@@ -83,6 +83,9 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "app.jobs.worker"]
     environment: *app-environment
+    # La imagen hereda un HEALTHCHECK HTTP pensado para la API; el worker no expone puerto.
+    healthcheck:
+      disable: true
     depends_on:
       db:
         condition: service_healthy

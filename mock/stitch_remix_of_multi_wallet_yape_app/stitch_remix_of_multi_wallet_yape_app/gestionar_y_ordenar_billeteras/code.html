@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-error": "#ffffff", "on-primary-fixed": "#350040", "tertiary": "#680036", "surface-variant": "#e8e0eb", "error-container": "#ffdad6", "secondary": "#006a63", "primary": "#59006a", "surface": "#fff7ff", "primary-container": "#742284", "on-tertiary-fixed-variant": "#8e004b", "tertiary-fixed": "#ffd9e2", "on-secondary-container": "#007169", "on-primary": "#ffffff", "secondary-container": "#56faeb", "on-tertiary-container": "#ff99bb", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#722082", "on-primary-container": "#f196fd", "on-tertiary-fixed": "#3e001e", "on-error-container": "#93000a", "surface-container-highest": "#e8e0eb", "tertiary-fixed-dim": "#ffb0c9", "secondary-fixed": "#56faeb", "on-background": "#1e1a22", "surface-container-high": "#eee5f1", "surface-tint": "#8d3b9c", "primary-fixed": "#ffd6ff", "secondary-fixed-dim": "#28ddcf", "inverse-surface": "#332f37", "surface-bright": "#fff7ff", "outline": "#817380", "surface-container": "#f4ebf7", "background": "#fff7ff", "inverse-on-surface": "#f7eef9", "on-secondary-fixed": "#00201d", "primary-fixed-dim": "#f7acff", "surface-container-low": "#faf1fc", "outline-variant": "#d3c1d0", "on-tertiary": "#ffffff", "on-surface": "#1e1a22", "on-secondary-fixed-variant": "#00504a", "inverse-primary": "#f7acff", "tertiary-container": "#91004d", "error": "#ba1a1a", "on-surface-variant": "#4f434f", "surface-dim": "#e0d7e3" }, borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" }, spacing: { "margin-tablet": "2rem", "margin-desktop": "3rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "space-lg": "1.5rem", "margin": "1rem", "gutter-desktop": "2rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2rem", "gutter": "1rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "display-amount-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "display-amount": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-xl-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-xl": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.03em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "30px", letterSpacing: "-0.01em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "500" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "display-amount-mobile": ["36px", { lineHeight: "42px", letterSpacing: "-0.03em", fontWeight: "800" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "700" }], "display-amount": ["48px", { lineHeight: "52px", letterSpacing: "-0.03em", fontWeight: "800" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Yape Multi-Wallet Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBjb96vXHhbX0ITHZhS1JCCXTGOx5017en4B0QC4sfBdP7lEAhsCiEala75nOiwcIgoC8V0DiChxuJpeWQisx96qql3pRy4qOyinF3nuBGuEHjLDP1mUL1-mDJxwFSSALKEGhjV_PNMMA6Zevh3d1gJ_Ko2DM2ozNI5OtNRRN3GEq7Fw-gtAZcydIV0ndvIdlfrIvbf-uen-Pjat7Xcsv6U__H230D-LQgrPOPtZ2H_eQ"/><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Hola, Yaper@</span><span class="font-headline-sm text-headline-sm text-primary-container leading-tight">Billeteras</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="Escanear QR" class="w-11 h-11 rounded-full flex items-center justify-center text-primary-container bg-surface-container-high hover:bg-secondary-container transition-colors"><span class="material-symbols-outlined text-[22px]">qr_code_scanner</span></button><button aria-label="Notificaciones" class="w-11 h-11 rounded-full flex items-center justify-center text-primary-container bg-surface-container-high hover:bg-surface-variant transition-colors relative"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-fixed"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full">
+<!-- Top Navigation & Header Bar -->
+<div class="px-space-md pt-space-sm pb-space-xs flex items-center justify-between">
+<button aria-label="Volver" class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-high text-primary active:scale-90 transition-transform" type="button">
+<span class="material-symbols-outlined text-[22px]">arrow_back</span>
+</button>
+<div class="flex flex-col items-center text-center">
+<h1 class="font-headline-sm text-headline-sm text-on-surface">Gestionar Billeteras</h1>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ordena y activa para pagos</span>
+</div>
+<button class="h-9 px-space-sm rounded-full bg-surface-container-high text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-variant active:scale-95 transition-all" id="btn-top-done" type="button">
+      Listo
+    </button>
+</div>
+<!-- Educational Info Banner -->
+<div class="px-space-md pt-space-xs pb-space-sm">
+<div class="bg-surface-container-low rounded-lg p-space-md flex items-start gap-space-sm shadow-sm relative overflow-hidden">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">swap_vert</span>
+</div>
+<div class="flex-1 pr-space-xs">
+<p class="font-label-md text-label-md text-primary font-bold">Personaliza tus fuentes de dinero</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">
+          Arrastra para priorizar qué billetera sale primero al escanear QR o yapear. Desactiva para congelar consumos inmediatos.
+        </p>
+</div>
+</div>
+</div>
+<!-- Wallet Cards List Section -->
+<div class="px-space-md flex flex-col gap-space-sm" id="wallets-container">
+<!-- Item 1: Cuenta Principal (Locked Base) -->
+<div class="wallet-item bg-surface-container-lowest rounded-lg p-space-md shadow-sm transition-all relative select-none" data-fixed="true" data-id="wallet-base">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="text-outline-variant flex items-center justify-center w-6 opacity-40 cursor-not-allowed" title="La cuenta base permanece fija">
+<span class="material-symbols-outlined text-[22px]">lock</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm shrink-0">
+<span class="material-symbols-outlined text-[24px]">account_balance_wallet</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="font-label-lg text-label-lg text-on-surface truncate wallet-name-text">Billetera Principal</span>
+<span class="bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full font-label-sm text-label-sm leading-none shrink-0">
+                Cuenta base BCP
+              </span>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Saldo disp:</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">S/ 1,450.80</span>
+</div>
+</div>
+</div>
+<!-- Lock Switch State (Cannot be disabled) -->
+<div class="flex flex-col items-end shrink-0 pl-space-xs">
+<div class="w-12 h-7 bg-secondary-fixed rounded-full p-1 flex items-center justify-end cursor-not-allowed opacity-90" title="Siempre habilitada">
+<div class="w-5 h-5 rounded-full bg-on-secondary shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-[13px] text-secondary">check</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-bold mt-1">Siempre activa</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+<span>Vinculada con tarjeta de débito terminada en *4092</span>
+</div>
+</div>
+<!-- Item 2: Emprendimiento Café (Draggable, Customizable) -->
+<div class="wallet-item bg-surface-container-lowest rounded-lg p-space-md shadow-sm transition-all relative select-none" data-id="wallet-cafe" data-name="Emprendimiento Café">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="drag-handle text-outline hover:text-primary cursor-grab active:cursor-grabbing flex items-center justify-center w-6 touch-manipulation py-2" title="Arrastrar para mover">
+<span class="material-symbols-outlined text-[24px]">drag_indicator</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">storefront</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-lg text-label-lg text-on-surface truncate wallet-name-text">Emprendimiento Café</span>
+<button aria-label="Editar nombre" class="btn-edit-wallet p-1 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Saldo disp:</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">S/ 890.00</span>
+</div>
+</div>
+</div>
+<!-- Custom Interactive Toggle -->
+<div class="flex flex-col items-end shrink-0 pl-space-xs">
+<button aria-checked="true" class="wallet-toggle w-12 h-7 rounded-full p-1 flex items-center justify-end transition-colors duration-200 bg-secondary-fixed cursor-pointer" role="switch" type="button">
+<div class="toggle-dot w-5 h-5 rounded-full bg-on-secondary shadow-sm transition-transform duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-[13px] text-secondary toggle-icon">check</span>
+</div>
+</button>
+<span class="font-label-sm text-label-sm toggle-label text-secondary font-bold mt-1">Activa para pagar</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="bg-surface-container text-primary font-label-sm text-label-sm px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">point_of_sale</span> Pagos QR negocio
+        </span>
+<div class="flex items-center gap-1">
+<button class="btn-move-up w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Subir de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+</button>
+<button class="btn-move-down w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Bajar de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 3: Ahorro Vacaciones (Protected Fund / Frozen mode) -->
+<div class="wallet-item bg-surface-container-lowest rounded-lg p-space-md shadow-sm transition-all relative select-none" data-id="wallet-ahorro" data-name="Ahorro Vacaciones">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="drag-handle text-outline hover:text-primary cursor-grab active:cursor-grabbing flex items-center justify-center w-6 touch-manipulation py-2" title="Arrastrar para mover">
+<span class="material-symbols-outlined text-[24px]">drag_indicator</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">flight_takeoff</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-lg text-label-lg text-on-surface truncate wallet-name-text">Ahorro Vacaciones</span>
+<button aria-label="Editar nombre" class="btn-edit-wallet p-1 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Saldo disp:</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">S/ 550.00</span>
+</div>
+</div>
+</div>
+<!-- Custom Interactive Toggle (Initially Disabled for Protected Savings) -->
+<div class="flex flex-col items-end shrink-0 pl-space-xs">
+<button aria-checked="false" class="wallet-toggle w-12 h-7 rounded-full p-1 flex items-center justify-start transition-colors duration-200 bg-surface-container-highest cursor-pointer" role="switch" type="button">
+<div class="toggle-dot w-5 h-5 rounded-full bg-on-secondary shadow-sm transition-transform duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-[13px] text-outline toggle-icon">remove</span>
+</div>
+</button>
+<span class="font-label-sm text-label-sm toggle-label text-on-surface-variant font-medium mt-1">No visible al pagar</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="bg-tertiary-fixed-dim/30 text-tertiary font-label-sm text-label-sm px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">shield</span> Fondos protegidos
+        </span>
+<div class="flex items-center gap-1">
+<button class="btn-move-up w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Subir de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+</button>
+<button class="btn-move-down w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Bajar de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 4: Mi Tienda Online (Active) -->
+<div class="wallet-item bg-surface-container-lowest rounded-lg p-space-md shadow-sm transition-all relative select-none" data-id="wallet-tienda" data-name="Mi Tienda Online">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="drag-handle text-outline hover:text-primary cursor-grab active:cursor-grabbing flex items-center justify-center w-6 touch-manipulation py-2" title="Arrastrar para mover">
+<span class="material-symbols-outlined text-[24px]">drag_indicator</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-label-lg text-label-lg text-on-surface truncate wallet-name-text">Mi Tienda Online</span>
+<button aria-label="Editar nombre" class="btn-edit-wallet p-1 text-on-surface-variant hover:text-primary rounded-full hover:bg-surface-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Saldo disp:</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">S/ 240.50</span>
+</div>
+</div>
+</div>
+<!-- Custom Interactive Toggle -->
+<div class="flex flex-col items-end shrink-0 pl-space-xs">
+<button aria-checked="true" class="wallet-toggle w-12 h-7 rounded-full p-1 flex items-center justify-end transition-colors duration-200 bg-secondary-fixed cursor-pointer" role="switch" type="button">
+<div class="toggle-dot w-5 h-5 rounded-full bg-on-secondary shadow-sm transition-transform duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined text-[13px] text-secondary toggle-icon">check</span>
+</div>
+</button>
+<span class="font-label-sm text-label-sm toggle-label text-secondary font-bold mt-1">Activa para pagar</span>
+</div>
+</div>
+<div class="mt-space-sm pt-space-xs flex items-center justify-between">
+<span class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sell</span> Cobros de clientes
+        </span>
+<div class="flex items-center gap-1">
+<button class="btn-move-up w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Subir de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+</button>
+<button class="btn-move-down w-7 h-7 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant active:scale-90" title="Bajar de prioridad" type="button">
+<span class="material-symbols-outlined text-[16px]">arrow_downward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Create Wallet Action Button -->
+<div class="px-space-md py-space-sm">
+<button class="w-full py-3.5 px-space-md rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]" id="btn-create-wallet" type="button">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</div>
+<span>Crear nueva billetera</span>
+</button>
+</div>
+<!-- Security Note / Guarantee Card -->
+<div class="px-space-md pb-space-sm">
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-[22px] shrink-0">lock_clock</span>
+<p class="font-body-sm text-body-sm leading-tight">
+        Tus movimientos y transferencias están protegidos por la validación biométrica y de seguridad BCP.
+      </p>
+</div>
+</div>
+<!-- Sticky Save / Action Container -->
+<div class="sticky bottom-0 w-full px-space-md pt-space-xs pb-space-md bg-surface/95 backdrop-blur-md shadow-[0_-8px_20px_rgba(0,0,0,0.05)] z-40">
+<button class="w-full h-14 rounded-full bg-secondary-fixed hover:bg-secondary-fixed-dim text-on-secondary-fixed font-headline-sm text-headline-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_0px_rgba(86,250,235,0.4)] active:scale-[0.98] transition-all" id="btn-save-changes" type="button">
+<span class="material-symbols-outlined text-[22px]">save</span>
+<span>Guardar cambios</span>
+</button>
+</div>
+<!-- Interactive Modal for Editing Wallet Name -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-50 hidden flex items-end justify-center" id="modal-edit">
+<div class="w-full max-w-lg bg-surface-container-lowest rounded-t-xl p-space-lg shadow-xl flex flex-col gap-space-md animate-in slide-in-from-bottom duration-200">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Renombrar Billetera</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center hover:bg-surface-variant" id="btn-close-modal" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant" for="input-wallet-name">Nombre representativo</label>
+<div class="relative flex items-center">
+<input class="w-full h-12 px-space-md rounded-lg bg-surface-container-low text-on-surface font-body-lg text-body-lg focus:outline-none focus:ring-2 focus:ring-primary" id="input-wallet-name" maxlength="24" placeholder="Ej: Viajes, Repostería, etc." type="text"/>
+</div>
+<span class="font-label-sm text-label-sm text-outline text-right" id="char-counter">0/24</span>
+</div>
+<div class="flex gap-space-sm">
+<button class="flex-1 h-12 rounded-full bg-surface-container-high text-on-surface font-label-lg text-label-lg active:scale-95 transition-all" id="btn-cancel-rename" type="button">
+          Cancelar
+        </button>
+<button class="flex-1 h-12 rounded-full bg-primary text-on-primary font-label-lg text-label-lg active:scale-95 transition-all shadow-sm" id="btn-confirm-rename" type="button">
+          Guardar nombre
+        </button>
+</div>
+</div>
+</div>
+<!-- Toast Feedback Notification -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface px-space-md py-2.5 rounded-full shadow-lg font-label-md text-label-md flex items-center gap-2 transition-all opacity-0 pointer-events-none z-50 scale-95" id="toast-feedback">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]" id="toast-icon">check_circle</span>
+<span id="toast-message">¡Cambios guardados con éxito!</span>
+</div>
+</div>
+<script>
+  (function initWalletManager() {
+    const container = document.getElementById('wallets-container');
+    const toast = document.getElementById('toast-feedback');
+    const toastMessage = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    const saveBtn = document.getElementById('btn-save-changes');
+    const topDoneBtn = document.getElementById('btn-top-done');
+    const createBtn = document.getElementById('btn-create-wallet');
+
+    // Rename Modal Elements
+    const modalEdit = document.getElementById('modal-edit');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const btnCancelRename = document.getElementById('btn-cancel-rename');
+    const btnConfirmRename = document.getElementById('btn-confirm-rename');
+    const inputWalletName = document.getElementById('input-wallet-name');
+    const charCounter = document.getElementById('char-counter');
+    let currentTargetCard = null;
+
+    // Toast helper
+    function showToast(msg, icon = 'check_circle') {
+      toastMessage.textContent = msg;
+      toastIcon.textContent = icon;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+      toast.classList.add('opacity-100', 'scale-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'scale-100');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+      }, 2600);
+    }
+
+    // Toggle switch interaction
+    container.addEventListener('click', (e) => {
+      const toggle = e.target.closest('.wallet-toggle');
+      if (toggle) {
+        const isChecked = toggle.getAttribute('aria-checked') === 'true';
+        const newChecked = !isChecked;
+        toggle.setAttribute('aria-checked', newChecked.toString());
+
+        const dot = toggle.querySelector('.toggle-dot');
+        const icon = toggle.querySelector('.toggle-icon');
+        const label = toggle.parentElement.querySelector('.toggle-label');
+
+        if (newChecked) {
+          toggle.classList.remove('bg-surface-container-highest', 'justify-start');
+          toggle.classList.add('bg-secondary-fixed', 'justify-end');
+          icon.textContent = 'check';
+          icon.className = 'material-symbols-outlined text-[13px] text-secondary toggle-icon';
+          label.textContent = 'Activa para pagar';
+          label.className = 'font-label-sm text-label-sm toggle-label text-secondary font-bold mt-1';
+          showToast('Billetera activada para pagos');
+        } else {
+          toggle.classList.remove('bg-secondary-fixed', 'justify-end');
+          toggle.classList.add('bg-surface-container-highest', 'justify-start');
+          icon.textContent = 'remove';
+          icon.className = 'material-symbols-outlined text-[13px] text-outline toggle-icon';
+          label.textContent = 'No visible al pagar';
+          label.className = 'font-label-sm text-label-sm toggle-label text-on-surface-variant font-medium mt-1';
+          showToast('Billetera excluida de pagos inmediatos');
+        }
+      }
+    });
+
+    // Reorder Handlers (Up / Down buttons)
+    container.addEventListener('click', (e) => {
+      const upBtn = e.target.closest('.btn-move-up');
+      const downBtn = e.target.closest('.btn-move-down');
+
+      if (upBtn) {
+        const currentItem = upBtn.closest('.wallet-item');
+        const prevItem = currentItem.previousElementSibling;
+        // Don't swap before the fixed base wallet
+        if (prevItem && prevItem.getAttribute('data-fixed') !== 'true') {
+          container.insertBefore(currentItem, prevItem);
+          currentItem.classList.add('bg-surface-container-low');
+          setTimeout(() => currentItem.classList.remove('bg-surface-container-low'), 300);
+        } else {
+          showToast('La Cuenta Base siempre permanece primera', 'info');
+        }
+      }
+
+      if (downBtn) {
+        const currentItem = downBtn.closest('.wallet-item');
+        const nextItem = currentItem.nextElementSibling;
+        if (nextItem) {
+          container.insertBefore(nextItem, currentItem);
+          currentItem.classList.add('bg-surface-container-low');
+          setTimeout(() => currentItem.classList.remove('bg-surface-container-low'), 300);
+        }
+      }
+    });
+
+    // Open Rename Modal
+    container.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.btn-edit-wallet');
+      if (editBtn) {
+        currentTargetCard = editBtn.closest('.wallet-item');
+        const nameSpan = currentTargetCard.querySelector('.wallet-name-text');
+        inputWalletName.value = nameSpan.textContent.trim();
+        charCounter.textContent = `${inputWalletName.value.length}/24`;
+        modalEdit.classList.remove('hidden');
+        inputWalletName.focus();
+      }
+    });
+
+    inputWalletName.addEventListener('input', () => {
+      charCounter.textContent = `${inputWalletName.value.length}/24`;
+    });
+
+    function closeModal() {
+      modalEdit.classList.add('hidden');
+      currentTargetCard = null;
+    }
+
+    btnCloseModal.addEventListener('click', closeModal);
+    btnCancelRename.addEventListener('click', closeModal);
+
+    btnConfirmRename.addEventListener('click', () => {
+      const trimmed = inputWalletName.value.trim();
+      if (trimmed && currentTargetCard) {
+        const nameSpan = currentTargetCard.querySelector('.wallet-name-text');
+        nameSpan.textContent = trimmed;
+        currentTargetCard.setAttribute('data-name', trimmed);
+        showToast('Nombre actualizado correctamente');
+        closeModal();
+      }
+    });
+
+    // Save changes CTA & Header 'Listo'
+    function triggerSaveFeedback() {
+      saveBtn.disabled = true;
+      const originalContent = saveBtn.innerHTML;
+      saveBtn.innerHTML = `
+        <span class="material-symbols-outlined animate-spin text-[22px]">progress_activity</span>
+        <span>Guardando...</span>
+      `;
+
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalContent;
+        showToast('¡Configuración de billeteras guardada!', 'task_alt');
+      }, 700);
+    }
+
+    saveBtn.addEventListener('click', triggerSaveFeedback);
+    topDoneBtn.addEventListener('click', triggerSaveFeedback);
+
+    // Create wallet button placeholder
+    createBtn.addEventListener('click', () => {
+      showToast('Abriendo creador de billeteras...', 'add_card');
+    });
+
+    // Simple Drag & Drop Simulation on Mobile / Desktop
+    let draggedElement = null;
+    const items = container.querySelectorAll('.wallet-item');
+
+    items.forEach((item) => {
+      if (item.getAttribute('data-fixed') === 'true') return;
+
+      item.setAttribute('draggable', 'true');
+
+      item.addEventListener('dragstart', (e) => {
+        draggedElement = item;
+        item.classList.add('opacity-50');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      item.addEventListener('dragend', () => {
+        draggedElement = null;
+        item.classList.remove('opacity-50');
+        items.forEach(i => i.classList.remove('ring-2', 'ring-secondary-fixed'));
+      });
+
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (draggedElement && draggedElement !== item && item.getAttribute('data-fixed') !== 'true') {
+          const allItems = Array.from(container.querySelectorAll('.wallet-item'));
+          const draggedIndex = allItems.indexOf(draggedElement);
+          const targetIndex = allItems.indexOf(item);
+
+          if (draggedIndex < targetIndex) {
+            container.insertBefore(draggedElement, item.nextSibling);
+          } else {
+            container.insertBefore(draggedElement, item);
+          }
+          showToast('Orden de billeteras reorganizado', 'reorder');
+        }
+      });
+    });
+
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(116,34,132,0.08)]" data-active-classes="text-primary-container font-bold"><div class="h-20 px-space-sm flex items-center justify-around relative"><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="billeteras" href="#"><span class="material-symbols-outlined text-[24px]">account_balance_wallet</span><span class="font-label-sm text-label-sm mt-space-xs">Billeteras</span></a><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="mi-qr" href="#"><span class="material-symbols-outlined text-[24px]">qr_code_2</span><span class="font-label-sm text-label-sm mt-space-xs">Mi QR</span></a><div class="relative flex flex-col items-center -top-4"><a class="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_6px_20px_0px_rgba(86,250,235,0.45)] hover:scale-105 active:scale-95 transition-transform ring-4 ring-surface" data-path="yapear-enviar" href="#"><span class="material-symbols-outlined text-[28px] text-secondary-fixed">send_money</span></a><span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Yapear</span></div><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="movimientos" href="#"><span class="material-symbols-outlined text-[24px]">receipt_long</span><span class="font-label-sm text-label-sm mt-space-xs">Movimientos</span></a><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="promociones" href="#"><span class="material-symbols-outlined text-[24px]">local_offer</span><span class="font-label-sm text-label-sm mt-space-xs">Promos</span></a></div></nav>
+</body></html>

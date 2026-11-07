@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-error": "#ffffff", "on-primary-fixed": "#350040", "tertiary": "#680036", "surface-variant": "#e8e0eb", "error-container": "#ffdad6", "secondary": "#006a63", "primary": "#59006a", "surface": "#fff7ff", "primary-container": "#742284", "on-tertiary-fixed-variant": "#8e004b", "tertiary-fixed": "#ffd9e2", "on-secondary-container": "#007169", "on-primary": "#ffffff", "secondary-container": "#56faeb", "on-tertiary-container": "#ff99bb", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#722082", "on-primary-container": "#f196fd", "on-tertiary-fixed": "#3e001e", "on-error-container": "#93000a", "surface-container-highest": "#e8e0eb", "tertiary-fixed-dim": "#ffb0c9", "secondary-fixed": "#56faeb", "on-background": "#1e1a22", "surface-container-high": "#eee5f1", "surface-tint": "#8d3b9c", "primary-fixed": "#ffd6ff", "secondary-fixed-dim": "#28ddcf", "inverse-surface": "#332f37", "surface-bright": "#fff7ff", "outline": "#817380", "surface-container": "#f4ebf7", "background": "#fff7ff", "inverse-on-surface": "#f7eef9", "on-secondary-fixed": "#00201d", "primary-fixed-dim": "#f7acff", "surface-container-low": "#faf1fc", "outline-variant": "#d3c1d0", "on-tertiary": "#ffffff", "on-surface": "#1e1a22", "on-secondary-fixed-variant": "#00504a", "inverse-primary": "#f7acff", "tertiary-container": "#91004d", "error": "#ba1a1a", "on-surface-variant": "#4f434f", "surface-dim": "#e0d7e3" }, borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" }, spacing: { "margin-tablet": "2rem", "margin-desktop": "3rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "space-lg": "1.5rem", "margin": "1rem", "gutter-desktop": "2rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2rem", "gutter": "1rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "display-amount-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "display-amount": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-xl-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-xl": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.03em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "30px", letterSpacing: "-0.01em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "500" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "display-amount-mobile": ["36px", { lineHeight: "42px", letterSpacing: "-0.03em", fontWeight: "800" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "700" }], "display-amount": ["48px", { lineHeight: "52px", letterSpacing: "-0.03em", fontWeight: "800" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Yape Multi-Wallet Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrBjb96vXHhbX0ITHZhS1JCCXTGOx5017en4B0QC4sfBdP7lEAhsCiEala75nOiwcIgoC8V0DiChxuJpeWQisx96qql3pRy4qOyinF3nuBGuEHjLDP1mUL1-mDJxwFSSALKEGhjV_PNMMA6Zevh3d1gJ_Ko2DM2ozNI5OtNRRN3GEq7Fw-gtAZcydIV0ndvIdlfrIvbf-uen-Pjat7Xcsv6U__H230D-LQgrPOPtZ2H_eQ"/><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Hola, Yaper@</span><span class="font-headline-sm text-headline-sm text-primary-container leading-tight">Billeteras</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="Escanear QR" class="w-11 h-11 rounded-full flex items-center justify-center text-primary-container bg-surface-container-high hover:bg-secondary-container transition-colors"><span class="material-symbols-outlined text-[22px]">qr_code_scanner</span></button><button aria-label="Notificaciones" class="w-11 h-11 rounded-full flex items-center justify-center text-primary-container bg-surface-container-high hover:bg-surface-variant transition-colors relative"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary-fixed"></span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full px-space-md pb-space-xl">
+<!-- Nav Bar & Step Indicator -->
+<div class="flex items-center justify-between py-space-sm">
+<div class="flex items-center gap-space-sm">
+<button aria-label="Volver" class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary-container active:scale-95 transition-transform" type="button">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</button>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary-container">Yapear</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Paso 2 de 2: Confirmar origen</p>
+</div>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-high px-3 py-1.5 rounded-full">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">Cero Comisiones</span>
+</div>
+</div>
+<!-- Destinatario Card -->
+<div class="mt-space-sm bg-surface-container-lowest rounded-lg p-space-md shadow-sm relative overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative flex-shrink-0">
+<img class="w-13 h-13 w-12 h-12 rounded-full object-cover shadow-sm" data-alt="Portrait of a smiling young Peruvian woman with warm lighting and purple vibrant background soft gradient" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtDuiL1ifqGWdbyFhISkSIPLmPEZeoapnEOx0xOTuGKW81e-1wnfKE1hfyanY7T6h4yHTBJ2eqGXNSRSRvuQ_R7SarO2gXVSX_JW6QPSoPJ4HQ2NaZqbNaaJHiOGJagEDyjw5i1uDms6M0EXGV_d18hYPuuuwQFvvBy95ZLcfmTPGvOQlqtYkp8FU66zgkCa3_n7eWLmEFWSdkSrnR_Q4Spd6NK0NIkp7ZyJr3RYXW"/>
+<div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-secondary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-secondary-container text-[12px] font-bold">verified</span>
+</div>
+</div>
+<div class="min-w-0 flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-body-lg text-body-lg font-bold text-on-surface truncate">Lucía Gómez R.</span>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full">Frecuente</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">987 654 321 • BCP / Yape</span>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-primary-container hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+</button>
+</div>
+</div>
+<!-- Amount Input Core Card -->
+<div class="mt-space-md bg-surface-container-lowest rounded-lg p-space-md shadow-sm flex flex-col items-center">
+<span class="font-label-md text-label-md text-on-surface-variant">Monto a enviar</span>
+<!-- Big Currency Field -->
+<div class="flex items-baseline justify-center gap-1 my-space-xs w-full">
+<span class="font-display-amount-mobile text-display-amount-mobile text-primary-container">S/</span>
+<input class="font-display-amount-mobile text-display-amount-mobile text-primary-container bg-transparent text-center focus:outline-none w-48 font-extrabold selection:bg-secondary-container" id="amountInput" min="1" step="0.50" type="number" value="85.00"/>
+</div>
+<div class="h-1 w-32 bg-secondary-container rounded-full mb-space-sm"></div>
+<!-- Quick Pill Modifiers -->
+<div class="flex items-center gap-space-xs mb-space-md">
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-primary-container font-label-md text-label-md hover:bg-secondary-container transition-colors active:scale-95" onclick="addAmount(10)" type="button">+S/ 10</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-primary-container font-label-md text-label-md hover:bg-secondary-container transition-colors active:scale-95" onclick="addAmount(20)" type="button">+S/ 20</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-high text-primary-container font-label-md text-label-md hover:bg-secondary-container transition-colors active:scale-95" onclick="addAmount(50)" type="button">+S/ 50</button>
+</div>
+<!-- Message / Note Field -->
+<div class="w-full bg-surface-container-low rounded-xl px-space-md py-space-sm flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary-container text-[20px]">edit_note</span>
+<input class="bg-transparent w-full text-on-surface font-body-md text-body-md focus:outline-none placeholder:text-outline" id="noteInput" placeholder="¿Para qué es este Yape?" type="text" value="Almuerzo oficina 🍜"/>
+</div>
+</div>
+<!-- Wallet Selection Section (Protagonist) -->
+<div class="mt-space-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[22px]">account_balance_wallet</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">¿De qué billetera saldrá el dinero?</h2>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-bold">3 activas</span>
+</div>
+<!-- Wallet 1: Principal (Default Selected) -->
+<div class="wallet-card cursor-pointer rounded-lg p-space-md bg-surface-container-lowest shadow-md transition-all relative overflow-hidden bg-gradient-to-r from-primary-container/10 via-transparent to-secondary-container/10" id="wallet-principal" onclick="selectWallet('principal')">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<div class="w-11 h-11 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-lg text-body-lg font-bold text-on-surface">Billetera Principal</span>
+<span class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full">DNI Oficial</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">BCP vinculada • Cuenta Corriente</p>
+<div class="mt-2 flex items-baseline gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Disponible:</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">S/ 2,450.80</span>
+</div>
+<div class="mt-1 flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-secondary font-bold">Quedará:</span>
+<span class="font-label-sm text-label-sm font-bold text-secondary" id="post-principal">S/ 2,365.80</span>
+</div>
+</div>
+</div>
+<!-- Radio/Check Icon -->
+<div class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center text-on-primary shadow-sm flex-shrink-0" id="check-principal">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Wallet 2: Emprendimiento Café -->
+<div class="wallet-card cursor-pointer rounded-lg p-space-md bg-surface-container-lowest shadow-sm hover:shadow-md transition-all relative overflow-hidden" id="wallet-cafe" onclick="selectWallet('cafe')">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<div class="w-11 h-11 rounded-full bg-surface-container-high text-primary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">storefront</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-lg text-body-lg font-bold text-on-surface">Emprendimiento Café</span>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full">Negocio</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">RUC 10 • Cobros Yape QR</p>
+<div class="mt-2 flex items-baseline gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Disponible:</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">S/ 840.20</span>
+</div>
+<div class="mt-1 flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Quedará:</span>
+<span class="font-label-sm text-label-sm font-medium text-on-surface-variant" id="post-cafe">S/ 755.20</span>
+</div>
+</div>
+</div>
+<!-- Radio Unselected -->
+<div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant flex-shrink-0" id="check-cafe">
+<span class="material-symbols-outlined text-[16px]">radio_button_unchecked</span>
+</div>
+</div>
+</div>
+<!-- Wallet 3: Ahorro Vacaciones -->
+<div class="wallet-card cursor-pointer rounded-lg p-space-md bg-surface-container-lowest shadow-sm hover:shadow-md transition-all relative overflow-hidden" id="wallet-vacaciones" onclick="selectWallet('vacaciones')">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<div class="w-11 h-11 rounded-full bg-surface-container-high text-primary-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]">savings</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-body-lg text-body-lg font-bold text-on-surface">Ahorro Vacaciones</span>
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full">Meta Activa</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Bolsillo Máncora 2025</p>
+<div class="mt-2 flex items-baseline gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Disponible:</span>
+<span class="font-label-lg text-label-lg font-bold text-on-surface">S/ 159.80</span>
+</div>
+<div class="mt-1 flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Quedará:</span>
+<span class="font-label-sm text-label-sm font-medium text-on-surface-variant" id="post-vacaciones">S/ 74.80</span>
+</div>
+</div>
+</div>
+<!-- Radio Unselected -->
+<div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant flex-shrink-0" id="check-vacaciones">
+<span class="material-symbols-outlined text-[16px]">radio_button_unchecked</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dynamic Balance Impact Box -->
+<div class="mt-space-md bg-surface-container-high rounded-lg p-space-md shadow-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container text-secondary-fixed flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">insights</span>
+</div>
+<div class="flex flex-col gap-1 min-w-0">
+<span class="font-label-md text-label-md font-bold text-primary-container">Impacto en tus saldos</span>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug" id="impactText">
+          Se debitará <span class="font-bold">S/ 85.00</span> de tu <span class="font-bold text-primary-container">Billetera Principal</span>. Tu Saldo Total Consolidado pasará de <span class="line-through text-outline">S/ 3,450.80</span> a <span class="font-bold text-secondary">S/ 3,365.80</span> sin comisiones.
+        </p>
+</div>
+</div>
+</div>
+<!-- Bottom CTA Container -->
+<div class="mt-space-lg flex flex-col gap-space-xs">
+<button class="w-full h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center gap-space-sm shadow-[0_6px_20px_0px_rgba(86,250,235,0.45)] hover:scale-[1.02] active:scale-98 transition-all" id="mainYapeBtn" type="button">
+<span class="material-symbols-outlined text-[24px] text-secondary-fixed">send_money</span>
+<span class="font-label-lg text-label-lg font-bold" id="btnLabel">Yapear S/ 85.00 desde Principal</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 py-1">
+<span class="material-symbols-outlined text-[16px] text-secondary font-bold">lock</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Transacción instantánea y 100% segura</span>
+</div>
+</div>
+</div>
+<script>
+  // State
+  const wallets = {
+    principal: { name: 'Principal', fullName: 'Billetera Principal', balance: 2450.80 },
+    cafe: { name: 'Café', fullName: 'Emprendimiento Café', balance: 840.20 },
+    vacaciones: { name: 'Vacaciones', fullName: 'Ahorro Vacaciones', balance: 159.80 }
+  };
+
+  let selectedWalletKey = 'principal';
+  const totalBalance = 2450.80 + 840.20 + 159.80; // 3,450.80
+
+  function formatSoles(amount) {
+    return 'S/ ' + amount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getAmount() {
+    const input = document.getElementById('amountInput');
+    const val = parseFloat(input.value);
+    return isNaN(val) || val <= 0 ? 0 : val;
+  }
+
+  function updateCalculations() {
+    const amount = getAmount();
+
+    // Recalculate remaining balances
+    for (const [key, wallet] of Object.entries(wallets)) {
+      const remaining = Math.max(0, wallet.balance - amount);
+      const postEl = document.getElementById(`post-${key}`);
+      if (postEl) {
+        postEl.innerText = formatSoles(remaining);
+      }
+    }
+
+    // Update CTA Button Text
+    const activeWallet = wallets[selectedWalletKey];
+    const btnLabel = document.getElementById('btnLabel');
+    if (btnLabel) {
+      btnLabel.innerText = `Yapear ${formatSoles(amount)} desde ${activeWallet.name}`;
+    }
+
+    // Update Impact Summary
+    const impactEl = document.getElementById('impactText');
+    const newTotal = Math.max(0, totalBalance - amount);
+    if (impactEl) {
+      impactEl.innerHTML = `Se debitará <span class="font-bold">${formatSoles(amount)}</span> de tu <span class="font-bold text-primary-container">${activeWallet.fullName}</span>. Tu Saldo Total Consolidado pasará de <span class="line-through text-outline">${formatSoles(totalBalance)}</span> a <span class="font-bold text-secondary">${formatSoles(newTotal)}</span> sin comisiones.`;
+    }
+  }
+
+  function selectWallet(key) {
+    selectedWalletKey = key;
+
+    // Reset styles on all cards
+    ['principal', 'cafe', 'vacaciones'].forEach(k => {
+      const card = document.getElementById(`wallet-${k}`);
+      const check = document.getElementById(`check-${k}`);
+      const postText = document.getElementById(`post-${k}`);
+
+      if (k === key) {
+        // Active styles
+        card.className = "wallet-card cursor-pointer rounded-lg p-space-md bg-surface-container-lowest shadow-md transition-all relative overflow-hidden bg-gradient-to-r from-primary-container/10 via-transparent to-secondary-container/10";
+        check.className = "w-7 h-7 rounded-full bg-primary-container flex items-center justify-center text-on-primary shadow-sm flex-shrink-0";
+        check.innerHTML = '<span class="material-symbols-outlined text-[18px] text-secondary-fixed">check_circle</span>';
+        if (postText) {
+          postText.className = "font-label-sm text-label-sm font-bold text-secondary";
+        }
+      } else {
+        // Inactive styles
+        card.className = "wallet-card cursor-pointer rounded-lg p-space-md bg-surface-container-lowest shadow-sm hover:shadow-md transition-all relative overflow-hidden";
+        check.className = "w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant flex-shrink-0";
+        check.innerHTML = '<span class="material-symbols-outlined text-[16px]">radio_button_unchecked</span>';
+        if (postText) {
+          postText.className = "font-label-sm text-label-sm font-medium text-on-surface-variant";
+        }
+      }
+    });
+
+    updateCalculations();
+  }
+
+  function addAmount(delta) {
+    const input = document.getElementById('amountInput');
+    const current = getAmount();
+    input.value = (current + delta).toFixed(2);
+    updateCalculations();
+  }
+
+  // Real-time listener for manual input changes
+  document.getElementById('amountInput').addEventListener('input', updateCalculations);
+
+  // Initialize
+  updateCalculations();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(116,34,132,0.08)]" data-active-classes="text-primary-container font-bold"><div class="h-20 px-space-sm flex items-center justify-around relative"><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="billeteras" href="#"><span class="material-symbols-outlined text-[24px]">account_balance_wallet</span><span class="font-label-sm text-label-sm mt-space-xs">Billeteras</span></a><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="mi-qr" href="#"><span class="material-symbols-outlined text-[24px]">qr_code_2</span><span class="font-label-sm text-label-sm mt-space-xs">Mi QR</span></a><div class="relative flex flex-col items-center -top-4"><a class="w-14 h-14 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-[0_6px_20px_0px_rgba(86,250,235,0.45)] hover:scale-105 active:scale-95 transition-transform ring-4 ring-surface" data-path="yapear-enviar" href="#"><span class="material-symbols-outlined text-[28px] text-secondary-fixed">send_money</span></a><span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Yapear</span></div><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="movimientos" href="#"><span class="material-symbols-outlined text-[24px]">receipt_long</span><span class="font-label-sm text-label-sm mt-space-xs">Movimientos</span></a><a class="flex flex-col items-center justify-center w-16 h-14 text-on-surface-variant hover:text-primary-container transition-colors" data-path="promociones" href="#"><span class="material-symbols-outlined text-[24px]">local_offer</span><span class="font-label-sm text-label-sm mt-space-xs">Promos</span></a></div></nav>
+</body></html>

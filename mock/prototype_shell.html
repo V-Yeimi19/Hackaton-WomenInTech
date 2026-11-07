@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Mica · Prototipo Multi-Billetera</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f4ebf7; --ink:#1e1a22; --primary:#742284; --accent:#56faeb; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); font-family:"Plus Jakarta Sans",system-ui,sans-serif; color:var(--ink); }
+  body { display:flex; align-items:center; justify-content:center; gap:32px; }
+  #phone { position:relative; width:412px; height:min(880px, calc(100dvh - 32px)); border-radius:44px;
+           background:#111; padding:10px; box-shadow:0 30px 80px rgba(89,0,106,.25); }
+  #screen { width:100%; height:100%; border:0; border-radius:34px; background:#fff7ff; display:block; }
+  #toast { position:absolute; left:50%; top:84px; transform:translate(-50%,-8px); background:#332f37; color:#fff;
+           padding:10px 16px; border-radius:14px; font-size:13px; font-weight:700; max-width:85%; text-align:center;
+           opacity:0; pointer-events:none; transition:all .25s; z-index:10; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
+  #side { width:260px; font-size:13px; line-height:1.5; }
+  #side h1 { font-size:20px; margin:0 0 4px; color:var(--primary); }
+  #side p { margin:0 0 12px; color:#4f434f; }
+  #side nav { display:flex; flex-direction:column; gap:6px; margin:12px 0; }
+  #side button { font:inherit; font-weight:700; text-align:left; padding:8px 12px; border-radius:12px; border:0;
+                 background:#fff; color:var(--ink); cursor:pointer; }
+  #side button:hover { background:var(--accent); }
+  #side button.reset { background:transparent; color:var(--primary); text-decoration:underline; padding:4px 0; }
+  #balances { background:#fff; border-radius:14px; padding:10px 12px; }
+  #balances div { display:flex; justify-content:space-between; }
+  @media (max-width: 760px) {
+    body { display:block; }
+    #side { display:none; }
+    #phone { width:100%; height:100dvh; border-radius:0; padding:0; box-shadow:none; }
+    #screen { border-radius:0; }
+  }
+</style>
+</head>
+<body>
+<div id="phone">
+  <iframe id="screen" title="Pantalla del prototipo"></iframe>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<aside id="side">
+  <h1>Prototipo navegable</h1>
+  <p>Mock unido de Stitch. Dinero ficticio; el estado vive en este navegador.</p>
+  <div id="balances"></div>
+  <nav id="jump"></nav>
+  <button class="reset" id="reset">Reiniciar demo</button>
+</aside>
+
+<script>
+const SCREENS = /*__SCREENS__*/{};
+
+/* ---------- Estado compartido ---------- */
+const DEFAULT_STATE = {
+  wallets: {
+    principal:  { name: "Principal",           balance: 1820.50 },
+    cafe:       { name: "Emprendimiento Café", balance: 840.20 },
+    vacaciones: { name: "Ahorro Vacaciones",   balance: 790.10 },
+  },
+  extra: null,          // billetera creada por la usuaria: { name, balance }
+  txs: [],              // movimientos generados en la demo (más reciente primero)
+  draft: {},            // datos que viajan entre pantallas del flujo yapear
+  payWallet: "cafe",    // billetera elegida en el escáner
+  last: null,           // último pago para la constancia
+};
+let state = load();
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem("mica-proto")); if (s && s.wallets) return s; } catch (e) {}
+  return structuredClone(DEFAULT_STATE);
+}
+function save() { try { localStorage.setItem("mica-proto", JSON.stringify(state)); } catch (e) {} renderSide(); }
+
+const fmt = n => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtShort = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
+const total = () => Object.values(state.wallets).reduce((a, w) => a + w.balance, 0) + (state.extra ? state.extra.balance : 0);
+function walletKey(name = "") {
+  name = name.toLowerCase();
+  if (name.includes("princ") || name.includes("personal")) return "principal";
+  if (name.includes("caf")) return "cafe";
+  if (name.includes("vacac") || name.includes("ahorro")) return "vacaciones";
+  if (state.extra && name.includes(state.extra.name.toLowerCase())) return "extra";
+  return null;
+}
+const wallet = k => k === "extra" ? state.extra : state.wallets[k];
+
+/* ---------- Saldos: cada pantalla trae números distintos; se reemplazan por el estado ---------- */
+const BAL = {
+  "home":          { "1,820.50": "principal", "840.20": "cafe", "790.10": "vacaciones", "3,450.80": "total" },
+  "home-nueva":    { "1,820.50": "principal", "840.20": "cafe", "790.10": "vacaciones", "3,450.80": "total" },
+  "yapear":        { "2,450.80": "principal", "840.20": "cafe", "159.80": "vacaciones", "3,450.80": "total",
+                     "balance: 2450.80": "raw:principal", "balance: 840.20": "raw:cafe", "balance: 159.80": "raw:vacaciones",
+                     "2450.80 + 840.20 + 159.80": "raw:total" },
+  "desglose":      { "1,450.80": "principal", "1,450.00": "cafe", "550.00": "vacaciones", "3,450.80": "total" },
+  "mi-qr":         { "2,450.80": "principal", "840.20": "cafe", "1,320.00": "vacaciones" },
+  "escanear":      { "1,450.80": "principal", "1,450.00": "cafe", "550.00": "vacaciones" },
+  "escanear-foto": { "850.00": "principal", "1,450.00": "cafe", "320.00": "vacaciones" },
+  "gestionar":     { "1,450.80": "principal", "890.00": "cafe", "550.00": "vacaciones" },
+};
+
+function valueFor(target) {
+  const raw = target.startsWith("raw:");
+  const key = raw ? target.slice(4) : target;
+  const n = key === "total" ? total() : wallet(key).balance;
+  if (!raw) return fmt(n);
+  return key === "total" ? n.toFixed(2) : "balance: " + n.toFixed(2);
+}
+
+function prepare(name) {
+  let html = SCREENS[name];
+  const table = Object.assign({}, BAL[name] || {});
+  const extraText = {};
+  if (name === "home-nueva" && state.extra) {
+    extraText["Mi Tienda Online"] = state.extra.name;
+    extraText["S/ 0.00"] = "S/ " + fmt(state.extra.balance);
+  }
+  if (name === "yapear" && state.draft.recipient) extraText["Lucía Gómez R."] = state.draft.recipient;
+  if (name === "confirmar") {
+    const w = wallet(state.payWallet) || state.wallets.cafe;
+    extraText["Emprendimiento Café"] = w.name;
+    table["1,450.00"] = state.payWallet;
+    if (state.draft.qrRecipient) extraText["La Tiendita de Don Pepe"] = state.draft.qrRecipient;
+  }
+  if (name.startsWith("constancia") || name === "te-yapearon") {
+    const now = new Date();
+    const date = now.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }).replace(/ de /g, " ");
+    const time = now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
+    for (const d of ["19 dic. 2025", "18 may. 2025"]) extraText[d] = date;
+    for (const t of ["12:50 p. m.", "01:15 p. m.", "04:35 p. m."]) extraText[t] = time;
+    const op = String(26100000 + Math.floor(Math.random() * 99999));
+    extraText["26101992"] = op; extraText["26102048"] = op;
+    if (name === "constancia-negocio" && state.last) extraText["Emprendimiento Café"] = state.last.walletName;
+  }
+  const replacements = {};
+  for (const [k, v] of Object.entries(table)) if (v === "total" || v.startsWith("raw:") || wallet(v)) replacements[k] = valueFor(v);
+  Object.assign(replacements, extraText);
+  const keys = Object.keys(replacements).sort((a, b) => b.length - a.length);
+  if (keys.length) {
+    const re = new RegExp(keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g");
+    // Solo el <body>: el <head> trae la config de Tailwind y no debe tocarse.
+    const i = html.indexOf("<body");
+    html = html.slice(0, i) + html.slice(i).replace(re, m => replacements[m]);
+  }
+  return html;
+}
+
+/* ---------- Navegación ---------- */
+const frame = document.getElementById("screen");
+let current = null;
+
+function homeRoute() { return state.extra ? "home-nueva" : "home"; }
+function go(name) { if (name === "home") name = homeRoute(); if (location.hash.slice(1) === name) render(); else location.hash = name; }
+function back() { history.length > 1 ? history.back() : go("home"); }
+function render() {
+  let name = location.hash.slice(1) || homeRoute();
+  if (name === "home" || name === "home-nueva") name = homeRoute();
+  if (!SCREENS[name]) name = homeRoute();
+  current = name;
+  frame.srcdoc = prepare(name);
+}
+window.addEventListener("hashchange", render);
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ---------- Acciones de negocio ---------- */
+function pay(amount, key, recipient) {
+  const w = wallet(key);
+  if (!w) return toast("Elige una billetera de origen");
+  if (!(amount > 0)) return toast("Ingresa un monto mayor a S/ 0");
+  if (amount > 500) return toast("Límite por yapeo: S/ 500");
+  if (amount > w.balance) return toast(`Saldo insuficiente en ${w.name}`);
+  w.balance = Math.round((w.balance - amount) * 100) / 100;
+  state.last = { amount, walletName: w.name, key, recipient };
+  state.txs.unshift({ title: `Yapeo a ${recipient}`, amount: -amount, key, walletName: w.name, detail: "Yape" });
+  state.draft = {};
+  save();
+  go(key === "principal" ? "constancia" : "constancia-negocio");
+}
+function receive() {
+  state.wallets.principal.balance = Math.round((state.wallets.principal.balance + 85) * 100) / 100;
+  state.txs.unshift({ title: "Yape de Lucía Gómez", amount: 85, key: "principal", walletName: "Principal", detail: "Celular" });
+  save();
+  go("te-yapearon");
+}
+
+/* ---------- Reglas de botones por pantalla ----------
+   Se comparan con el texto visible del botón (incluye el nombre del ícono). */
+const GLOBAL_RULES = [
+  [/^account_balance_wallet Billeteras$/, () => go("home")],
+  [/^qr_code_2 Mi QR$/, () => go("mi-qr")],
+  [/^send_money$/, () => go("yapear")],
+  [/^receipt_long Movimientos$/, () => go("desglose")],
+  [/^local_offer Promos$/, () => toast("Promos: próximamente")],
+  [/^qr_code_scanner$/, () => go("escanear")],
+  [/^notifications$/, () => receive()],
+  [/^headphones Necesito ayuda$/, () => toast("Ayuda: próximamente")],
+];
+
+const RULES = {
+  home: [
+    [/Ver desglose/, () => go("desglose")],
+    [/Organizar/, () => go("gestionar")],
+    [/^send_money Yapear$/, () => { state.draft = {}; go("yapear"); }],
+    [/^qr_code_scanner Escanear$/, () => go("escanear")],
+    [/Mover plata/, () => toast("Mover plata entre billeteras: próximamente")],
+    [/^arrow_forward$/, () => go("mi-qr")],
+    [/^Ver todos$/, () => go("desglose")],
+    [/Nueva Billetera|^add$/, () => go("crear")],
+    [/^edit$/, () => go("gestionar")],
+    [/^Cambiar( expand_more)?$/, () => go("gestionar")],
+    [/^(call_received|call_made|north_east|sync_alt|shopping_cart|savings) /, (el) => el.classList.contains("tx-item") ? go("desglose") : "pass"],
+    [/Continuar al Monto/, (el, win) => {
+      const doc = win.document;
+      const wName = doc.getElementById("send-modal-wallet-name")?.textContent || "Principal";
+      const input = doc.querySelector("#wallet-send-modal input");
+      state.draft = { walletKey: walletKey(wName), recipient: state.draft.contact || (input && input.value) || undefined };
+      go("yapear");
+    }],
+  ],
+  yapear: [
+    [/^arrow_back$/, () => back()],
+    [/^swap_horiz$/, () => go("home")],
+    [/^send_money Yapear/, (el, win) => {
+      const amount = win.eval("getAmount()");
+      const key = win.eval("selectedWalletKey");
+      pay(amount, key, state.draft.recipient || "Lucía Gómez R.");
+    }],
+  ],
+  escanear: [
+    [/^arrow_back$/, () => back()],
+    [/Escanear foto|^image$|photo_library/, () => go("escanear-foto")],
+    [/Otra$/, () => go("crear")],
+    [/Continuar a Pagar/, (el, win) => {
+      const phone = win.document.getElementById("phoneInput")?.value?.trim();
+      state.draft = { qrRecipient: phone ? `Celular ${phone}` : undefined }; save();
+      go("confirmar");
+    }],
+  ],
+  "escanear-foto": [
+    [/^close$/, (el) => el.closest("#walletSheetPanel") || el.id === "closeWalletSheetBtn" ? "pass" : go("home")],
+    [/Vincular otra cuenta/, () => go("crear")],
+    [/Subir foto/, () => { toast("QR detectado en la foto"); state.draft = {}; setTimeout(() => go("confirmar"), 700); }],
+    [/^$/, (el) => { if (el.tagName !== "BUTTON") return "pass"; state.draft = {}; save(); go("confirmar"); }],
+  ],
+  confirmar: [
+    [/^arrow_back$/, () => back()],
+    [/^close$/, () => go("home")],
+    [/^Otros bancos$/, () => toast("Otros bancos: próximamente")],
+    [/^Yapear/, (el, win) => {
+      const amount = parseFloat(win.document.getElementById("amount-text")?.textContent || "0");
+      pay(amount, state.payWallet, state.draft.qrRecipient || "La Tiendita de Don Pepe");
+    }],
+  ],
+  constancia: [[/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; go("yapear"); }]],
+  "constancia-negocio": [[/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; go("yapear"); }]],
+  "te-yapearon": [[/^info$/, () => toast("Verifica que el código coincida con el de quien te yapeó")], [/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; go("yapear"); }]],
+  crear: [
+    [/^arrow_back$/, () => back()],
+    [/^close$/, (el) => el.id === "clearInputBtn" ? "pass" : back()],
+    [/Crear y activar billetera/, (el, win) => {
+      const name = win.document.getElementById("walletNameInput")?.value.trim() || "Mi Nueva Billetera";
+      state.extra = { name, balance: 0 }; save();
+      go("home");
+      setTimeout(() => toast(`Billetera "${name}" creada`), 400);
+    }],
+  ],
+  desglose: [
+    [/^arrow_back$|^close$/, () => go("home")],
+    [/Ver movimientos/, () => go("home")],
+    [/Ver QR de cobro/, () => go("mi-qr")],
+    [/Gestionar meta/, () => go("gestionar")],
+    [/Mover plata/, () => toast("Mover plata entre billeteras: próximamente")],
+    [/Crear nueva billetera/, () => go("crear")],
+    [/^download$/, () => toast("Estado de cuenta descargado (simulado)")],
+  ],
+  gestionar: [
+    [/^arrow_back$|^Listo$/, () => go("home")],
+    [/Crear nueva billetera/, () => go("crear")],
+    [/Guardar cambios/, () => { setTimeout(() => go("home"), 900); return "pass"; }],
+  ],
+};
+RULES["home-nueva"] = RULES.home;
+
+const label = el => (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+
+frame.addEventListener("load", () => {
+  const win = frame.contentWindow, doc = frame.contentDocument;
+  if (!doc) return;
+  const name = current;
+  doc.addEventListener("click", e => {
+    const el = e.target.closest("button, a, [onclick], [role=button], [class*='cursor-pointer'], .tx-item");
+    if (!el) return;
+    const text = label(el);
+    for (const [re, fn] of [...(RULES[name] || []), ...GLOBAL_RULES]) {
+      if (re.test(text)) {
+        const r = fn(el, win);
+        if (r !== "pass") { e.preventDefault(); e.stopImmediatePropagation(); }
+        return;
+      }
+    }
+  }, true);
+  enhance(name, win, doc);
+});
+
+/* ---------- Ajustes por pantalla tras cargar ---------- */
+function enhance(name, win, doc) {
+  // El logo remoto de Stitch no carga: se oculta en vez de mostrar texto roto.
+  doc.querySelectorAll("img[alt*='Logo'], img[alt*='logo']").forEach(img => {
+    const hide = () => { img.style.display = "none"; };
+    if (img.complete && !img.naturalWidth) hide(); else img.addEventListener("error", hide);
+  });
+
+  if (name === "home" || name === "home-nueva") {
+    const wrap = (fn, cb) => { const orig = win[fn]; if (orig) win[fn] = function (...a) { cb(...a); return orig.apply(this, a); }; };
+    wrap("selectQuickContact", contact => { state.draft.contact = contact; });
+    // Movimientos generados en la demo, encima de los de ejemplo.
+    const first = doc.querySelector(".tx-item");
+    if (first) {
+      [...state.txs].reverse().forEach(tx => {
+        const row = first.cloneNode(true);
+        const spans = row.querySelectorAll("span");
+        const icon = row.querySelector(".material-symbols-outlined");
+        if (icon) icon.textContent = tx.amount < 0 ? "call_made" : "call_received";
+        const texts = [...spans].filter(s => !s.classList.contains("material-symbols-outlined") && s.textContent.trim());
+        if (texts[0]) texts[0].textContent = tx.title;
+        if (texts[1]) texts[1].textContent = "Hoy, " + new Date().toLocaleTimeString("es-PE", { hour: "numeric", minute: "2-digit" });
+        if (texts[2]) texts[2].textContent = tx.walletName;
+        if (texts[3]) texts[3].textContent = (tx.amount < 0 ? "- S/ " : "+ S/ ") + fmt(Math.abs(tx.amount));
+        if (texts[4]) texts[4].textContent = tx.detail;
+        row.dataset.wallets = "all " + ({ principal: "principal", cafe: "emprendimiento", vacaciones: "ahorro" }[tx.key] || "");
+        first.parentNode.insertBefore(row, first);
+      });
+    }
+  }
+
+  if (name === "yapear") {
+    if (state.draft.walletKey && state.draft.walletKey !== "extra") { try { win.eval(`selectWallet('${state.draft.walletKey}')`); } catch (e) {} }
+    try { win.eval("updateCalculations()"); } catch (e) {}
+  }
+
+  if (name === "escanear") {
+    const orig = win.selectWallet;
+    if (orig) win.selectWallet = function (btn, wName, bal) { const k = walletKey(wName); if (k) { state.payWallet = k; save(); } return orig.apply(this, arguments); };
+    const feed = doc.getElementById("cameraFeedSim");
+    if (feed) {
+      const area = feed.parentElement;
+      area.style.cursor = "pointer";
+      area.addEventListener("click", e => { if (!e.target.closest("button")) { state.draft = {}; save(); go("confirmar"); } });
+      const hint = doc.createElement("div");
+      hint.textContent = "Toca la cámara para simular el escaneo";
+      hint.style.cssText = "position:absolute;left:50%;top:58%;transform:translateX(-50%);background:#56faeb;color:#00201d;font:700 12px 'Plus Jakarta Sans';padding:6px 12px;border-radius:999px;z-index:5;pointer-events:none;white-space:nowrap";
+      area.appendChild(hint);
+    }
+  }
+
+  if (name === "escanear-foto") {
+    const laser = doc.getElementById("scannerLaser");
+    const area = laser && laser.parentElement;
+    if (area) {
+      area.style.cursor = "pointer";
+      area.addEventListener("click", () => { state.draft = {}; go("confirmar"); });
+    }
+    // La billetera elegida en la hoja inferior se usa para pagar.
+    doc.getElementById("walletSheetPanel")?.addEventListener("click", e => {
+      const b = e.target.closest("button"); const k = b && walletKey(label(b));
+      if (k) { state.payWallet = k; save(); }
+    });
+  }
+
+  if ((name === "constancia" || name === "constancia-negocio") && state.last) {
+    const amountEl = doc.querySelector("[class*='text-[42px]']");
+    if (amountEl) amountEl.textContent = fmtShort(state.last.amount);
+    const nameEl = doc.querySelector("[class*='text-[18px]'].font-bold");
+    if (nameEl) nameEl.textContent = state.last.recipient;
+  }
+}
+
+/* ---------- Panel lateral (solo escritorio) ---------- */
+const JUMPS = [["home", "Inicio · Billeteras"], ["yapear", "Yapear a contacto"], ["escanear", "Escanear QR y pagar"],
+               ["mi-qr", "Mi QR por billetera"], ["desglose", "Desglose de saldo"], ["gestionar", "Organizar billeteras"],
+               ["crear", "Crear billetera"]];
+document.getElementById("jump").innerHTML = JUMPS.map(([k, t]) => `<button data-go="${k}">${t}</button>`).join("");
+document.getElementById("jump").addEventListener("click", e => { const k = e.target.dataset.go; if (k) { state.draft = {}; go(k); } });
+document.getElementById("reset").addEventListener("click", () => { state = structuredClone(DEFAULT_STATE); save(); go("home"); toast("Demo reiniciada"); });
+
+function renderSide() {
+  const rows = Object.values(state.wallets).concat(state.extra ? [state.extra] : []);
+  document.getElementById("balances").innerHTML =
+    rows.map(w => `<div><span>${w.name}</span><b>S/ ${fmt(w.balance)}</b></div>`).join("") +
+    `<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><span>Total</span><b>S/ ${fmt(total())}</b></div>`;
+}
+
+renderSide();
+render();
+</script>
+</body>
+</html>
