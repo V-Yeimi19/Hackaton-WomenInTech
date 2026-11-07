@@ -1,0 +1,47 @@
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Base de datos y artefactos
+*.sqlite3
+*.db
+mica_pgdata/
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Editores / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Auditoria local
+.review-pgdata/
+.mypy_cache*/
+
+.review-*.dump
+backend/test-results.xml
+
+backend/coverage-review.json

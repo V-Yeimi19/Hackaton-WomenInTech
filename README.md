@@ -12,6 +12,8 @@ En la hackatón, una interfaz móvil web representa la experiencia propuesta en 
 
 **Decisión de precisión financiera:** con cobros y pagos se calcula flujo de caja registrado. Sin inventario, costo de ventas, obligaciones y otros ajustes, no se puede afirmar cuánto ganó realmente el negocio. El MVP dice “te quedó de tus cobros después de pagar el negocio”; no presenta ese importe como utilidad contable ni como capacidad de endeudamiento certificada.
 
+> **Backend revisado el 7 de noviembre de 2026:** [instrucciones de ejecución](backend/README.md) y [auditoría con evidencia y pendientes](backend/AUDIT.md). La revisión técnica no acredita integración bancaria ni cierre de las dependencias externas.
+
 ## 1. Visión, problema y usuaria
 
 ### 1.1 Visión

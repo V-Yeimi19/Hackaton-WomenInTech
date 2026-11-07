@@ -1,0 +1,93 @@
+name: mica
+
+x-app-environment: &app-environment
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-mica}:${POSTGRES_PASSWORD:-mica}@db:5432/${POSTGRES_DB:-mica}
+  APP_ENV: ${APP_ENV:-demo}
+  APP_TIMEZONE: ${APP_TIMEZONE:-America/Lima}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-change-me}
+  PHONE_ENCRYPTION_KEY: ${PHONE_ENCRYPTION_KEY:-dev-phone-encryption-key-change-me}
+  PHONE_LOOKUP_KEY: ${PHONE_LOOKUP_KEY:-dev-phone-lookup-key-change-me}
+  SIMULATOR_SIGNING_SECRET: ${SIMULATOR_SIGNING_SECRET:-dev-simulator-secret-change-me}
+  PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+  TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+  TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+  TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-whatsapp:+10000000000}
+  TWILIO_WEBHOOK_PUBLIC_URL: ${TWILIO_WEBHOOK_PUBLIC_URL:-}
+  TWILIO_STATUS_PUBLIC_URL: ${TWILIO_STATUS_PUBLIC_URL:-}
+  MESSAGING_MODE: ${MESSAGING_MODE:-fake}
+  RULES_VERSION: ${RULES_VERSION:-demo-1}
+  WEEKLY_REPORT_LOCAL_TIME: ${WEEKLY_REPORT_LOCAL_TIME:-20:00}
+  STABILITY_WEEKS: ${STABILITY_WEEKS:-8}
+  SALES_DROP_THRESHOLD: ${SALES_DROP_THRESHOLD:-0.30}
+  DEMO_WEEKLY_INSTALLMENT_RATIO: ${DEMO_WEEKLY_INSTALLMENT_RATIO:-0.20}
+  PROCESS_INBOX_INLINE: ${PROCESS_INBOX_INLINE:-false}
+  RUN_SCHEDULER_IN_WORKER: ${RUN_SCHEDULER_IN_WORKER:-true}
+  ENABLE_LLM: ${ENABLE_LLM:-false}
+  ENABLE_TTS: ${ENABLE_TTS:-false}
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["alembic", "upgrade", "head"]
+    environment: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mica}
+      POSTGRES_USER: ${POSTGRES_USER:-mica}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mica}
+      TZ: ${APP_TIMEZONE:-America/Lima}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - mica_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mica} -d ${POSTGRES_DB:-mica}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment: *app-environment
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["python", "-m", "app.jobs.worker"]
+    environment: *app-environment
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  mica_pgdata:

@@ -1,0 +1,2823 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mica · Mi Negocio API",
+    "description": "Backend P0 del monoproducto Mi Negocio: libro financiero, reportes semanales, alertas, oportunidades simuladas y mensajería WhatsApp en modo fake/Twilio.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Live",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Live Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Ready",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/usage-events": {
+      "post": {
+        "tags": [
+          "usage"
+        ],
+        "summary": "Usage",
+        "operationId": "usage_api_v1_usage_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsageEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/education/recommendation": {
+      "get": {
+        "tags": [
+          "education"
+        ],
+        "summary": "Recommendation",
+        "operationId": "recommendation_api_v1_education_recommendation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/sessions": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create Demo Session",
+        "operationId": "create_demo_session_api_v1_demo_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSessionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/channel-link-challenges": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create Channel Link Challenge",
+        "operationId": "create_channel_link_challenge_api_v1_channel_link_challenges_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelLinkChallengeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business/activation": {
+      "post": {
+        "tags": [
+          "business"
+        ],
+        "summary": "Activate Business",
+        "operationId": "activate_business_api_v1_business_activation_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business": {
+      "get": {
+        "tags": [
+          "business"
+        ],
+        "summary": "Get Business",
+        "operationId": "get_business_api_v1_business_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business/balances": {
+      "get": {
+        "tags": [
+          "business"
+        ],
+        "summary": "Get Balances",
+        "operationId": "get_balances_api_v1_business_balances_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalancesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions": {
+      "get": {
+        "tags": [
+          "ledger"
+        ],
+        "summary": "List Transactions",
+        "operationId": "list_transactions_api_v1_transactions_get",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments": {
+      "post": {
+        "tags": [
+          "ledger"
+        ],
+        "summary": "Create Payment",
+        "operationId": "create_payment_api_v1_payments_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/household-transfers": {
+      "post": {
+        "tags": [
+          "ledger"
+        ],
+        "summary": "Create Household Transfer",
+        "operationId": "create_household_transfer_api_v1_household_transfers_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cash-records": {
+      "post": {
+        "tags": [
+          "ledger"
+        ],
+        "summary": "Create Cash Record",
+        "operationId": "create_cash_record_api_v1_cash_records_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CashRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashRecordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/corrections": {
+      "post": {
+        "tags": [
+          "ledger"
+        ],
+        "summary": "Correct Transaction",
+        "operationId": "correct_transaction_api_v1_transactions__transaction_id__corrections_post",
+        "parameters": [
+          {
+            "name": "transaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Transaction Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/classifications": {
+      "get": {
+        "tags": [
+          "classification"
+        ],
+        "summary": "List Classifications",
+        "operationId": "list_classifications_api_v1_classifications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Classifications Api V1 Classifications Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/classifications/{request_id}/resolution": {
+      "post": {
+        "tags": [
+          "classification"
+        ],
+        "summary": "Resolve Classification",
+        "operationId": "resolve_classification_api_v1_classifications__request_id__resolution_post",
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolutionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commitments": {
+      "post": {
+        "tags": [
+          "commitments"
+        ],
+        "summary": "Create Commitment",
+        "operationId": "create_commitment_api_v1_commitments_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitmentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitmentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "commitments"
+        ],
+        "summary": "List Commitments",
+        "operationId": "list_commitments_api_v1_commitments_get",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitmentListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Report",
+        "operationId": "get_report_api_v1_reports_get",
+        "parameters": [
+          {
+            "name": "period_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/preview": {
+      "post": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Preview Report",
+        "operationId": "preview_report_api_v1_reports_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReportPreviewRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/alerts": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "List Alerts",
+        "operationId": "list_alerts_api_v1_alerts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Alerts Api V1 Alerts Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/opportunities/latest": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Latest Opportunity",
+        "operationId": "latest_opportunity_api_v1_opportunities_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Latest Opportunity Api V1 Opportunities Latest Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consents": {
+      "get": {
+        "tags": [
+          "consents"
+        ],
+        "summary": "List Consents",
+        "operationId": "list_consents_api_v1_consents_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConsentOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Consents Api V1 Consents Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consents/{purpose}/grant": {
+      "post": {
+        "tags": [
+          "consents"
+        ],
+        "summary": "Grant Consent",
+        "operationId": "grant_consent_api_v1_consents__purpose__grant_post",
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Purpose"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentGrantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consents/{purpose}/revocation": {
+      "post": {
+        "tags": [
+          "consents"
+        ],
+        "summary": "Revoke Consent",
+        "operationId": "revoke_consent_api_v1_consents__purpose__revocation_post",
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Purpose"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentRevocationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/preferences": {
+      "get": {
+        "tags": [
+          "consents"
+        ],
+        "summary": "Get Preferences",
+        "operationId": "get_preferences_api_v1_preferences_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "consents"
+        ],
+        "summary": "Update Preferences",
+        "operationId": "update_preferences_api_v1_preferences_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/simulator/transactions": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Simulator Webhook",
+        "operationId": "simulator_webhook_api_v1_webhooks_simulator_transactions_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/twilio/whatsapp": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Twilio Whatsapp Webhook",
+        "operationId": "twilio_whatsapp_webhook_api_v1_webhooks_twilio_whatsapp_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/twilio/status": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Twilio Status Webhook",
+        "operationId": "twilio_status_webhook_api_v1_webhooks_twilio_status_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/simulate-sale": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Simulate Sale",
+        "operationId": "simulate_sale_api_v1_demo_simulate_sale_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateSaleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Simulate Sale Api V1 Demo Simulate Sale Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/simulate-whatsapp": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Simulate Whatsapp",
+        "operationId": "simulate_whatsapp_api_v1_demo_simulate_whatsapp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateWhatsappRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Simulate Whatsapp Api V1 Demo Simulate Whatsapp Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/messages": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "List Messages",
+        "operationId": "list_messages_api_v1_demo_messages_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Messages Api V1 Demo Messages Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/inbox": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "List Inbox",
+        "operationId": "list_inbox_api_v1_demo_inbox_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Inbox Api V1 Demo Inbox Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/qr/{token}/sales": {
+      "post": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Simulate Qr Sale",
+        "operationId": "simulate_qr_sale_api_v1_demo_qr__token__sales_post",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateSaleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivationRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "consent_core": {
+            "type": "boolean",
+            "title": "Consent Core"
+          },
+          "consent_whatsapp": {
+            "type": "boolean",
+            "title": "Consent Whatsapp",
+            "default": false
+          },
+          "consent_invitations": {
+            "type": "boolean",
+            "title": "Consent Invitations",
+            "default": false
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version",
+            "default": "demo-1"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "default": "WEB"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "consent_core"
+        ],
+        "title": "ActivationRequest"
+      },
+      "ActivationResponse": {
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/BusinessOut"
+          },
+          "qr_token": {
+            "type": "string",
+            "title": "Qr Token"
+          },
+          "qr_url": {
+            "type": "string",
+            "title": "Qr Url"
+          },
+          "accounts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Accounts"
+          },
+          "whatsapp_consent": {
+            "type": "boolean",
+            "title": "Whatsapp Consent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "business",
+          "qr_token",
+          "qr_url",
+          "accounts",
+          "whatsapp_consent"
+        ],
+        "title": "ActivationResponse"
+      },
+      "BalancesResponse": {
+        "properties": {
+          "business_digital": {
+            "type": "string",
+            "title": "Business Digital"
+          },
+          "household_digital": {
+            "type": "string",
+            "title": "Household Digital"
+          },
+          "cash_declared": {
+            "type": "string",
+            "title": "Cash Declared"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "default": "DEMO"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "business_digital",
+          "household_digital",
+          "cash_declared",
+          "updated_at"
+        ],
+        "title": "BalancesResponse"
+      },
+      "BusinessOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "timezone",
+          "currency",
+          "environment"
+        ],
+        "title": "BusinessOut"
+      },
+      "CashRecordRequest": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SALE",
+              "BUSINESS_PAYMENT"
+            ],
+            "title": "Type"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "amount"
+        ],
+        "title": "CashRecordRequest"
+      },
+      "CashRecordResponse": {
+        "properties": {
+          "transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Transaction Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "balances": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Balances"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_id",
+          "status",
+          "environment",
+          "kind",
+          "amount",
+          "balances",
+          "message"
+        ],
+        "title": "CashRecordResponse"
+      },
+      "ChannelLinkChallengeResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "instructions": {
+            "type": "string",
+            "title": "Instructions",
+            "default": "Envía por WhatsApp el mensaje 'VINCULAR <código>' al número de prueba configurado."
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "expires_at"
+        ],
+        "title": "ChannelLinkChallengeResponse"
+      },
+      "CommitmentCreate": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "payment_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Account Id"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "DIGITAL",
+              "CASH"
+            ],
+            "title": "Medium",
+            "default": "DIGITAL"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "amount",
+          "due_at"
+        ],
+        "title": "CommitmentCreate"
+      },
+      "CommitmentListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CommitmentOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "CommitmentListResponse"
+      },
+      "CommitmentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "payment_account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Payment Account Id"
+          },
+          "paid_transaction_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Transaction Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "amount",
+          "due_at",
+          "source",
+          "status",
+          "payment_account_id"
+        ],
+        "title": "CommitmentOut"
+      },
+      "ConsentGrantRequest": {
+        "properties": {
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version",
+            "default": "demo-1"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "default": "WEB"
+          },
+          "evidence_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Ref"
+          }
+        },
+        "type": "object",
+        "title": "ConsentGrantRequest"
+      },
+      "ConsentOut": {
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
+          "policy_version": {
+            "type": "string",
+            "title": "Policy Version"
+          },
+          "granted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Granted At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purpose",
+          "policy_version",
+          "granted_at",
+          "active"
+        ],
+        "title": "ConsentOut"
+      },
+      "ConsentRevocationRequest": {
+        "properties": {
+          "policy_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Version"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "ConsentRevocationRequest"
+      },
+      "CorrectionRequest": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReplacementIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "CorrectionRequest"
+      },
+      "CorrectionResponse": {
+        "properties": {
+          "original": {
+            "$ref": "#/components/schemas/TransactionOut"
+          },
+          "reversal": {
+            "$ref": "#/components/schemas/TransactionOut"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransactionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "original",
+          "reversal",
+          "message"
+        ],
+        "title": "CorrectionResponse"
+      },
+      "DemoSessionCreate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "risk",
+              "stable"
+            ],
+            "title": "Scenario",
+            "default": "empty"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Teléfono de prueba autorizado para la demo de WhatsApp."
+          }
+        },
+        "type": "object",
+        "title": "DemoSessionCreate"
+      },
+      "DemoSessionResponse": {
+        "properties": {
+          "session_token": {
+            "type": "string",
+            "title": "Session Token"
+          },
+          "csrf_token": {
+            "type": "string",
+            "title": "Csrf Token"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "default": "DEMO"
+          },
+          "scenario": {
+            "type": "string",
+            "title": "Scenario",
+            "default": "empty"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Sesión demo creada. Guarda el token; no se vuelve a mostrar."
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_token",
+          "csrf_token",
+          "expires_at",
+          "user_id"
+        ],
+        "title": "DemoSessionResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PaymentRequest": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "provider": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Provider",
+            "default": "Proveedor Demo"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "commitment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commitment Id"
+          },
+          "ambiguous": {
+            "type": "boolean",
+            "title": "Ambiguous",
+            "default": false
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "title": "PaymentRequest"
+      },
+      "PaymentResponse": {
+        "properties": {
+          "transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Transaction Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "balances": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Balances"
+          },
+          "classification_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification Request Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_id",
+          "status",
+          "environment",
+          "kind",
+          "amount",
+          "balances",
+          "message"
+        ],
+        "title": "PaymentResponse"
+      },
+      "PreferencesOut": {
+        "properties": {
+          "reports_enabled": {
+            "type": "boolean",
+            "title": "Reports Enabled"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "schedule_local": {
+            "type": "string",
+            "title": "Schedule Local"
+          },
+          "invitations_enabled": {
+            "type": "boolean",
+            "title": "Invitations Enabled"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reports_enabled",
+          "format",
+          "schedule_local",
+          "invitations_enabled",
+          "updated_at"
+        ],
+        "title": "PreferencesOut"
+      },
+      "PreferencesPatch": {
+        "properties": {
+          "reports_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reports Enabled"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TEXT",
+                  "AUDIO"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "schedule_local": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{2}:\\d{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Local"
+          },
+          "invitations_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitations Enabled"
+          }
+        },
+        "type": "object",
+        "title": "PreferencesPatch"
+      },
+      "ReplacementIn": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "DIGITAL",
+              "CASH"
+            ],
+            "title": "Medium",
+            "default": "DIGITAL"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "title": "ReplacementIn"
+      },
+      "ReportListResponse": {
+        "properties": {
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReportOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revisions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Revisions"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report",
+          "revisions"
+        ],
+        "title": "ReportListResponse"
+      },
+      "ReportOut": {
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Report Id"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Period End"
+          },
+          "data_cutoff_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Data Cutoff At"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "rules_version": {
+            "type": "string",
+            "title": "Rules Version"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "quality": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Quality"
+          },
+          "primary_alert": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Alert"
+          },
+          "advice_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advice Code"
+          },
+          "opportunity": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Opportunity"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report_id",
+          "environment",
+          "kind",
+          "period_start",
+          "period_end",
+          "data_cutoff_at",
+          "revision",
+          "rules_version",
+          "metrics",
+          "quality",
+          "opportunity",
+          "text"
+        ],
+        "title": "ReportOut"
+      },
+      "ReportPreviewRequest": {
+        "properties": {
+          "cutoff_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cutoff At"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "PRELIMINARY",
+              "WEEKLY_FINAL"
+            ],
+            "title": "Kind",
+            "default": "AUTO"
+          }
+        },
+        "type": "object",
+        "title": "ReportPreviewRequest"
+      },
+      "ReportResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/ReportOut"
+          },
+          "revisions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Revisions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "report",
+          "revisions"
+        ],
+        "title": "ReportResponse"
+      },
+      "ResolutionRequest": {
+        "properties": {
+          "option": {
+            "type": "string",
+            "enum": [
+              "BUSINESS_PAYMENT",
+              "HOUSEHOLD_WITHDRAWAL"
+            ],
+            "title": "Option"
+          },
+          "expected_version": {
+            "type": "integer",
+            "title": "Expected Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "option",
+          "expected_version"
+        ],
+        "title": "ResolutionRequest"
+      },
+      "ResolutionResponse": {
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/TransactionOut"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction",
+          "status",
+          "version",
+          "message"
+        ],
+        "title": "ResolutionResponse"
+      },
+      "SimulateSaleRequest": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount",
+            "description": "Importe decimal como cadena, por ejemplo 120.00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "title": "SimulateSaleRequest"
+      },
+      "SimulateWhatsappRequest": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "body"
+        ],
+        "title": "SimulateWhatsappRequest"
+      },
+      "TransactionListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TransactionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "TransactionListResponse"
+      },
+      "TransactionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "medium": {
+            "type": "string",
+            "title": "Medium",
+            "default": "DIGITAL"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "classification_source": {
+            "type": "string",
+            "title": "Classification Source"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "reversal_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reversal Of"
+          },
+          "replacement_for": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement For"
+          },
+          "adjustment_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjustment Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "amount",
+          "currency",
+          "status",
+          "source",
+          "environment",
+          "classification_source",
+          "occurred_at"
+        ],
+        "title": "TransactionOut"
+      },
+      "TransferRequest": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "PEN"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "BUSINESS_TO_HOME",
+              "HOME_TO_BUSINESS"
+            ],
+            "title": "Direction"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "direction"
+        ],
+        "title": "TransferRequest"
+      },
+      "TransferResponse": {
+        "properties": {
+          "transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Transaction Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "balances": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Balances"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transaction_id",
+          "status",
+          "environment",
+          "kind",
+          "amount",
+          "balances",
+          "message"
+        ],
+        "title": "TransferResponse"
+      },
+      "UsageEvent": {
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "REPORT_OPENED",
+              "BALANCES_OPENED",
+              "EDUCATION_OPENED",
+              "INVITATION_OPENED"
+            ],
+            "title": "Event"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event"
+        ],
+        "title": "UsageEvent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
