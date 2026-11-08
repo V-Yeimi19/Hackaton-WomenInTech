@@ -101,7 +101,7 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
           <span className="rounded bg-secondary-fixed px-1.5 text-[10px] font-extrabold uppercase text-on-secondary-fixed">Nuevo</span></p>
         <div className="no-scrollbar mt-2 flex snap-x snap-mandatory gap-2 overflow-x-auto">
           {MICA_ADS.map((ad) => (
-            <button key={ad.key} type="button" onClick={() => toast(ad.toast)}
+            <button key={ad.key} type="button" onClick={() => ad.key === "agent" ? router.push("/mica") : toast(ad.toast)}
               className={`flex w-[86%] shrink-0 snap-start items-center gap-2.5 rounded-xl p-2.5 text-left text-on-surface ${ad.bg}`}>
               {ad.avatar ? <Image src="/mica-avatar.jpg" alt="" width={44} height={44} className="h-11 w-11 rounded-full object-cover" /> : (
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/70 text-primary-container"><Icon name={ad.icon!} className="text-[24px]" /></span>

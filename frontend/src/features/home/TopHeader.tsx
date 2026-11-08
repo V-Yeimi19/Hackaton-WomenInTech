@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/Icon";
@@ -90,6 +91,7 @@ const PROMOS = [
 ];
 
 function PromoCarousel() {
+  const router = useRouter();
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
@@ -110,7 +112,7 @@ function PromoCarousel() {
     <div className="mt-6">
       <div ref={track} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto px-4">
         {PROMOS.map((p) => (
-          <div key={p.title} className={`flex h-36 w-[88%] shrink-0 snap-center items-center gap-2 overflow-hidden rounded-[20px] p-4 ${p.bg}`}>
+          <div key={p.title} className={`relative flex h-36 w-[88%] shrink-0 snap-center items-center gap-2 overflow-hidden rounded-[20px] p-4 ${p.bg}`}>
             <div className="min-w-0 flex-1">
               <span className={clsx("inline-block rounded-full px-2 py-0.5 text-[11px] font-bold leading-4", p.avatar ? "bg-secondary-container text-on-secondary-container" : "bg-primary-container text-on-primary")}>{p.tag}</span>
               <p className={clsx("mt-2 text-[18px] font-bold leading-[22px]", p.tag === "Mi Negocio" ? "text-[#002c2b]" : "text-primary-container")}>{p.title}</p>
@@ -121,6 +123,7 @@ function PromoCarousel() {
             ) : (
               <Icon name={p.icon!} filled size={64} className="shrink-0 text-primary-container" />
             )}
+            {p.avatar && <button type="button" aria-label="Hablar con Mica" onClick={() => router.push("/mica")} className="absolute inset-0 rounded-[20px] focus-visible:outline-2 focus-visible:outline-primary" />}
           </div>
         ))}
       </div>

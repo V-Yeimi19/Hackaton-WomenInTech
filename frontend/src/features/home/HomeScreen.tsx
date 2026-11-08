@@ -92,7 +92,7 @@ export function HomeScreen() {
 
       <MovementsPanel wallets={wallets} />
 
-      <BottomBar onYapear={() => setOverlay({ kind: "picker" })} onAgent={() => setOverlay({ kind: "mica" })} hideAgent={overlay !== null} />
+      <BottomBar onYapear={() => setOverlay({ kind: "picker" })} onAgent={() => router.push("/mica")} hideAgent={overlay !== null} />
 
       <SideMenu open={overlay?.kind === "menu"} onClose={close} onMica={() => setOverlay({ kind: "mica" })} />
       <MicaSheet open={overlay?.kind === "mica"} onClose={close} />
