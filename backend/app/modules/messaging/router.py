@@ -1,4 +1,4 @@
-"""Webhooks del simulador y de Twilio WhatsApp."""
+"""Webhooks del simulador, de Twilio WhatsApp y de Telegram."""
 
 from __future__ import annotations
 
@@ -15,7 +15,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.errors import AppError
-from app.core.security import verify_simulator_signature, verify_twilio_signature
+from app.core.security import (
+    verify_simulator_signature,
+    verify_telegram_secret,
+    verify_twilio_signature,
+)
 from app.db.base import utcnow
 from app.db.session import get_db
 from app.modules.messaging import service as messaging_service
@@ -101,6 +105,8 @@ async def twilio_whatsapp_webhook(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    if not settings.whatsapp_enabled:
+        raise AppError("CHANNEL_DISABLED", "WhatsApp no está activo.", 404)
     form = await request.form()
     params = {key: str(value) for key, value in form.items()}
     signature = request.headers.get("X-Twilio-Signature", "")
@@ -139,6 +145,38 @@ async def twilio_whatsapp_webhook(
         messaging_service.deliver_pending(db)
 
     return Response(content="<Response/>", media_type="application/xml", status_code=200)
+
+
+@router.post("/webhooks/telegram")
+async def telegram_webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    if not settings.telegram_enabled:
+        raise AppError("CHANNEL_DISABLED", "Telegram no está activo.", 404)
+    if not verify_telegram_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")):
+        raise AppError("INVALID_SIGNATURE", "Token secreto de Telegram inválido.", 403)
+    try:
+        update = await request.json()
+    except ValueError as exc:
+        raise AppError("INVALID_PAYLOAD", "JSON inválido.", 422) from exc
+    if not isinstance(update, dict) or "update_id" not in update:
+        raise AppError("INVALID_PAYLOAD", "Falta update_id.", 422)
+
+    try:
+        event, duplicate = messaging_service.persist_inbound(
+            db,
+            provider="telegram",
+            event_id=str(update["update_id"]),
+            payload=update,
+        )
+    except SQLAlchemyError:
+        return Response(status_code=503, content="Retry later")
+
+    if not duplicate and settings.process_inbox_inline:
+        messaging_service.process_inbound(db, event)
+        messaging_service.deliver_pending(db)
+    return Response(status_code=200)
 
 
 @router.post("/webhooks/twilio/status")

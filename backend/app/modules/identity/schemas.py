@@ -33,6 +33,8 @@ class DemoSessionResponse(BaseModel):
 class ChannelLinkChallengeResponse(BaseModel):
     code: str
     expires_at: datetime
+    channel: Literal["whatsapp", "telegram"] = "whatsapp"
+    telegram_url: str | None = None
     instructions: str = (
         "Envía por WhatsApp el mensaje 'VINCULAR <código>' al número de prueba configurado."
     )

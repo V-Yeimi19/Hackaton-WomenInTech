@@ -14,6 +14,8 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.rate_limit import enforce
 from app.core.security import (
+    channel_address,
+    channel_lookup_hash,
     decrypt_phone,
     encrypt_phone,
     hash_token,
@@ -93,8 +95,10 @@ def consume_link_challenge(
     *,
     commit: bool = True,
 ) -> tuple[Business, ChannelLink]:
-    normalized = normalize_phone(phone)
-    enforce(db, phone_lookup_hash(normalized), "consume-link", 5, seconds=600)
+    """Vincula una dirección del canal (teléfono o chat_id de Telegram) al negocio."""
+    normalized = channel_address(provider, phone)
+    lookup = channel_lookup_hash(provider, normalized)
+    enforce(db, lookup, "consume-link", 5, seconds=600)
     challenge = db.scalar(
         select(LinkChallenge)
         .where(LinkChallenge.code_hash == hash_token(code.strip()))
@@ -116,7 +120,6 @@ def consume_link_challenge(
     if business is None:
         raise AppError("BUSINESS_NOT_ACTIVATED", "Primero activa Mi Negocio.", 409)
 
-    lookup = phone_lookup_hash(normalized)
     link = db.scalar(
         select(ChannelLink).where(
             ChannelLink.provider == provider,
@@ -165,7 +168,7 @@ def find_link_by_phone(
     environment: str | None = None,
 ) -> ChannelLink | None:
     try:
-        lookup = phone_lookup_hash(phone)
+        lookup = channel_lookup_hash(provider, phone)
     except ValueError:
         return None
     conditions = [

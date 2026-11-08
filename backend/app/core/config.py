@@ -46,6 +46,19 @@ class Settings(BaseSettings):
     payment_limit_pen: int = 500
     daily_limit_pen: int = 2000
 
+    # Canales de mensajería: se activan por separado. Mientras WhatsApp espera
+    # las verificaciones de Meta/Twilio, la demo usa Telegram.
+    whatsapp_enabled: bool = False
+    telegram_enabled: bool = True
+
+    # Telegram (sin token, los envíos se simulan)
+    telegram_bot_token: str = ""
+    telegram_bot_username: str = ""
+    # Si se configura, el webhook exige la cabecera X-Telegram-Bot-Api-Secret-Token.
+    telegram_webhook_secret: str = ""
+    # El worker consulta getUpdates (útil en local, sin URL pública ni webhook).
+    telegram_polling: bool = True
+
     # Twilio / WhatsApp
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""

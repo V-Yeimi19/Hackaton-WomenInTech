@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.core.deps import AuthContext, get_auth_context
 from app.core.rate_limit import enforce
 from app.db.session import get_db
+from app.integrations import telegram_gateway
 from app.modules.demo import service as demo_service
 from app.modules.identity import service as identity_service
 from app.modules.identity.schemas import (
@@ -79,7 +80,19 @@ def create_channel_link_challenge(
 ) -> ChannelLinkChallengeResponse:
     enforce(db, str(ctx.session.id), "link-challenges", 5)
     challenge, code = identity_service.create_link_challenge(db, ctx.session)
-    return ChannelLinkChallengeResponse(code=code, expires_at=challenge.expires_at)
+    if settings.telegram_enabled and not settings.whatsapp_enabled:
+        return ChannelLinkChallengeResponse(
+            code=code,
+            expires_at=challenge.expires_at,
+            channel="telegram",
+            telegram_url=telegram_gateway.deep_link(code),
+            instructions="Abre el enlace y toca «Iniciar» en Telegram para vincular tu cuenta.",
+        )
+    return ChannelLinkChallengeResponse(
+        code=code,
+        expires_at=challenge.expires_at,
+        telegram_url=telegram_gateway.deep_link(code) if settings.telegram_enabled else None,
+    )
 
 
 def _set_session_cookies(response: Response, token: str, csrf: str) -> None:

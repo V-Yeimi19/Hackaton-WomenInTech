@@ -1635,6 +1635,25 @@
         }
       }
     },
+    "/api/v1/webhooks/telegram": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Telegram Webhook",
+        "operationId": "telegram_webhook_api_v1_webhooks_telegram_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/webhooks/twilio/status": {
       "post": {
         "tags": [
@@ -2128,6 +2147,26 @@
             "type": "string",
             "format": "date-time",
             "title": "Expires At"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "whatsapp",
+              "telegram"
+            ],
+            "title": "Channel",
+            "default": "whatsapp"
+          },
+          "telegram_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Url"
           },
           "instructions": {
             "type": "string",
