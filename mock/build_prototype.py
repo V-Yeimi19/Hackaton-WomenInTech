@@ -10,6 +10,7 @@ billeteras, último pago) y conecta los botones de cada pantalla con el resto.
 
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 
@@ -28,15 +29,24 @@ SCREENS = {
     "constancia": "constancia_yape_yapeaste",
     "constancia-negocio": "constancia_yape_pago_desde_emprendimiento_caf",
     "te-yapearon": "constancia_de_yapeo_exitoso",
-    "crear": "crear_nueva_billetera",
+    # "crear" es la pantalla propia screens/crear.html; la de Stitch queda sin enlace.
+    "crear-original": "crear_nueva_billetera",
     "desglose": "desglose_de_saldo_consolidado",
-    "gestionar": "gestionar_y_ordenar_billeteras",
     "mi-qr": "mi_qr_por_billetera",
+    # Pantallas disponibles por URL (#nombre) pero sin enlace desde Inicio.
+    "gestionar": "gestionar_y_ordenar_billeteras",
 }
 
 
 def main() -> None:
     screens = {name: (SRC / folder / "code.html").read_text(encoding="utf-8") for name, folder in SCREENS.items()}
+    # Pantallas propias (no exportadas de Stitch): reutilizan el <head> con la config de Tailwind.
+    head = screens["home"][: screens["home"].index("<body")]
+    for file in sorted((ROOT / "screens").glob("*.html")):
+        screens[file.stem] = file.read_text(encoding="utf-8").replace("<!--STITCH_HEAD-->", head)
+    # Imágenes locales incrustadas para que index.html siga siendo un solo archivo.
+    avatar = "data:image/jpeg;base64," + base64.b64encode((ROOT / "assets" / "mica-avatar.jpg").read_bytes()).decode()
+    screens = {k: v.replace("__MICA_AVATAR__", avatar) for k, v in screens.items()}
     template = (ROOT / "prototype_shell.html").read_text(encoding="utf-8")
     payload = json.dumps(screens, ensure_ascii=False).replace("</", "<\\/")
     OUT.write_text(template.replace("/*__SCREENS__*/{}", payload), encoding="utf-8")

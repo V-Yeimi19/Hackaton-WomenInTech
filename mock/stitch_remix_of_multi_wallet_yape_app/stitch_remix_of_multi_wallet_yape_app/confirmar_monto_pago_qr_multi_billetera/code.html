@@ -28,7 +28,7 @@
 
     <!-- Recipient and Multi-wallet Selector -->
     <div class="flex flex-col items-center mt-6 px-4 text-center">
-      <h1 class="text-[24px] font-extrabold text-primary-container leading-tight tracking-tight">La Tiendita de Don Pepe</h1>
+      <h1 id="recipient-name" class="text-[24px] font-extrabold text-primary-container leading-tight tracking-tight">La Tiendita de Don Pepe</h1>
       
       <!-- Subtle Multi-Wallet Selector Badge -->
       <button id="open-wallet-sheet" type="button" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors active:scale-95">
@@ -42,7 +42,7 @@
     <div class="flex flex-col items-center mt-8">
       <div class="flex items-baseline justify-center gap-1.5 relative">
         <span class="text-[34px] font-extrabold text-primary-fixed-dim select-none tracking-tight">S/</span>
-        <span id="amount-text" class="text-[68px] leading-none font-bold text-primary-container tracking-tight">25</span>
+        <span id="amount-text" class="text-[68px] leading-none font-bold text-primary-container tracking-tight">0</span>
         <span id="cursor-indicator" class="inline-block w-[3px] h-14 bg-primary-container ml-0.5 animate-pulse -mb-1"></span>
       </div>
 
@@ -52,12 +52,12 @@
       </div>
 
       <!-- Message Section / Selector -->
-      <div class="mt-6 w-full max-w-xs px-4 flex flex-col items-center" id="msg-section"><div id="note-input-wrapper" class="relative w-full max-w-[260px] pb-1 border-b border-outline-variant/40 transition-colors focus-within:border-primary-container flex items-center justify-center"><div id="note-placeholder" class="absolute inset-0 flex items-center justify-center gap-1.5 text-on-surface-variant/70 text-body-md pointer-events-none select-none transition-opacity"><span class="material-symbols-outlined text-[18px] text-on-surface-variant/70">edit_note</span><span class="font-medium text-body-md text-on-surface-variant/70">Agregar mensaje</span></div><input id="tx-note" type="text" maxlength="40" class="w-full text-center bg-transparent py-1 text-on-surface font-medium text-body-md outline-none border-none tracking-normal" autocomplete="off" value=""><button id="clear-note-btn" type="button" class="absolute right-0 text-outline hover:text-on-surface hidden p-0.5 active:opacity-60"><span class="material-symbols-outlined text-[16px]">cancel</span></button></div><div id="chips-drawer" class="flex flex-col items-center gap-1.5 mt-3 transition-all duration-200"><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="📦 Para volver a surtir"><span class="">📦</span><span class="">Para volver a surtir</span></button><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="💡 Para pagar local/servicios"><span class="">💡</span><span class="">Para pagar local/servicios</span></button><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="👨‍👩‍👧 Para mí o mi familia"><span class="">👨‍👩‍👧</span><span class="">Para mí o mi familia</span></button></div></div>
+      <div class="mt-6 w-full max-w-xs px-4 flex flex-col items-center" id="msg-section"><div id="note-input-wrapper" class="relative w-full max-w-[260px] pb-1 border-b border-outline-variant/40 transition-colors focus-within:border-primary-container flex items-center justify-center"><div id="note-placeholder" class="absolute inset-0 flex items-center justify-center gap-1.5 text-on-surface-variant/70 text-body-md pointer-events-none select-none transition-opacity"><span class="material-symbols-outlined text-[18px] text-on-surface-variant/70">edit_note</span><span class="font-medium text-body-md text-on-surface-variant/70">Agregar mensaje</span></div><input id="tx-note" type="text" maxlength="40" class="w-full text-center bg-transparent py-1 text-on-surface font-medium text-body-md outline-none border-none tracking-normal" autocomplete="off" value=""><button id="clear-note-btn" type="button" class="absolute right-0 text-outline hover:text-on-surface hidden p-0.5 active:opacity-60"><span class="material-symbols-outlined text-[16px]">cancel</span></button></div><div id="chips-drawer" class="flex flex-col items-center gap-1.5 mt-3 transition-all duration-200"><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="📦 Para volver a surtir"><span class="">📦</span><span class="">Para volver a surtir</span></button><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="💡 Para pagar local/servicios/ayudantes"><span class="">💡</span><span class="">Para pagar local/servicios/ayudantes</span></button><button type="button" class="category-chip text-[12px] font-medium px-3.5 py-1 rounded-full border border-outline-variant/30 bg-surface-container-low hover:bg-surface-container text-on-surface transition-all active:scale-95 flex items-center gap-1.5 shadow-sm" data-category="👨‍👩‍👧 Para mí o mi familia"><span class="">👨‍👩‍👧</span><span class="">Para mí o mi familia</span></button></div></div>
     </div>
   </div>
 
   <!-- Bottom Half: Action Buttons & Keypad -->
-  <script>(() => { const noteInput = document.getElementById('tx-note'); const placeholder = document.getElementById('note-placeholder'); const clearBtn = document.getElementById('clear-note-btn'); const chips = document.querySelectorAll('.category-chip'); if (!noteInput || !placeholder) return; function updateDisplay() { const val = noteInput.value.trim(); if (val !== '') { placeholder.classList.add('opacity-0'); if (clearBtn) clearBtn.classList.remove('hidden'); } else { placeholder.classList.remove('opacity-0'); if (clearBtn) clearBtn.classList.add('hidden'); } chips.forEach(chip => { const cat = chip.getAttribute('data-category'); if (cat === val) { chip.classList.add('bg-primary-container', 'text-surface-container-lowest', 'border-primary-container'); chip.classList.remove('bg-surface-container-low', 'text-on-surface', 'border-outline-variant/30'); } else { chip.classList.remove('bg-primary-container', 'text-surface-container-lowest', 'border-primary-container'); chip.classList.add('bg-surface-container-low', 'text-on-surface', 'border-outline-variant/30'); } }); } noteInput.addEventListener('focus', () => { placeholder.classList.add('opacity-30'); }); noteInput.addEventListener('blur', () => { updateDisplay(); }); noteInput.addEventListener('input', () => { updateDisplay(); }); chips.forEach(chip => { chip.addEventListener('click', () => { const cat = chip.getAttribute('data-category'); if (noteInput.value === cat) { noteInput.value = ''; } else { noteInput.value = cat; } updateDisplay(); }); }); if (clearBtn) { clearBtn.addEventListener('click', () => { noteInput.value = ''; updateDisplay(); noteInput.focus(); }); } updateDisplay(); })();</script><div class="w-full mt-4 flex flex-col">
+  <script>(() => { const noteInput = document.getElementById('tx-note'); const placeholder = document.getElementById('note-placeholder'); const clearBtn = document.getElementById('clear-note-btn'); const chips = document.querySelectorAll('.category-chip'); if (!noteInput || !placeholder) return; function updateDisplay() { const val = noteInput.value.trim(); if (val !== '') { placeholder.classList.add('opacity-0'); if (clearBtn) clearBtn.classList.remove('hidden'); } else { placeholder.classList.remove('opacity-0'); if (clearBtn) clearBtn.classList.add('hidden'); } chips.forEach(chip => { const cat = chip.getAttribute('data-category'); if (cat === val) { chip.classList.add('bg-primary-container', 'text-surface-container-lowest', 'border-primary-container'); chip.classList.remove('bg-surface-container-low', 'text-on-surface', 'border-outline-variant/30'); } else { chip.classList.remove('bg-primary-container', 'text-surface-container-lowest', 'border-primary-container'); chip.classList.add('bg-surface-container-low', 'text-on-surface', 'border-outline-variant/30'); } }); } noteInput.addEventListener('focus', () => { placeholder.classList.add('opacity-30'); }); noteInput.addEventListener('blur', () => { updateDisplay(); }); noteInput.addEventListener('input', () => { updateDisplay(); }); const lock = on => { noteInput.readOnly = on; noteInput.classList.toggle('text-primary-container', on); noteInput.classList.toggle('cursor-default', on); noteInput.setAttribute('aria-readonly', on ? 'true' : 'false'); }; chips.forEach(chip => { chip.addEventListener('click', () => { const cat = chip.getAttribute('data-category'); if (noteInput.value === cat) { noteInput.value = ''; lock(false); } else { noteInput.value = cat; lock(true); } updateDisplay(); }); }); if (clearBtn) { clearBtn.addEventListener('click', () => { noteInput.value = ''; noteInput.readOnly = false; noteInput.classList.remove('text-primary-container', 'cursor-default'); updateDisplay(); noteInput.focus(); }); } updateDisplay(); })();</script><div class="w-full mt-4 flex flex-col">
     <!-- Action Buttons (Otros bancos & Yapear) exactly like reference image -->
     <div class="px-4 mb-4 grid grid-cols-2 gap-3 max-w-sm mx-auto w-full">
       <button type="button" class="w-full h-12 rounded-xl border-2 border-secondary text-secondary font-headline-sm text-[15px] font-bold flex items-center justify-center bg-surface-container-lowest active:scale-95 transition-all shadow-sm">
@@ -116,8 +116,8 @@
           <span class="text-[22px] font-bold leading-none">9</span>
           <span class="text-[9px] font-bold text-on-surface/60 leading-none tracking-widest">WXYZ</span>
         </button>
-        <!-- Empty Left spacer -->
-        <div class="h-12"></div>
+        <!-- Punto decimal -->
+        <button type="button" data-key="." aria-label="Punto decimal" class="pad-key h-12 rounded-lg flex items-center justify-center text-[26px] font-bold text-on-surface active:bg-surface-variant transition-colors">.</button>
         <!-- 0 -->
         <button type="button" class="pad-key h-12 rounded-lg bg-surface-container-lowest shadow-[0_1px_2px_rgba(0,0,0,0.1)] flex items-center justify-center active:bg-surface-variant transition-colors" data-key="0">
           <span class="text-[22px] font-bold leading-none">0</span>
@@ -133,331 +133,40 @@
   </div>
 </div>
 
+
+</main>
+
+
+
+
+
+
 <script>
-  (() => {
-    let currentAmountStr = "25";
-    let isFresh = true;
-
-    const amountDisplay = document.getElementById("amount-text");
-    const payBtn = document.getElementById("pay-submit-btn");
-    const toggleMsgBtn = document.getElementById("btn-toggle-msg");
-    const msgContainer = document.getElementById("msg-container");
-
-    if (toggleMsgBtn && msgContainer) {
-      toggleMsgBtn.addEventListener("click", () => {
-        msgContainer.classList.toggle("hidden");
-        msgContainer.classList.toggle("flex");
-      });
+(() => {
+  // Teclado de monto: dígitos, punto decimal (máx. 2 decimales) y borrar. También acepta el teclado físico.
+  const amountEl = document.getElementById('amount-text');
+  let cur = '0';
+  const paint = () => { amountEl.textContent = cur; };
+  function press(key) {
+    if (key === 'backspace') { cur = cur.slice(0, -1) || '0'; }
+    else if (key === '.') { if (!cur.includes('.')) cur += '.'; }
+    else {
+      const [int, dec] = cur.split('.');
+      if (dec !== undefined) { if (dec.length < 2) cur += key; }
+      else if (cur === '0') cur = key;
+      else if (int.length < 4) cur += key;
     }
-
-    function updateAmountUI() {
-      if (!currentAmountStr || currentAmountStr === "") {
-        amountDisplay.textContent = "0";
-      } else {
-        amountDisplay.textContent = currentAmountStr;
-      }
-    }
-
-    document.querySelectorAll(".pad-key").forEach((keyBtn) => {
-      keyBtn.addEventListener("click", () => {
-        const key = keyBtn.getAttribute("data-key");
-        if (!key) return;
-        
-        if (isFresh) {
-          currentAmountStr = "";
-          isFresh = false;
-        }
-
-        if (key === "backspace") {
-          currentAmountStr = currentAmountStr.slice(0, -1);
-          if (currentAmountStr === "") currentAmountStr = "0";
-        } else {
-          if (currentAmountStr === "0") {
-            currentAmountStr = key;
-          } else {
-            if (currentAmountStr.length < 6) {
-              currentAmountStr += key;
-            }
-          }
-        }
-        updateAmountUI();
-      });
-    });
-
-    // Multi-Wallet Modal Logic
-    const backdrop = document.getElementById("wallet-sheet-backdrop");
-    const sheetPanel = document.getElementById("wallet-sheet-panel");
-    const openSheetBtn = document.getElementById("open-wallet-sheet");
-    const closeSheetBtn = document.getElementById("close-wallet-sheet");
-    const confirmWalletBtn = document.getElementById("confirm-wallet-selection");
-
-    function openModal() {
-      if (!backdrop) return;
-      backdrop.classList.remove("hidden");
-      setTimeout(() => {
-        backdrop.classList.remove("opacity-0");
-        sheetPanel.classList.remove("translate-y-full");
-      }, 10);
-    }
-
-    function closeModal() {
-      if (!backdrop) return;
-      backdrop.classList.add("opacity-0");
-      sheetPanel.classList.add("translate-y-full");
-      setTimeout(() => {
-        backdrop.classList.add("hidden");
-      }, 300);
-    }
-
-    if (openSheetBtn) openSheetBtn.addEventListener("click", openModal);
-    if (closeSheetBtn) closeSheetBtn.addEventListener("click", closeModal);
-    if (backdrop) {
-      backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) closeModal();
-      });
-    }
-
-    const walletOptions = document.querySelectorAll(".wallet-option");
-    let selectedOptionEl = document.querySelector('.wallet-option[data-wallet-id="negocio"]');
-    walletOptions.forEach((option) => {
-      option.addEventListener("click", () => {
-        walletOptions.forEach((opt) => {
-          opt.classList.remove("bg-surface-container-low", "ring-2", "ring-primary-container");
-          opt.classList.add("bg-surface-container-lowest");
-          const radio = opt.querySelector(".wallet-radio");
-          if (radio) {
-            radio.className = "wallet-radio w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center";
-            radio.innerHTML = "";
-          }
-        });
-
-        option.classList.remove("bg-surface-container-lowest");
-        option.classList.add("bg-surface-container-low", "ring-2", "ring-primary-container");
-        const radio = option.querySelector(".wallet-radio");
-        if (radio) {
-          radio.className = "wallet-radio w-6 h-6 rounded-full border-2 border-primary-container flex items-center justify-center";
-          radio.innerHTML = '<span class="w-3 h-3 rounded-full bg-secondary-fixed"></span>';
-        }
-        selectedOptionEl = option;
-      });
-    });
-
-    if (confirmWalletBtn) {
-      confirmWalletBtn.addEventListener("click", () => {
-        if (selectedOptionEl) {
-          const name = selectedOptionEl.getAttribute("data-wallet-name");
-          const bal = selectedOptionEl.getAttribute("data-balance");
-          const nameEl = document.getElementById("active-wallet-name");
-          const balEl = document.getElementById("active-wallet-balance");
-          if (nameEl) nameEl.textContent = name;
-          if (balEl) balEl.textContent = `S/ ${bal}`;
-        }
-        closeModal();
-      });
-    }
-
-    if (payBtn) {
-      payBtn.addEventListener("click", () => {
-        payBtn.classList.add("scale-95");
-        const original = payBtn.innerHTML;
-        payBtn.innerHTML = '<span>¡Yapeado!</span>';
-        setTimeout(() => {
-          payBtn.classList.remove("scale-95");
-          payBtn.innerHTML = original;
-        }, 1200);
-      });
-    }
-  })();
+    paint();
+  }
+  document.querySelectorAll('.pad-key').forEach(b => b.addEventListener('click', () => press(b.getAttribute('data-key'))));
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (/^[0-9]$/.test(e.key)) press(e.key);
+    else if (e.key === '.' || e.key === ',') press('.');
+    else if (e.key === 'Backspace') press('backspace');
+    else if (e.key === 'Enter') document.getElementById('pay-submit-btn').click();
+  });
+  paint();
+})();
 </script>
-<script>
-  (() => {
-    // Current input string state
-    let currentAmountStr = "15.00";
-    let isFresh = true; // resets on first pad press if desired
-
-    const amountDisplay = document.getElementById("amount-text");
-    const payBtnText = document.getElementById("pay-btn-text");
-    const payBtn = document.getElementById("pay-submit-btn");
-
-    function updateAmountUI() {
-      if (!currentAmountStr || currentAmountStr === "") {
-        currentAmountStr = "0.00";
-      }
-      amountDisplay.textContent = currentAmountStr;
-      payBtnText.textContent = `Yapear S/ ${currentAmountStr}`;
-    }
-
-    // Number Pad Interactions
-    document.querySelectorAll(".pad-key").forEach((keyBtn) => {
-      keyBtn.addEventListener("click", () => {
-        const key = keyBtn.getAttribute("data-key");
-        
-        if (isFresh) {
-          currentAmountStr = "";
-          isFresh = false;
-        }
-
-        if (key === "backspace") {
-          currentAmountStr = currentAmountStr.slice(0, -1);
-          if (currentAmountStr === "") currentAmountStr = "0";
-        } else if (key === ".") {
-          if (!currentAmountStr.includes(".")) {
-            currentAmountStr = (currentAmountStr === "" ? "0" : currentAmountStr) + ".";
-          }
-        } else {
-          // Check decimals limit (max 2 digits after dot)
-          if (currentAmountStr.includes(".")) {
-            const parts = currentAmountStr.split(".");
-            if (parts[1] && parts[1].length >= 2) return;
-          }
-          // Prevent leading extra zeros
-          if (currentAmountStr === "0" && key !== ".") {
-            currentAmountStr = key;
-          } else {
-            if (currentAmountStr.length < 8) {
-              currentAmountStr += key;
-            }
-          }
-        }
-        updateAmountUI();
-      });
-    });
-
-    // Quick suggestion pills
-    document.querySelectorAll(".quick-chip").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        const val = chip.getAttribute("data-val");
-        currentAmountStr = `${val}.00`;
-        isFresh = false;
-        updateAmountUI();
-      });
-    });
-
-    // Business Expense Toggle
-    const expenseToggleBtn = document.getElementById("expense-toggle-btn");
-    const expenseToggleDot = document.getElementById("expense-toggle-dot");
-    let isBusinessExpense = true;
-
-    expenseToggleBtn.addEventListener("click", () => {
-      isBusinessExpense = !isBusinessExpense;
-      if (isBusinessExpense) {
-        expenseToggleBtn.classList.remove("bg-surface-container-high");
-        expenseToggleBtn.classList.add("bg-primary-container");
-        expenseToggleDot.classList.remove("translate-x-0");
-        expenseToggleDot.classList.add("translate-x-4");
-      } else {
-        expenseToggleBtn.classList.remove("bg-primary-container");
-        expenseToggleBtn.classList.add("bg-surface-container-high");
-        expenseToggleDot.classList.remove("translate-x-4");
-        expenseToggleDot.classList.add("translate-x-0");
-      }
-    });
-
-    // Multi-Wallet Bottom Sheet Logic
-    const backdrop = document.getElementById("wallet-sheet-backdrop");
-    const sheetPanel = document.getElementById("wallet-sheet-panel");
-    const openSheetBtn = document.getElementById("open-wallet-sheet");
-    const activeWalletDisplay = document.getElementById("active-wallet-display");
-    const closeSheetBtn = document.getElementById("close-wallet-sheet");
-    const confirmWalletBtn = document.getElementById("confirm-wallet-selection");
-
-    let selectedOptionEl = document.querySelector('.wallet-option[data-wallet-id="negocio"]');
-
-    function openModal() {
-      backdrop.classList.remove("hidden");
-      setTimeout(() => {
-        backdrop.classList.remove("opacity-0");
-        sheetPanel.classList.remove("translate-y-full");
-      }, 10);
-    }
-
-    function closeModal() {
-      backdrop.classList.add("opacity-0");
-      sheetPanel.classList.add("translate-y-full");
-      setTimeout(() => {
-        backdrop.classList.add("hidden");
-      }, 300);
-    }
-
-    openSheetBtn.addEventListener("click", openModal);
-    activeWalletDisplay.addEventListener("click", openModal);
-    closeSheetBtn.addEventListener("click", closeModal);
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) closeModal();
-    });
-
-    // Selecting a Wallet inside bottom sheet
-    const walletOptions = document.querySelectorAll(".wallet-option");
-    walletOptions.forEach((option) => {
-      option.addEventListener("click", () => {
-        walletOptions.forEach((opt) => {
-          opt.classList.remove("bg-surface-container-low", "ring-2", "ring-primary-container");
-          opt.classList.add("bg-surface-container-lowest");
-          const radio = opt.querySelector(".wallet-radio");
-          radio.className = "wallet-radio w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center";
-          radio.innerHTML = "";
-        });
-
-        option.classList.remove("bg-surface-container-lowest");
-        option.classList.add("bg-surface-container-low", "ring-2", "ring-primary-container");
-        const radio = option.querySelector(".wallet-radio");
-        radio.className = "wallet-radio w-6 h-6 rounded-full border-2 border-primary-container flex items-center justify-center";
-        radio.innerHTML = '<span class="w-3 h-3 rounded-full bg-secondary-fixed"></span>';
-
-        selectedOptionEl = option;
-      });
-    });
-
-    // Confirm wallet and reflect on the primary card
-    confirmWalletBtn.addEventListener("click", () => {
-      if (selectedOptionEl) {
-        const name = selectedOptionEl.getAttribute("data-wallet-name");
-        const type = selectedOptionEl.getAttribute("data-wallet-type");
-        const bal = selectedOptionEl.getAttribute("data-balance");
-        const icon = selectedOptionEl.getAttribute("data-icon");
-        const iconBg = selectedOptionEl.getAttribute("data-icon-bg");
-
-        document.getElementById("active-wallet-name").textContent = name;
-        document.getElementById("active-wallet-badge").textContent = type;
-        document.getElementById("active-wallet-balance").textContent = `S/ ${bal}`;
-        document.getElementById("active-wallet-icon").textContent = icon;
-        
-        const iconWrapper = document.getElementById("active-wallet-icon-bg");
-        iconWrapper.className = `w-10 h-10 rounded-full ${iconBg} flex items-center justify-center text-on-primary`;
-
-        // Update badge styling according to type
-        const badge = document.getElementById("active-wallet-badge");
-        if (type === "NEGOCIO") {
-          badge.className = "bg-primary-fixed text-on-primary-fixed-variant px-1.5 py-0.2 rounded-full font-label-sm text-[10px]";
-        } else if (type === "PERSONAL") {
-          badge.className = "bg-secondary-fixed/40 text-on-secondary-fixed-variant px-1.5 py-0.2 rounded-full font-label-sm text-[10px]";
-        } else {
-          badge.className = "bg-tertiary-fixed text-on-tertiary-fixed-variant px-1.5 py-0.2 rounded-full font-label-sm text-[10px]";
-        }
-      }
-      closeModal();
-    });
-
-    // Payment action feedback
-    payBtn.addEventListener("click", () => {
-      const amountVal = parseFloat(currentAmountStr) || 0;
-      if (amountVal <= 0) {
-        alert("Ingresa un monto válido para yapear");
-        return;
-      }
-      payBtn.classList.add("scale-95");
-      payBtnText.textContent = "Procesando pago seguro...";
-      setTimeout(() => {
-        payBtn.classList.remove("scale-95");
-        payBtnText.textContent = `¡Yapeaste S/ ${currentAmountStr}!`;
-      }, 700);
-    });
-  })();
-</script></main>
-
-
-
-
-
-
 </body></html>

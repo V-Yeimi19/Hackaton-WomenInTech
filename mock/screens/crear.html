@@ -1,0 +1,168 @@
+<!--STITCH_HEAD-->
+<body class="bg-surface font-body-md text-on-surface min-h-screen">
+<header class="fixed top-0 w-full z-40 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+  <div class="h-16 px-space-md flex items-center gap-space-sm">
+    <button type="button" id="btn-back" aria-label="Volver" class="w-10 h-10 rounded-full bg-surface-container-high text-primary-container flex items-center justify-center">
+      <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+    </button>
+    <h1 class="font-headline-sm text-headline-sm text-primary-container">Nueva billetera</h1>
+  </div>
+</header>
+
+<main class="pt-20 pb-32 px-space-md flex flex-col gap-space-md">
+  <!-- Vista previa -->
+  <section id="preview" class="rounded-lg p-space-md text-on-primary shadow-md relative overflow-hidden transition-colors duration-300 bg-gradient-to-br from-primary-container to-primary">
+    <div class="absolute -right-8 -top-8 w-28 h-28 rounded-full bg-on-primary/10 blur-xl pointer-events-none"></div>
+    <div class="flex items-center gap-space-sm relative">
+      <span id="pv-icon" class="w-12 h-12 rounded-full bg-on-primary/15 flex items-center justify-center text-[24px] shrink-0">🛍️</span>
+      <div class="min-w-0 flex-1">
+        <p id="pv-name" class="font-headline-sm text-headline-sm truncate">Mi nueva billetera</p>
+        <span id="pv-tag" class="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-on-primary/15 font-label-sm text-label-sm">Negocio</span>
+      </div>
+      <span class="material-symbols-outlined text-[28px] opacity-90">qr_code_2</span>
+    </div>
+    <p class="relative mt-space-md font-label-md text-label-md opacity-80">Saldo inicial · <span class="font-bold">S/ 0.00</span></p>
+  </section>
+
+  <form id="form" class="flex flex-col gap-space-md" novalidate>
+    <!-- Nombre -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label for="name" class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Nombre</label>
+        <span id="name-count" class="font-body-sm text-body-sm text-on-surface-variant">0/24</span>
+      </div>
+      <div class="flex items-center gap-2 rounded-[12px] border-2 border-outline-variant focus-within:border-primary-container bg-surface-container-lowest px-3">
+        <input id="name" maxlength="24" autocomplete="off" placeholder="Ej.: Delivery de postres" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-body-lg text-body-lg text-on-surface" />
+        <button type="button" id="name-clear" aria-label="Borrar nombre" class="hidden text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">cancel</span></button>
+      </div>
+      <p id="name-hint" class="mt-1.5 font-body-sm text-body-sm text-on-surface-variant">Se verá en tu QR y en tus constancias.</p>
+      <p id="name-error" class="hidden mt-1.5 font-body-sm text-body-sm text-error" role="alert"></p>
+    </div>
+
+    <!-- Propósito -->
+    <div>
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">Para qué es</p>
+      <div id="purpose" class="grid grid-cols-2 gap-space-sm" role="radiogroup" aria-label="Propósito">
+        <button type="button" data-purpose="business" role="radio" class="purpose flex items-center gap-2 rounded-[14px] border-2 px-3 py-3 text-left transition">
+          <span class="material-symbols-outlined text-[22px] text-primary-container">storefront</span>
+          <span class="font-label-lg text-[15px] text-on-surface">Negocio</span>
+        </button>
+        <button type="button" data-purpose="savings" role="radio" class="purpose flex items-center gap-2 rounded-[14px] border-2 px-3 py-3 text-left transition">
+          <span class="material-symbols-outlined text-[22px] text-primary-container">savings</span>
+          <span class="font-label-lg text-[15px] text-on-surface">Ahorro</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Ícono -->
+    <div>
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">Ícono</p>
+      <div id="icons" class="grid grid-cols-6 gap-space-xs" role="radiogroup" aria-label="Ícono"></div>
+    </div>
+
+    <!-- Color -->
+    <div>
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">Color</p>
+      <div id="colors" class="flex gap-space-sm" role="radiogroup" aria-label="Color"></div>
+    </div>
+  </form>
+</main>
+
+<!-- Acción principal -->
+<div class="fixed bottom-0 w-full z-40 pb-safe bg-surface/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(116,34,132,0.08)]">
+  <div class="px-space-md py-3">
+    <button type="submit" form="form" class="w-full h-12 rounded-[12px] bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-2 active:scale-[0.98] transition">
+      <span class="material-symbols-outlined text-[20px]">add_circle</span>Crear billetera
+    </button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var M = parent.Mica;
+  if (!M) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var ICONS = ['🛍️', '☕', '💇', '🚗', '💼', '🎯'];
+  var COLORS = {
+    purple:  { label: 'Morado',   dot: 'bg-primary-container',  card: 'from-primary-container to-primary' },
+    teal:    { label: 'Turquesa', dot: 'bg-secondary',          card: 'from-secondary to-on-secondary-fixed-variant' },
+    magenta: { label: 'Magenta',  dot: 'bg-tertiary-container', card: 'from-tertiary-container to-tertiary' },
+    night:   { label: 'Noche',    dot: 'bg-inverse-surface',    card: 'from-inverse-surface to-on-surface' }
+  };
+  var f = { name: '', purpose: 'business', icon: ICONS[0], color: 'purple' };
+
+  ICONS.forEach(function (ic) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.dataset.icon = ic; b.setAttribute('role', 'radio'); b.setAttribute('aria-label', 'Ícono ' + ic);
+    b.className = 'icon-opt aspect-square rounded-[14px] border-2 text-[22px] flex items-center justify-center transition';
+    b.textContent = ic;
+    $('icons').appendChild(b);
+  });
+  Object.keys(COLORS).forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.dataset.color = k; b.setAttribute('role', 'radio'); b.setAttribute('aria-label', COLORS[k].label);
+    b.className = 'color-opt w-10 h-10 rounded-full flex items-center justify-center text-on-primary ring-offset-2 ring-offset-surface transition ' + COLORS[k].dot;
+    b.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span>';
+    $('colors').appendChild(b);
+  });
+
+  function paint() {
+    $('pv-name').textContent = f.name.trim() || 'Mi nueva billetera';
+    $('pv-icon').textContent = f.icon;
+    $('pv-tag').textContent = f.purpose === 'business' ? 'Negocio' : 'Ahorro';
+    var card = $('preview');
+    Object.keys(COLORS).forEach(function (k) { COLORS[k].card.split(' ').forEach(function (c) { card.classList.remove(c); }); });
+    COLORS[f.color].card.split(' ').forEach(function (c) { card.classList.add(c); });
+    document.querySelectorAll('.purpose').forEach(function (b) {
+      var on = b.dataset.purpose === f.purpose;
+      b.setAttribute('aria-checked', on);
+      b.classList.toggle('border-primary-container', on); b.classList.toggle('bg-primary-fixed/50', on);
+      b.classList.toggle('border-outline-variant/60', !on); b.classList.toggle('bg-surface-container-lowest', !on);
+    });
+    document.querySelectorAll('.icon-opt').forEach(function (b) {
+      var on = b.dataset.icon === f.icon;
+      b.setAttribute('aria-checked', on);
+      b.classList.toggle('border-primary-container', on); b.classList.toggle('bg-primary-fixed/50', on);
+      b.classList.toggle('border-transparent', !on); b.classList.toggle('bg-surface-container-high', !on);
+    });
+    document.querySelectorAll('.color-opt').forEach(function (b) {
+      var on = b.dataset.color === f.color;
+      b.setAttribute('aria-checked', on);
+      b.classList.toggle('ring-2', on); b.classList.toggle('ring-primary-container', on);
+      b.firstElementChild.classList.toggle('invisible', !on);
+    });
+    $('name-count').textContent = f.name.trim().length + '/24';
+    $('name-clear').classList.toggle('hidden', !f.name);
+  }
+  function setError(msg) {
+    $('name-error').textContent = msg || '';
+    $('name-error').classList.toggle('hidden', !msg);
+    $('name-hint').classList.toggle('hidden', !!msg);
+  }
+
+  $('btn-back').addEventListener('click', function () { M.back(); });
+  $('name').addEventListener('input', function (e) { f.name = e.target.value; setError(''); paint(); });
+  $('name-clear').addEventListener('click', function () { f.name = ''; $('name').value = ''; $('name').focus(); paint(); });
+  $('purpose').addEventListener('click', function (e) {
+    var b = e.target.closest('.purpose'); if (!b) return;
+    f.purpose = b.dataset.purpose;
+    if (f.purpose === 'savings' && f.icon === ICONS[0]) f.icon = '🎯';
+    paint();
+  });
+  $('icons').addEventListener('click', function (e) { var b = e.target.closest('.icon-opt'); if (b) { f.icon = b.dataset.icon; paint(); } });
+  $('colors').addEventListener('click', function (e) { var b = e.target.closest('.color-opt'); if (b) { f.color = b.dataset.color; paint(); } });
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = M.createWallet(f);
+    if (err) { setError(err); $('name').focus(); return; }
+    var name = f.name.trim();
+    M.go('home');
+    setTimeout(function () { M.toast('Billetera "' + name + '" creada'); }, 400);
+  });
+
+  paint();
+  $('name').focus();
+})();
+</script>
+</body>
+</html>
