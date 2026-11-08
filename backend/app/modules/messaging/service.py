@@ -23,7 +23,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
-from app.integrations import telegram_gateway, twilio_gateway
+from app.integrations import audio_gateway, telegram_gateway, twilio_gateway
 from app.modules.agent import service as agent_service
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
@@ -515,9 +515,75 @@ def _handle_telegram(db: Session, event: InboundEvent) -> None:
     chat_id = str(chat.get("id") or "")
     if not chat_id or chat.get("type", "private") != "private":
         return  # sin mensaje o chat grupal: el agente solo atiende chats privados
+    audio = message.get("voice") or message.get("audio")
+    document = message.get("document") or {}
+    if (
+        not audio
+        and isinstance(document, dict)
+        and str(document.get("mime_type", "")).startswith("audio/")
+    ):
+        audio = document
+    if audio:
+        _handle_telegram_audio(db, event, chat_id, audio)
+        return
     text = str(message.get("text") or "")
     command, argument = parse_telegram_text(text)
     _handle_command(db, event, "telegram", chat_id, command, argument, text)
+
+
+def _handle_telegram_audio(db: Session, event: InboundEvent, chat_id: str, audio: dict) -> None:
+    # Comprobar el vínculo antes de descargar archivos o consumir transcripción.
+    link = identity_service.find_link_by_phone(
+        db,
+        chat_id,
+        "telegram",
+        business_id=event.business_id,
+        environment=event.environment,
+    )
+    if link is None:
+        _handle_command(db, event, "telegram", chat_id, "", "", "")
+        return
+    business = db.get(Business, link.business_id)
+    if business is None:
+        raise AppError("BUSINESS_NOT_FOUND", "Negocio no encontrado.", 404)
+    event.business_id = business.id
+    link.last_inbound_at = utcnow()
+    try:
+        if not audio_gateway.is_enabled():
+            raise audio_gateway.AudioError(
+                "Por ahora no puedo escuchar audios. Escríbeme tu consulta y te ayudaré por aquí."
+            )
+        if not isinstance(audio, dict):
+            raise audio_gateway.AudioError(
+                "No pude leer ese audio. Intenta grabarlo otra vez o escríbeme tu consulta."
+            )
+        duration, size = audio.get("duration", 0), audio.get("file_size", 0)
+        if not isinstance(duration, int) or not isinstance(size, int) or duration < 0 or size < 0:
+            raise audio_gateway.AudioError(
+                "No pude leer ese audio. Intenta grabarlo otra vez o escríbeme tu consulta."
+            )
+        if duration > settings.telegram_audio_max_seconds:
+            raise audio_gateway.AudioError(
+                f"Ese audio es muy largo. Envíame uno de hasta {settings.telegram_audio_max_seconds} segundos o escríbeme tu consulta."
+            )
+        if size > settings.telegram_audio_max_bytes:
+            raise audio_gateway.AudioError(
+                "Ese audio es muy pesado. Envíame uno más pequeño o escríbeme tu consulta."
+            )
+        if not event.transcript:
+            file_id = audio.get("file_id")
+            if not isinstance(file_id, str) or not file_id:
+                raise audio_gateway.AudioError(
+                    "No pude leer ese audio. Intenta grabarlo otra vez o escríbeme tu consulta."
+                )
+            content, filename = telegram_gateway.download_audio(file_id)
+            event.transcript = audio_gateway.transcribe(content, filename)
+            db.flush()
+    except audio_gateway.AudioError as exc:
+        _reply(db, business, link, event, str(exc))
+        return
+    command, argument = parse_telegram_text(event.transcript)
+    _handle_command(db, event, "telegram", chat_id, command, argument, event.transcript)
 
 
 def _handle_command(

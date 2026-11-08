@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     telegram_webhook_secret: str = ""
     # El worker consulta getUpdates (útil en local, sin URL pública ni webhook).
     telegram_polling: bool = True
+    enable_telegram_audio: bool = True
+    telegram_audio_max_bytes: int = Field(default=10_000_000, ge=1, le=20_000_000)
+    telegram_audio_max_seconds: int = Field(default=180, ge=1, le=180)
 
     # Twilio / WhatsApp
     twilio_account_sid: str = ""
@@ -83,6 +86,8 @@ class Settings(BaseSettings):
     groq_model: str = ""
     groq_base_url: str = "https://api.groq.com/openai/v1"
     groq_timeout_seconds: int = 20
+    groq_transcription_model: str = "whisper-large-v3-turbo"
+    groq_transcription_timeout_seconds: int = Field(default=30, ge=1, le=30)
     enable_tts: bool = False
 
     # Comportamiento de demo

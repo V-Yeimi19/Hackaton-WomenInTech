@@ -8,12 +8,16 @@ la entrega en la misma respuesta, por eso el estado queda en ``DELIVERED``.
 from __future__ import annotations
 
 import logging
+import re
+import time
 import uuid
+from pathlib import PurePosixPath
 from typing import Any
 
 import httpx
 
 from app.core.config import get_settings
+from app.integrations.audio_gateway import AudioError
 from app.integrations.twilio_gateway import SendResult
 
 settings = get_settings()
@@ -96,3 +100,75 @@ def deep_link(code: str) -> str | None:
     """Enlace t.me que abre el bot y envía /start <código> con un toque."""
     base = bot_url()
     return f"{base}?start={code}" if base else None
+
+
+def download_audio(file_id: str) -> tuple[bytes, str]:
+    """Descarga acotada en memoria, sin seguir URLs ni nombres enviados por el usuario."""
+    try:
+        response = httpx.get(_url("getFile"), params={"file_id": file_id}, timeout=TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
+        if not data.get("ok"):
+            raise ValueError("getFile rejected")
+        file = data["result"]
+        limit = settings.telegram_audio_max_bytes
+        if file.get("file_size", 0) > limit:
+            raise AudioError(
+                "Ese audio es muy pesado. Envíame uno más pequeño o escríbeme tu consulta."
+            )
+        path = file["file_path"]
+        if (
+            not isinstance(path, str)
+            or not re.fullmatch(r"[A-Za-z0-9_./-]+", path)
+            or path.startswith("/")
+            or any(p in (".", "..") for p in path.split("/"))
+        ):
+            raise ValueError("Invalid Telegram file path")
+        extension = PurePosixPath(path).suffix.lower()
+        if extension == ".oga":
+            extension = ".ogg"
+        if extension not in {
+            ".ogg",
+            ".mp3",
+            ".m4a",
+            ".mp4",
+            ".mpeg",
+            ".mpga",
+            ".flac",
+            ".wav",
+            ".webm",
+        }:
+            raise AudioError(
+                "No puedo leer ese formato de audio. Prueba enviándolo como nota de voz de Telegram."
+            )
+        deadline = time.monotonic() + 20
+        with httpx.stream(
+            "GET",
+            f"{API_BASE}/file/bot{settings.telegram_bot_token}/{path}",
+            timeout=httpx.Timeout(20.0, connect=5.0),
+            follow_redirects=False,
+        ) as stream:
+            stream.raise_for_status()
+            if int(stream.headers.get("content-length", "0")) > limit:
+                raise AudioError(
+                    "Ese audio es muy pesado. Envíame uno más pequeño o escríbeme tu consulta."
+                )
+            content = bytearray()
+            for chunk in stream.iter_bytes(chunk_size=64 * 1024):
+                if len(content) + len(chunk) > limit:
+                    raise AudioError(
+                        "Ese audio es muy pesado. Envíame uno más pequeño o escríbeme tu consulta."
+                    )
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Audio download timed out")
+                content.extend(chunk)
+        if not content:
+            raise ValueError("Empty audio")
+        return bytes(content), "audio" + extension
+    except AudioError:
+        raise
+    except Exception as exc:
+        logger.warning("telegram.audio_download_failed type=%s", type(exc).__name__)
+        raise AudioError(
+            "No pude descargar ese audio. Intenta enviarlo otra vez o escríbeme tu consulta."
+        ) from None

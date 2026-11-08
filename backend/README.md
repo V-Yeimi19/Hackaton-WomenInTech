@@ -84,6 +84,29 @@ por el navegador. Las opciones Ayuda, Resumen, Pausar y Reanudar funcionan en am
 canales; cada respuesta se entrega en el canal donde se consultó. La personalización
 local anterior se recupera al abrir el chat si aún no existe perfil en el servidor.
 
+## Audios de Telegram
+
+Mica acepta notas de voz, audios y documentos con MIME `audio/*` de cuentas ya
+vinculadas. Descarga el archivo en memoria y lo transcribe mediante
+[Groq Speech to Text](https://console.groq.com/docs/speech-to-text), usando la
+misma `GROQ_API_KEY` de las consultas. La respuesta se entrega como texto en
+Telegram, con el perfil compartido del negocio y el historial propio de ese canal.
+
+`ENABLE_TELEGRAM_AUDIO=true` y `ENABLE_LLM=true` habilitan el recorrido. El modelo
+de transcripción predeterminado es `GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo`.
+Los límites son `TELEGRAM_AUDIO_MAX_BYTES=10000000` (10 MB) y
+`TELEGRAM_AUDIO_MAX_SECONDS=180` (3 minutos); se pueden reducir. La descarga también
+verifica el tamaño real del contenido para archivos sin tamaño declarado. No se
+guardan archivos de audio locales: únicamente su transcripción en `inbound_events.transcript`,
+separada del payload original para conservar la deduplicación de Telegram.
+
+Si el audio excede los límites, no se puede descargar o transcribir, o la función
+está apagada, Mica envía una explicación y permite continuar por texto. Los audios
+de chats sin vincular no se descargan ni se envían a Groq. WhatsApp y la respuesta
+por voz no forman parte de esta integración.
+
+Documentación de descarga: [Telegram getFile](https://core.telegram.org/bots/api#getfile).
+
 ## WhatsApp
 
 `MESSAGING_MODE=fake` no contacta personas. Para probar Twilio, configurar SID, Auth Token, sender y URLs públicas exactas del webhook y callback. Crear un código mediante `/channel-link-challenges` y enviar `VINCULAR <código>` desde el teléfono autorizado en el Sandbox. Los escenarios no verifican automáticamente teléfonos en modo Twilio.

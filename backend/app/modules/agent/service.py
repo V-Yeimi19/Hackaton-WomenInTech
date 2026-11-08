@@ -154,7 +154,7 @@ def clean_reply(text: str) -> str:
 def _inbound_text(event: InboundEvent) -> str:
     payload = event.payload_json or {}
     if event.provider == "telegram":
-        return str((payload.get("message") or {}).get("text") or "")
+        return event.transcript or str((payload.get("message") or {}).get("text") or "")
     return str(payload.get("Body") or "")
 
 
@@ -255,7 +255,7 @@ def generate_answer(
             "content": memory_context(db, business.id, wallet.id if wallet else None),
         },
         *history[-HISTORY_TURNS * 2 :],
-        {"role": "user", "content": text.strip()[:1000]},
+        {"role": "user", "content": text.strip()[:4000]},
     ]
     reply = llm_gateway.chat(messages)
     return clean_reply(reply) if reply else None
