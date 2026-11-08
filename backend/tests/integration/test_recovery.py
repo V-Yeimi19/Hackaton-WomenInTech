@@ -135,6 +135,27 @@ def test_entries_cannot_be_edited(db, business):
     db.rollback()
 
 
+def test_channel_link_lookup_is_scoped_to_business(db, business):
+    from app.core.security import encrypt_phone, phone_lookup_hash
+    from app.modules.identity.models import ChannelLink
+    from app.modules.identity.service import find_link_by_phone
+
+    phone = "+51900001234"
+    db.add(
+        ChannelLink(
+            business_id=business.id,
+            environment="DEMO",
+            phone_encrypted=encrypt_phone(phone),
+            phone_lookup_hash=phone_lookup_hash(phone),
+            status="ACTIVE",
+        )
+    )
+    db.commit()
+
+    assert find_link_by_phone(db, phone, business_id=business.id) is not None
+    assert find_link_by_phone(db, phone, business_id=uuid.uuid4()) is None
+
+
 def test_cross_business_reference_rejected(db, business, message):
     link = db.get(ChannelLink, message.channel_link_id)
     with pytest.raises(IntegrityError):

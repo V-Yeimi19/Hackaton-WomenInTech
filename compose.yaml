@@ -83,6 +83,8 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "app.jobs.worker"]
     environment: *app-environment
+    healthcheck:
+      disable: true
     depends_on:
       db:
         condition: service_healthy

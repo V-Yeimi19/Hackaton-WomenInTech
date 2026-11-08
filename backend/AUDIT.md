@@ -14,7 +14,7 @@ Entorno: Windows 11, Python 3.12.10, PostgreSQL 18.6 local aislado, FastAPI/SQLA
 
 | Comprobación | Resultado |
 |---|---|
-| pytest con PostgreSQL real | 90 pruebas aprobadas |
+| pytest con PostgreSQL real | 91 pruebas aprobadas |
 | Cobertura de líneas de aplicación | 78%, redondeado; no cobertura total de ramas |
 | Ruff | Sin errores |
 | Mypy | Sin errores en 91 archivos de aplicación |

@@ -400,7 +400,12 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
         except AppError as exc:
             if exc.code != "LINK_CODE_USED":
                 raise
-            link = identity_service.find_link_by_phone(db, phone)
+            link = identity_service.find_link_by_phone(
+                db,
+                phone,
+                business_id=event.business_id,
+                environment=event.environment,
+            )
             if link is None:
                 raise
             business = db.get(Business, link.business_id)
@@ -416,7 +421,12 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
         )
         return
 
-    link = identity_service.find_link_by_phone(db, phone)
+    link = identity_service.find_link_by_phone(
+        db,
+        phone,
+        business_id=event.business_id,
+        environment=event.environment,
+    )
     if link is None:
         audit_record(
             db,
