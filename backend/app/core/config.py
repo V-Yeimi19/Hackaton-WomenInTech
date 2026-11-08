@@ -76,6 +76,13 @@ class Settings(BaseSettings):
 
     # Opcionales
     enable_llm: bool = False
+
+    # IA del agente con GroqCloud (API compatible con OpenAI). Se activa con
+    # ENABLE_LLM=true; apagada, el agente responde con plantillas.
+    groq_api_key: str = ""
+    groq_model: str = ""
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_timeout_seconds: int = 20
     enable_tts: bool = False
 
     # Comportamiento de demo
@@ -107,6 +114,8 @@ class Settings(BaseSettings):
             self.twilio_account_sid and self.twilio_auth_token
         ):
             raise ValueError("Twilio requiere Account SID y Auth Token")
+        if self.enable_llm and not (self.groq_api_key and self.groq_model):
+            raise ValueError("ENABLE_LLM=true requiere GROQ_API_KEY y GROQ_MODEL")
         return self
 
     @property
