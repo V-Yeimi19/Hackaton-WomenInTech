@@ -113,6 +113,19 @@ const nowLabel = () => "Hoy - " + new Date().toLocaleTimeString("es-PE", { hour:
 const txSub = t => `${t.when} - ${t.label || (wallet(t.keys[0]) || {}).name || ""}`;
 const txsFor = k => state.txs.filter(t => t.keys.includes(k));
 const round2 = n => Math.round(n * 100) / 100;
+function txDate(l) {
+  if (l && l.at) return new Date(l.at);
+  const d = new Date(), w = (l && l.when) || "";
+  if (/^Ayer/.test(w)) d.setDate(d.getDate() - 1);
+  else if (!/^Hoy/.test(w)) {
+    const m = w.match(/^(\d+) (\w+)\./);
+    const mi = m ? ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"].indexOf(m[2].toLowerCase()) : -1;
+    if (mi >= 0) { d.setMonth(mi); d.setDate(Number(m[1])); }
+  }
+  const t = w.match(/(\d+):(\d+) ([ap])m/);
+  if (t) d.setHours((Number(t[1]) % 12) + (t[3] === "p" ? 12 : 0), Number(t[2]));
+  return d;
+}
 const isBusiness = k => k === "cafe" || (k === "extra" && !!state.extra && state.extra.purpose !== "savings");
 
 /* ---------- Saldos: cada pantalla trae números distintos; se reemplazan por el estado ---------- */
@@ -157,12 +170,12 @@ function prepare(name) {
     if (state.draft.qrRecipient) extraText["La Tiendita de Don Pepe"] = state.draft.qrRecipient;
   }
   if (name.startsWith("constancia") || name === "te-yapearon") {
-    const now = new Date();
+    const now = state.last ? txDate(state.last) : new Date();
     const date = now.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }).replace(/ de /g, " ");
     const time = now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
     for (const d of ["19 dic. 2025", "18 may. 2025"]) extraText[d] = date;
     for (const t of ["12:50 p. m.", "01:15 p. m.", "04:35 p. m."]) extraText[t] = time;
-    const op = String(26100000 + Math.floor(Math.random() * 99999));
+    const op = (state.last && state.last.op) || String(26100000 + Math.floor(Math.random() * 99999));
     extraText["26101992"] = op; extraText["26102048"] = op;
     if (name === "constancia-negocio" && state.last) extraText["Emprendimiento Café"] = state.last.walletName;
   }
@@ -217,7 +230,9 @@ function pay(amount, key, recipient, note) {
   state.last = { amount, walletName: w.name, key, recipient, note: String(note || "").trim() };
   if (state.draft.flow === "contact") state.lastContact = recipient;
   note = String(note || "").replace(/\s+/g, " ").trim();
-  state.txs.unshift({ title: `Yapeo a ${recipient}`, amount: -amount, keys: [key], when: nowLabel(), ...(note ? { note } : {}) });
+  state.last.op = String(26100000 + Math.floor(Math.random() * 99999));
+  state.last.at = new Date().toISOString();
+  state.txs.unshift({ title: `Yapeo a ${recipient}`, amount: -amount, keys: [key], when: nowLabel(), at: state.last.at, op: state.last.op, ...(note ? { note } : {}) });
   state.draft = {};
   save();
   go(key === "principal" ? "constancia" : "constancia-negocio");
@@ -308,6 +323,7 @@ const GLOBAL_RULES = [
   // La campana no hace nada por ahora; "te-yapearon" se usará más adelante tras yapear.
   [/^notifications$/, () => {}],
   [/^headphones Necesito ayuda$/, () => toast("Ayuda: próximamente")],
+  [/^headset_mic$/, () => toast("Ayuda: próximamente")],
 ];
 
 const RULES = {
@@ -409,7 +425,7 @@ frame.addEventListener("load", () => {
   if (!doc) return;
   const name = current;
   doc.addEventListener("click", e => {
-    if (e.target.closest("#wallet-picker, #wallet-options, #wallet-transfer, #contact-sheet")) return;
+    if (e.target.closest("#wallet-picker, #wallet-options, #wallet-transfer, #contact-sheet, #tx-detail")) return;
     const el = e.target.closest("button, a, [onclick], [role=button], [class*='cursor-pointer'], .tx-item");
     if (!el) return;
     if (el.dataset.export) {
@@ -422,6 +438,20 @@ frame.addEventListener("load", () => {
         print: `Enviando el QR de ${name} a imprimir (simulado)`,
       };
       return toast(MSG[el.dataset.export]);
+    }
+    if (el.classList.contains("tx-item") && el.dataset.tx !== undefined) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return openTxDetail(doc, Number(el.dataset.tx));
+    }
+    if (el.dataset.micaAd) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return toast({ agent: "Pronto podrás hablar con Mica, tu asesora contable",
+                     resumen: "Tu resumen semanal con Mica: próximamente",
+                     ahorro: "Metas de ahorro con Mica: próximamente" }[el.dataset.micaAd]);
+    }
+    if (el.dataset.shortcut) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return toast(`${el.dataset.shortcut}: próximamente`);
     }
     if (el.id === "btn-agent") {
       e.preventDefault(); e.stopImmediatePropagation();
@@ -850,6 +880,68 @@ function openContactSheet(doc) {
   });
 }
 
+/* ---------- Detalle de un movimiento (al tocarlo en "Mostrar movimientos") ---------- */
+function opNumber(tx) {
+  if (tx.op) return tx.op;
+  let h = 0;  // número estable para los movimientos de ejemplo
+  for (const c of tx.title + tx.when + tx.amount) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return String(26100000 + (h % 99999));
+}
+function openTxDetail(doc, i) {
+  const tx = state.txs[i];
+  if (!tx) return;
+  if (!/^Transferencia/.test(tx.title)) {
+    const out = tx.amount < 0, key = tx.keys[0];
+    state.last = {
+      amount: Math.abs(tx.amount), key, op: opNumber(tx), at: tx.at, when: tx.when, note: tx.note,
+      walletName: (wallet(key) || {}).name || "Billetera eliminada",
+      recipient: out ? tx.title.replace(/^Yapeo a /, "") : tx.title.replace(/^(Yape de|Pago de) /, ""),
+    };
+    save();
+    return go(!out ? "te-yapearon" : key === "principal" ? "constancia" : "constancia-negocio");
+  }
+  doc.getElementById("tx-detail")?.remove();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const out = tx.amount < 0;
+  const kind = /^Transferencia/.test(tx.title) ? "Transferencia entre billeteras" : out ? "Yapeo enviado" : "Yapeo recibido";
+  const walletName = tx.label || (wallet(tx.keys[0]) || {}).name || "Billetera eliminada";
+  const row = (k, v) => `<div class="flex items-start justify-between gap-space-md py-2.5 border-t border-surface-container-high">
+      <span class="font-body-md text-body-md text-on-surface-variant shrink-0">${k}</span>
+      <span class="font-label-lg text-[15px] text-on-surface text-right break-words min-w-0">${v}</span></div>`;
+  const wrap = doc.createElement("div");
+  wrap.id = "tx-detail";
+  wrap.className = "fixed inset-0 z-[70] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  wrap.innerHTML = `<div class="td-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl translate-y-full transition-transform duration-300 max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-label="Detalle del movimiento">
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+      <div class="flex items-start justify-between">
+        <span class="w-12 h-12 rounded-full ${out ? "bg-tertiary-fixed text-tertiary-container" : "bg-secondary-container/60 text-on-secondary-container"} flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">${/^Transferencia/.test(tx.title) ? "swap_horiz" : out ? "north_east" : "south_west"}</span></span>
+        <button type="button" data-act="close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+      <p class="mt-space-sm font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">${kind}</p>
+      <p class="font-headline-sm text-headline-sm text-on-surface">${esc(tx.title)}</p>
+      <p class="mt-1 font-display-amount-mobile text-display-amount-mobile ${out ? "text-tertiary-container" : "text-on-surface"}">${out ? "- " : ""}S/ ${fmt(Math.abs(tx.amount))}</p>
+      <div class="mt-space-md">
+        ${row("Fecha y hora", esc(tx.when))}
+        ${row("Billetera", esc(walletName))}
+        ${tx.note ? row("Descripción", esc(tx.note)) : ""}
+        ${row("Nro. de operación", opNumber(tx))}
+      </div>
+      <button type="button" data-act="share" class="mt-space-md w-full h-12 rounded-[12px] border-2 border-secondary text-secondary font-label-lg text-label-lg flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">share</span>Compartir constancia</button>
+    </div>`;
+  doc.body.appendChild(wrap);
+  const sheet = wrap.querySelector(".td-sheet");
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); sheet.classList.remove("translate-y-full"); });
+  const close = () => { wrap.classList.add("opacity-0"); sheet.classList.add("translate-y-full"); setTimeout(() => wrap.remove(), 250); };
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    const act = e.target.closest("button")?.dataset.act;
+    if (e.target === wrap || act === "close") return close();
+    if (act === "share") toast("Constancia lista para compartir (simulado)");
+  });
+}
+
 function scanDetected(doc, recipient, msg) {
   state.draft = { flow: "qr", qrRecipient: recipient === "La Tiendita de Don Pepe" ? undefined : recipient };
   toast(msg || "QR detectado");
@@ -877,7 +969,7 @@ function enhance(name, win, doc) {
     const agent = doc.getElementById("btn-agent");
     if (agent) {
       const overlayOpen = () =>
-        !!doc.querySelector("#wallet-picker, #wallet-options, #wallet-transfer") ||
+        !!doc.querySelector("#wallet-picker, #wallet-options, #wallet-transfer, #tx-detail, #side-menu.is-open") ||
         ["wallet-qr-modal", "wallet-send-modal"].some(id => { const m = doc.getElementById(id); return m && !m.classList.contains("pointer-events-none"); });
       const sync = () => { agent.style.display = overlayOpen() ? "none" : ""; };
       new win.MutationObserver(sync).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
@@ -889,8 +981,11 @@ function enhance(name, win, doc) {
       const box = first.parentNode, tpl = first.cloneNode(true);
       box.querySelectorAll(".tx-item").forEach(r => r.remove());
       const FILTER = { principal: "principal", cafe: "emprendimiento", vacaciones: "ahorro", extra: "extra" };
-      state.txs.forEach(tx => {
+      state.txs.forEach((tx, i) => {
         const row = tpl.cloneNode(true);
+        row.dataset.tx = i;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", `Ver detalle: ${tx.title}`);
         row.querySelector(".tx-title").textContent = tx.title;
         row.querySelector(".tx-sub").textContent = txSub(tx);
         if (tx.note) {  // descripción opcional de las transferencias
@@ -980,6 +1075,13 @@ function enhance(name, win, doc) {
     const TAG = { cafe: "Negocio", vacaciones: "Ahorro", extra: state.extra && state.extra.purpose === "savings" ? "Ahorro" : "Negocio" };
     [...doc.querySelectorAll("span")].find(sp => sp.textContent.trim() === "Negocio" && sp.className.includes("uppercase"))
       ?.replaceChildren(TAG[state.last.key] || "Billetera");
+  }
+
+  if (name === "te-yapearon" && state.last) {
+    const amountEl = doc.querySelector("[class*='text-[42px]']");
+    if (amountEl) amountEl.textContent = fmtShort(state.last.amount);
+    const nameEl = doc.querySelector("[class*='text-[17px]'].font-bold");
+    if (nameEl) nameEl.textContent = state.last.recipient;
   }
 
   if ((name === "constancia" || name === "constancia-negocio") && state.last) {
