@@ -211,7 +211,6 @@ const RULES = {
     [/^send_money Yapear$/, () => { state.draft = {}; go("yapear"); }],
     [/^qr_code_scanner Escanear$/, () => go("escanear")],
     [/Mover plata/, () => toast("Mover plata entre billeteras: próximamente")],
-    [/^arrow_forward$/, () => go("mi-qr")],
     [/^Ver todos$/, () => go("desglose")],
     [/Nueva Billetera|^add$/, () => go("crear")],
     [/^edit$/, () => go("gestionar")],
