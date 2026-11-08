@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { MicaSheet } from "@/features/agent/MicaSheet";
 import { MovementsPanel } from "@/features/movements/MovementsPanel";
+import { useDemoYapeos } from "@/features/wallets/DemoYapeos";
 import { useWallets } from "@/features/wallets/api";
 import { QrSheet } from "@/features/wallets/components/QrSheet";
 import { TransferSheet } from "@/features/wallets/components/TransferSheet";
@@ -29,6 +30,7 @@ export function HomeScreen() {
   const params = useSearchParams();
   const { data, isPending, isError, refetch } = useWallets();
   const visibility = useBalanceVisibility();
+  const demo = useDemoYapeos();
   const [overlay, setOverlay] = useState<Overlay>(null);
   const wallets = data?.items ?? [];
 
@@ -68,6 +70,8 @@ export function HomeScreen() {
             {isPending && <div className="h-[168px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
             {wallets.map((w) => (
               <WalletCard key={w.id} wallet={w} shown={visibility.isShown(w.id)} onToggleShown={() => visibility.toggle(w.id)}
+                onSimulate={w.role === "BUSINESS" || (w.role === "CUSTOM" && w.purpose === "BUSINESS") ? () => demo.generate(w) : undefined}
+                simulating={demo.generating}
                 onOptions={() => setOverlay({ kind: "options", wallet: w })} onQr={() => setOverlay({ kind: "qr", wallet: w })} />
             ))}
             <Link href="/billeteras/nueva"

@@ -6,7 +6,7 @@ import { callBackend, clearSessionCookie, errorResponse, forwardHeaders } from "
  * Proxy BFF hacia FastAPI: el navegador llama a /api/backend/* y Next agrega el
  * token desde la cookie httpOnly. Solo se permiten las rutas que usa la app.
  */
-const ALLOWED = [/^wallets(\/[\w-]+)?$/, /^wallet-transfers$/, /^yapeos$/, /^movements(\/[\w-]+)?$/, /^me$/, /^channel-link-challenges$/];
+const ALLOWED = [/^demo\/incoming-yapes$/, /^agent\/chat$/, /^wallets(\/[\w-]+)?$/, /^wallet-transfers$/, /^yapeos$/, /^movements(\/[\w-]+)?$/, /^me$/, /^channel-link-challenges$/];
 
 type Context = { params: Promise<{ path: string[] }> };
 
