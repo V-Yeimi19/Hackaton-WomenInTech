@@ -185,6 +185,19 @@ def find_link_by_phone(
     return db.scalar(select(ChannelLink).where(*conditions))
 
 
+def has_active_link(db: Session, business_id: uuid.UUID, provider: str) -> bool:
+    return (
+        db.scalar(
+            select(ChannelLink.id).where(
+                ChannelLink.business_id == business_id,
+                ChannelLink.provider == provider,
+                ChannelLink.status == "ACTIVE",
+            )
+        )
+        is not None
+    )
+
+
 PERU_MOBILE = re.compile(r"^\+519\d{8}$")
 
 

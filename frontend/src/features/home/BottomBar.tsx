@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 
 import { Icon } from "@/components/ui/Icon";
-import { useToast } from "@/components/ui/Toast";
 
 /** Barra inferior (Escanear QR / Yapear) y acceso al agente Mica, solo en Inicio. */
-export function BottomBar({ onYapear, hideAgent }: { onYapear: () => void; hideAgent: boolean }) {
-  const toast = useToast();
+export function BottomBar({ onYapear, onAgent, hideAgent }: { onYapear: () => void; onAgent: () => void; hideAgent: boolean }) {
   const [agentBottom, setAgentBottom] = useState(104);
   const drag = useRef<{ pointerId: number; startY: number; startBottom: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
@@ -58,7 +56,7 @@ export function BottomBar({ onYapear, hideAgent }: { onYapear: () => void; hideA
           onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
           onClick={() => {
             if (suppressClick.current) return;
-            toast("Pronto podrás hablar con Mica, tu asesora contable");
+            onAgent();
           }}
           style={{ bottom: agentBottom }}
           className="fixed right-[max(1rem,calc(50%-215px+1rem))] z-50 h-16 w-16 touch-none select-none cursor-grab overflow-hidden rounded-full bg-white shadow-[0_8px_24px_rgba(89,0,106,0.35)] ring-4 ring-surface transition-transform hover:scale-105 active:scale-95 active:cursor-grabbing">

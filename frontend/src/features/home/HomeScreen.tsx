@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/ui/Icon";
+import { MicaSheet } from "@/features/agent/MicaSheet";
 import { MovementsPanel } from "@/features/movements/MovementsPanel";
 import { useWallets } from "@/features/wallets/api";
 import { QrSheet } from "@/features/wallets/components/QrSheet";
@@ -20,7 +21,7 @@ import { BottomBar } from "./BottomBar";
 import { SideMenu } from "./SideMenu";
 import { TopHeader } from "./TopHeader";
 
-type Overlay = { kind: "menu" } | { kind: "picker" } | { kind: "transfer" } | { kind: "qr"; wallet: Wallet } | { kind: "options"; wallet: Wallet } | null;
+type Overlay = { kind: "menu" } | { kind: "mica" } | { kind: "picker" } | { kind: "transfer" } | { kind: "qr"; wallet: Wallet } | { kind: "options"; wallet: Wallet } | null;
 
 /** Inicio: compone las secciones; cada una es dueña de su lógica. */
 export function HomeScreen() {
@@ -91,9 +92,10 @@ export function HomeScreen() {
 
       <MovementsPanel wallets={wallets} />
 
-      <BottomBar onYapear={() => setOverlay({ kind: "picker" })} hideAgent={overlay !== null} />
+      <BottomBar onYapear={() => setOverlay({ kind: "picker" })} onAgent={() => setOverlay({ kind: "mica" })} hideAgent={overlay !== null} />
 
-      <SideMenu open={overlay?.kind === "menu"} onClose={close} />
+      <SideMenu open={overlay?.kind === "menu"} onClose={close} onMica={() => setOverlay({ kind: "mica" })} />
+      <MicaSheet open={overlay?.kind === "mica"} onClose={close} />
       <WalletPickerSheet open={overlay?.kind === "picker"} onClose={close} wallets={wallets}
         onPick={(w) => router.push(`/yapear?wallet=${w.id}&flujo=contacto`)} />
       <TransferSheet open={overlay?.kind === "transfer"} onClose={close} wallets={wallets} />

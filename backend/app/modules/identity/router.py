@@ -19,6 +19,7 @@ from app.modules.identity.schemas import (
     MeResponse,
     PhoneLoginRequest,
     PhoneLoginResponse,
+    TelegramStatus,
 )
 
 router = APIRouter(tags=["identity"])
@@ -158,4 +159,13 @@ def me(
         phone_masked=identity_service.phone_for_user(db, ctx.user.id),
         environment=ctx.user.environment,
         session_expires_at=ctx.session.expires_at,
+        telegram=TelegramStatus(
+            enabled=settings.telegram_enabled,
+            linked=bool(
+                settings.telegram_enabled
+                and ctx.business
+                and identity_service.has_active_link(db, ctx.business.id, "telegram")
+            ),
+            bot_url=telegram_gateway.bot_url(),
+        ),
     )

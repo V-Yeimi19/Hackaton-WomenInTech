@@ -639,6 +639,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/webhooks/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Telegram Webhook */
+        post: operations["telegram_webhook_api_v1_webhooks_telegram_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks/twilio/status": {
         parameters: {
             query?: never;
@@ -883,6 +900,14 @@ export interface components {
              */
             expires_at: string;
             /**
+             * Channel
+             * @default whatsapp
+             * @enum {string}
+             */
+            channel: "whatsapp" | "telegram";
+            /** Telegram Url */
+            telegram_url?: string | null;
+            /**
              * Instructions
              * @default Envía por WhatsApp el mensaje 'VINCULAR <código>' al número de prueba configurado.
              */
@@ -1100,6 +1125,7 @@ export interface components {
              * Format: date-time
              */
             session_expires_at: string;
+            telegram: components["schemas"]["TelegramStatus"];
         };
         /** MovementListResponse */
         MovementListResponse: {
@@ -1418,6 +1444,18 @@ export interface components {
             body: string;
             /** Phone */
             phone?: string | null;
+        };
+        /**
+         * TelegramStatus
+         * @description Estado del agente en Telegram para esta cuenta.
+         */
+        TelegramStatus: {
+            /** Enabled */
+            enabled: boolean;
+            /** Linked */
+            linked: boolean;
+            /** Bot Url */
+            bot_url?: string | null;
         };
         /** TransactionListResponse */
         TransactionListResponse: {
@@ -2761,6 +2799,26 @@ export interface operations {
         };
     };
     twilio_whatsapp_webhook_api_v1_webhooks_twilio_whatsapp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    telegram_webhook_api_v1_webhooks_telegram_post: {
         parameters: {
             query?: never;
             header?: never;

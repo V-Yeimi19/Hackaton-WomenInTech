@@ -12,5 +12,7 @@ export type MovementList = Schemas["MovementListResponse"];
 export type Operation = Schemas["OperationResponse"];
 export type YapeoRequest = Schemas["YapeoRequest"];
 export type TransferRequest = Schemas["WalletTransferRequest"];
+export type Me = Schemas["MeResponse"];
+export type LinkChallenge = Schemas["ChannelLinkChallengeResponse"];
 export type Category = NonNullable<YapeoRequest["category"]>;
 export type CounterpartyType = YapeoRequest["counterparty"]["type"];

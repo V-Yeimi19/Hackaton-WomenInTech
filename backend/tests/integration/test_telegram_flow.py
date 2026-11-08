@@ -62,9 +62,13 @@ def test_telegram_link_and_commands(client, pg_engine, monkeypatch):  # noqa: F8
     assert body["channel"] == "telegram"
     assert body["telegram_url"] == f"https://t.me/MicaPruebaBot?start={body['code']}"
 
+    me = client.get("/api/v1/me", headers=headers).json()["telegram"]
+    assert me == {"enabled": True, "linked": False, "bot_url": "https://t.me/MicaPruebaBot"}
+
     chat_id = random.randint(10**9, 10**10)
     messages = _send(client, pg_engine, chat_id, f"/start {body['code']}")
     assert messages and "Tu Telegram quedó vinculado" in messages[-1]
+    assert client.get("/api/v1/me", headers=headers).json()["telegram"]["linked"] is True
     assert messages[-1].startswith("DELIVERED|")  # simulado: sin token no sale nada real
 
     messages = _send(client, pg_engine, chat_id, "/resumen")

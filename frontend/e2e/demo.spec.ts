@@ -96,15 +96,20 @@ test("recorrido completo de la demo contra el backend", async ({ page, context }
   await page.locator('[data-key="7"]').click();
   await page.getByTestId("pay").click();
   await expect(page).toHaveURL(/\/constancia\//);
-  expect(await lastMovement(page)).toMatchObject({ title: "Yapeo a Restaurante Mary", amount: "-7.00", category: null });
+  // Los destinatarios de demo rotan: basta con que sea uno de ellos.
+  expect(await lastMovement(page)).toMatchObject({
+    title: expect.stringMatching(/^Yapeo a (BoticaPeru|Restaurante Mary|Susan Mar\*|Makro|Stephen Cuo\*)$/),
+    amount: "-7.00",
+    category: null,
+  });
   await page.getByRole("button", { name: "Cerrar" }).click();
 
   // Crear y eliminar una billetera.
   await page.getByRole("link", { name: /Nueva Billetera/ }).click();
-  await page.getByLabel("Nombre").fill("Mi Bodega E2E");
+  await page.getByLabel("Nombre").fill("Mi Bodega Prueba");
   await page.getByRole("button", { name: "Crear billetera" }).click();
   await expect(page).toHaveURL("/");
-  const created = (await wallets(page)).find((w) => w.name === "Mi Bodega E2E")!;
+  const created = (await wallets(page)).find((w) => w.name === "Mi Bodega Prueba")!;
   expect(created.balance).toBe("0.00");
   await page.locator(`[data-wallet="${created.id}"]`).getByRole("button", { name: "Opciones de billetera" }).click();
   await page.getByRole("button", { name: /Eliminar billetera/ }).click();
@@ -171,4 +176,23 @@ test("cambiar de número en la misma pestaña muestra sus propias billeteras", a
   for (const wallet of firstWallets) {
     await expect(page.locator(`[data-wallet="${wallet.id}"]`)).toBeVisible();
   }
+});
+
+test("Mica: conectar con Telegram desde Inicio y desde el menú", async ({ page }) => {
+  await login(page, randomPhone());
+
+  await page.getByRole("button", { name: /Hablar con Mica/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Habla con Mica" });
+  const connect = sheet.getByRole("link", { name: "Conectar con Telegram" });
+  await expect(connect).toBeVisible();
+  // Enlace al bot con un código de un solo uso; se abre en otra pestaña.
+  await expect(connect).toHaveAttribute("href", /^https:\/\/t\.me\/\w+\?start=[\w-]+$/);
+  await expect(connect).toHaveAttribute("target", "_blank");
+  const me = await api<{ telegram: { enabled: boolean; linked: boolean } }>(page, "me");
+  expect(me.telegram).toMatchObject({ enabled: true, linked: false });
+  await sheet.getByRole("button", { name: "Cerrar" }).click();
+
+  await page.getByRole("button", { name: "Mi perfil" }).first().click();
+  await page.getByRole("button", { name: "Mica en Telegram" }).click();
+  await expect(page.getByRole("dialog", { name: "Habla con Mica" }).getByRole("link", { name: "Conectar con Telegram" })).toBeVisible();
 });

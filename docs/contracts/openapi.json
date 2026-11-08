@@ -2676,13 +2676,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Session Expires At"
+          },
+          "telegram": {
+            "$ref": "#/components/schemas/TelegramStatus"
           }
         },
         "type": "object",
         "required": [
           "user_id",
           "environment",
-          "session_expires_at"
+          "session_expires_at",
+          "telegram"
         ],
         "title": "MeResponse"
       },
@@ -3504,6 +3508,36 @@
           "body"
         ],
         "title": "SimulateWhatsappRequest"
+      },
+      "TelegramStatus": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "bot_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bot Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled",
+          "linked"
+        ],
+        "title": "TelegramStatus",
+        "description": "Estado del agente en Telegram para esta cuenta."
       },
       "TransactionListResponse": {
         "properties": {

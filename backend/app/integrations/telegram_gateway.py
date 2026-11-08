@@ -67,8 +67,14 @@ def get_updates(offset: int | None) -> list[dict[str, Any]]:
     return list(data.get("result") or [])
 
 
-def deep_link(code: str) -> str | None:
-    """Enlace t.me que abre el bot y envía /start <código> con un toque."""
+def bot_url() -> str | None:
+    """Enlace t.me al chat del bot."""
     if not settings.telegram_bot_username:
         return None
-    return f"https://t.me/{settings.telegram_bot_username.lstrip('@')}?start={code}"
+    return f"https://t.me/{settings.telegram_bot_username.lstrip('@')}"
+
+
+def deep_link(code: str) -> str | None:
+    """Enlace t.me que abre el bot y envía /start <código> con un toque."""
+    base = bot_url()
+    return f"{base}?start={code}" if base else None
