@@ -37,9 +37,7 @@ def _url(method: str) -> str:
     return f"{API_BASE}/bot{settings.telegram_bot_token}/{method}"
 
 
-def send_text(
-    chat_id: str, body: str, *, reply_markup: dict[str, Any] | None = None
-) -> SendResult:
+def send_text(chat_id: str, body: str, *, reply_markup: dict[str, Any] | None = None) -> SendResult:
     if not is_live():
         return SendResult(
             provider_sid=f"TGDEMO{uuid.uuid4().hex[:24]}", status="DELIVERED", simulated=True

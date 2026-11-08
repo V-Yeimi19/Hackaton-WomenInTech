@@ -17,10 +17,7 @@ depends_on = None
 
 
 def upgrade():
-    op.execute(
-        "ALTER TABLE outbound_messages "
-        "ADD COLUMN IF NOT EXISTS reply_markup jsonb"
-    )
+    op.execute("ALTER TABLE outbound_messages ADD COLUMN IF NOT EXISTS reply_markup jsonb")
 
 
 def downgrade():

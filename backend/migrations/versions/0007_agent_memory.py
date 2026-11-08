@@ -34,7 +34,9 @@ def upgrade():
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         if_not_exists=True,
     )
-    op.create_index("ix_agent_profiles_business_id", "agent_profiles", ["business_id"], if_not_exists=True)
+    op.create_index(
+        "ix_agent_profiles_business_id", "agent_profiles", ["business_id"], if_not_exists=True
+    )
     op.create_table(
         "agent_app_exchanges",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),

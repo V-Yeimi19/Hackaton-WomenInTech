@@ -108,7 +108,9 @@ def test_shared_memory_but_independent_channel_histories(client, pg_engine, monk
     def fake_chat(messages):
         seen.append(messages)
         return (
-            "APP_PRIVATE_REPLY" if "Conversas por la app." in messages[0]["content"] else "TELEGRAM_PRIVATE_REPLY"
+            "APP_PRIVATE_REPLY"
+            if "Conversas por la app." in messages[0]["content"]
+            else "TELEGRAM_PRIVATE_REPLY"
         )
 
     monkeypatch.setattr(llm_gateway, "chat", fake_chat)
