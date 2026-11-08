@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import uuid
 from datetime import timedelta
 
 from sqlalchemy import select
@@ -138,15 +139,27 @@ def consume_link_challenge(
     return business, link
 
 
-def find_link_by_phone(db: Session, phone: str, provider: str = "twilio") -> ChannelLink | None:
+def find_link_by_phone(
+    db: Session,
+    phone: str,
+    provider: str = "twilio",
+    *,
+    business_id: uuid.UUID | None = None,
+    environment: str | None = None,
+) -> ChannelLink | None:
     try:
         lookup = phone_lookup_hash(phone)
     except ValueError:
         return None
-    return db.scalar(
-        select(ChannelLink).where(
-            ChannelLink.provider == provider,
-            ChannelLink.phone_lookup_hash == lookup,
-            ChannelLink.status == "ACTIVE",
-        )
-    )
+    conditions = [
+        ChannelLink.provider == provider,
+        ChannelLink.phone_lookup_hash == lookup,
+        ChannelLink.status == "ACTIVE",
+    ]
+    # Un evento con negocio conocido no debe resolver el vínculo de otro
+    # negocio aunque el teléfono coincida (aislamiento por negocio/entorno).
+    if business_id is not None:
+        conditions.append(ChannelLink.business_id == business_id)
+    if environment is not None:
+        conditions.append(ChannelLink.environment == environment)
+    return db.scalar(select(ChannelLink).where(*conditions))

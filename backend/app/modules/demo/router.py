@@ -140,7 +140,11 @@ def simulate_whatsapp(
         "NumMedia": "0",
     }
     event, duplicate = messaging_service.persist_inbound(
-        db, provider="twilio", event_id=event_id, payload=inbound_payload
+        db,
+        provider="twilio",
+        event_id=event_id,
+        payload=inbound_payload,
+        business_id=link.business_id,
     )
     if not duplicate:
         messaging_service.process_inbound(db, event)
