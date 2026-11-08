@@ -15,6 +15,9 @@ CASH_DECLARED = "CASH_DECLARED"
 EXTERNAL_CLEARING = "EXTERNAL_CLEARING"
 ACCOUNT_KINDS = (BUSINESS_DIGITAL, HOUSEHOLD_DIGITAL, CASH_DECLARED, EXTERNAL_CLEARING)
 DISPLAY_ACCOUNTS = (BUSINESS_DIGITAL, HOUSEHOLD_DIGITAL, CASH_DECLARED)
+# Billeteras con nombre (ahorro y creadas por la usuaria). No forma parte de
+# ACCOUNT_KINDS porque no es una cuenta fija: hay una por billetera.
+WALLET = "WALLET"
 
 # Tipos de operación
 SALE = "SALE"
@@ -25,6 +28,10 @@ UNKNOWN_OUTFLOW = "UNKNOWN_OUTFLOW"
 OPENING_BALANCE = "OPENING_BALANCE"
 CLASSIFICATION_ADJUSTMENT = "CLASSIFICATION_ADJUSTMENT"
 REVERSAL = "REVERSAL"
+# Operaciones de billeteras personales (no son métricas del negocio).
+PERSONAL_PAYMENT = "PERSONAL_PAYMENT"
+PERSONAL_INCOME = "PERSONAL_INCOME"
+WALLET_TRANSFER = "WALLET_TRANSFER"
 
 # Medios
 DIGITAL = "DIGITAL"
@@ -117,7 +124,7 @@ def reversal_entries(entries: list[tuple[str, Decimal]]) -> list[EntryDraft]:
 
 def is_debit_account(account_kind: str) -> bool:
     """Cuentas cuyo saldo no debe quedar negativo por una operación iniciada."""
-    return account_kind in DISPLAY_ACCOUNTS
+    return account_kind in DISPLAY_ACCOUNTS or account_kind == WALLET
 
 
 def metric_name(kind: str) -> str | None:

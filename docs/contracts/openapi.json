@@ -163,6 +163,83 @@
         }
       }
     },
+    "/api/v1/auth/phone-login": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Phone Login",
+        "description": "Login de demo solo con número (sin clave): mismo número, misma cuenta.",
+        "operationId": "phone_login_api_v1_auth_phone_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneLoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/business/activation": {
       "post": {
         "tags": [
@@ -534,6 +611,456 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CorrectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallets": {
+      "get": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "List Wallets",
+        "operationId": "list_wallets_api_v1_wallets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Create Wallet",
+        "operationId": "create_wallet_api_v1_wallets_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallets/{wallet_id}": {
+      "delete": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Archive Wallet",
+        "operationId": "archive_wallet_api_v1_wallets__wallet_id__delete",
+        "parameters": [
+          {
+            "name": "wallet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Wallet Id"
+            }
+          },
+          {
+            "name": "move_to_wallet_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Move To Wallet Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletArchiveResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/wallet-transfers": {
+      "post": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Create Wallet Transfer",
+        "operationId": "create_wallet_transfer_api_v1_wallet_transfers_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletTransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/yapeos": {
+      "post": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Create Yapeo",
+        "operationId": "create_yapeo_api_v1_yapeos_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/YapeoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/movements": {
+      "get": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "List Movements",
+        "operationId": "list_movements_api_v1_movements_get",
+        "parameters": [
+          {
+            "name": "wallet_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Wallet Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/movements/{movement_id}": {
+      "get": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Get Movement",
+        "operationId": "get_movement_api_v1_movements__movement_id__get",
+        "parameters": [
+          {
+            "name": "movement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovementOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/demo/incoming-yapes": {
+      "post": {
+        "tags": [
+          "wallets"
+        ],
+        "summary": "Simulate Incoming Yape",
+        "operationId": "simulate_incoming_yape_api_v1_demo_incoming_yapes_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncomingYapeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResponse"
                 }
               }
             }
@@ -1898,6 +2425,43 @@
         ],
         "title": "CorrectionResponse"
       },
+      "Counterparty": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CONTACT",
+              "PHONE",
+              "MERCHANT"
+            ],
+            "title": "Type"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "name"
+        ],
+        "title": "Counterparty"
+      },
       "DemoSessionCreate": {
         "properties": {
           "display_name": {
@@ -2008,6 +2572,296 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "IncomingYapeRequest": {
+        "properties": {
+          "to_wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Wallet Id"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "from_name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "From Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_wallet_id",
+          "amount",
+          "from_name"
+        ],
+        "title": "IncomingYapeRequest"
+      },
+      "MeResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "business_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Business Id"
+          },
+          "phone_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Masked"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment"
+          },
+          "session_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Session Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "environment",
+          "session_expires_at"
+        ],
+        "title": "MeResponse"
+      },
+      "MovementListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MovementOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "MovementListResponse"
+      },
+      "MovementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "operation_number": {
+            "type": "string",
+            "title": "Operation Number"
+          },
+          "security_code": {
+            "type": "string",
+            "title": "Security Code"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT",
+              "TRANSFER"
+            ],
+            "title": "Direction"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "wallets": {
+            "items": {
+              "$ref": "#/components/schemas/MovementWallet"
+            },
+            "type": "array",
+            "title": "Wallets"
+          },
+          "from_wallet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WalletRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to_wallet": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WalletRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "counterparty_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Name"
+          },
+          "counterparty_phone_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counterparty Phone Masked"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "category_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "operation_number",
+          "security_code",
+          "kind",
+          "direction",
+          "title",
+          "amount",
+          "occurred_at",
+          "wallets"
+        ],
+        "title": "MovementOut",
+        "description": "Movimiento visible para la usuaria; también es la constancia."
+      },
+      "MovementWallet": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose"
+          },
+          "delta": {
+            "type": "string",
+            "title": "Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "role",
+          "purpose",
+          "delta"
+        ],
+        "title": "MovementWallet"
+      },
+      "OperationResponse": {
+        "properties": {
+          "movement": {
+            "$ref": "#/components/schemas/MovementOut"
+          },
+          "wallets": {
+            "$ref": "#/components/schemas/WalletListResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "movement",
+          "wallets"
+        ],
+        "title": "OperationResponse"
       },
       "PaymentRequest": {
         "properties": {
@@ -2131,6 +2985,73 @@
           "message"
         ],
         "title": "PaymentResponse"
+      },
+      "PhoneLoginRequest": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 9,
+            "title": "Phone",
+            "description": "Celular peruano de 9 dígitos."
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "title": "PhoneLoginRequest"
+      },
+      "PhoneLoginResponse": {
+        "properties": {
+          "session_token": {
+            "type": "string",
+            "title": "Session Token"
+          },
+          "csrf_token": {
+            "type": "string",
+            "title": "Csrf Token"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "business_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Business Id"
+          },
+          "phone_masked": {
+            "type": "string",
+            "title": "Phone Masked"
+          },
+          "is_new": {
+            "type": "boolean",
+            "title": "Is New"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "default": "DEMO"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_token",
+          "csrf_token",
+          "expires_at",
+          "user_id",
+          "business_id",
+          "phone_masked",
+          "is_new"
+        ],
+        "title": "PhoneLoginResponse"
       },
       "PreferencesOut": {
         "properties": {
@@ -2817,6 +3738,293 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WalletArchiveResponse": {
+        "properties": {
+          "archived": {
+            "type": "boolean",
+            "title": "Archived"
+          },
+          "wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Wallet Id"
+          },
+          "moved_amount": {
+            "type": "string",
+            "title": "Moved Amount"
+          },
+          "hidden_movements": {
+            "type": "integer",
+            "title": "Hidden Movements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "archived",
+          "wallet_id",
+          "moved_amount",
+          "hidden_movements"
+        ],
+        "title": "WalletArchiveResponse"
+      },
+      "WalletCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Name"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "BUSINESS",
+              "SAVINGS"
+            ],
+            "title": "Purpose"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 24
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 16
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "purpose"
+        ],
+        "title": "WalletCreate"
+      },
+      "WalletListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WalletOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "updated_at"
+        ],
+        "title": "WalletListResponse"
+      },
+      "WalletOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "PRINCIPAL",
+              "BUSINESS",
+              "SAVINGS",
+              "CUSTOM"
+            ],
+            "title": "Role"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "PERSONAL",
+              "BUSINESS",
+              "SAVINGS"
+            ],
+            "title": "Purpose"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary"
+          },
+          "is_business": {
+            "type": "boolean",
+            "title": "Is Business"
+          },
+          "balance": {
+            "type": "string",
+            "title": "Balance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "role",
+          "purpose",
+          "is_primary",
+          "is_business",
+          "balance"
+        ],
+        "title": "WalletOut"
+      },
+      "WalletRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "WalletRef"
+      },
+      "WalletTransferRequest": {
+        "properties": {
+          "from_wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Wallet Id"
+          },
+          "to_wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Wallet Id"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_wallet_id",
+          "to_wallet_id",
+          "amount"
+        ],
+        "title": "WalletTransferRequest"
+      },
+      "YapeoRequest": {
+        "properties": {
+          "from_wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Wallet Id"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "counterparty": {
+            "$ref": "#/components/schemas/Counterparty"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "RESTOCK",
+                  "LOCAL_SERVICES",
+                  "FAMILY"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_wallet_id",
+          "amount",
+          "counterparty"
+        ],
+        "title": "YapeoRequest"
       }
     }
   }

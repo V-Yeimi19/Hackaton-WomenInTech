@@ -29,6 +29,7 @@ from app.modules.identity.router import router as identity_router
 from app.modules.insights.router import router as insights_router
 from app.modules.ledger.router import router as ledger_router
 from app.modules.messaging.router import router as webhooks_router
+from app.modules.wallets.router import router as wallets_router
 
 settings = get_settings()
 logger = logging.getLogger("mica.api")
@@ -176,6 +177,7 @@ def create_app() -> FastAPI:
     app.include_router(identity_router, prefix=api_prefix)
     app.include_router(business_router, prefix=api_prefix)
     app.include_router(ledger_router, prefix=api_prefix)
+    app.include_router(wallets_router, prefix=api_prefix)
     app.include_router(classification_router, prefix=api_prefix)
     app.include_router(commitments_router, prefix=api_prefix)
     app.include_router(insights_router, prefix=api_prefix)

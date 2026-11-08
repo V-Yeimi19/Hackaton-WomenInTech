@@ -15,6 +15,9 @@ from app.modules.identity.schemas import (
     ChannelLinkChallengeResponse,
     DemoSessionCreate,
     DemoSessionResponse,
+    MeResponse,
+    PhoneLoginRequest,
+    PhoneLoginResponse,
 )
 
 router = APIRouter(tags=["identity"])
@@ -77,3 +80,69 @@ def create_channel_link_challenge(
     enforce(db, str(ctx.session.id), "link-challenges", 5)
     challenge, code = identity_service.create_link_challenge(db, ctx.session)
     return ChannelLinkChallengeResponse(code=code, expires_at=challenge.expires_at)
+
+
+def _set_session_cookies(response: Response, token: str, csrf: str) -> None:
+    max_age = settings.session_ttl_hours * 3600
+    secure = settings.public_base_url.startswith("https://")
+    response.set_cookie(
+        "mica_session", token, max_age=max_age, httponly=True, samesite="lax", secure=secure
+    )
+    response.set_cookie(
+        "mica_csrf", csrf, max_age=max_age, httponly=False, samesite="lax", secure=secure
+    )
+
+
+@router.post("/auth/phone-login", response_model=PhoneLoginResponse, status_code=200)
+def phone_login(
+    payload: PhoneLoginRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> PhoneLoginResponse:
+    """Login de demo solo con número (sin clave): mismo número, misma cuenta."""
+    if settings.app_env != "demo":
+        from app.core.errors import AppError
+
+        raise AppError("DEMO_DISABLED", "Demo deshabilitada.", 404)
+    enforce(db, request.client.host if request.client else "unknown", "phone-login", 60)
+    user, session, token, csrf, business_id, masked, is_new = identity_service.phone_login(
+        db, payload.phone
+    )
+    _set_session_cookies(response, token, csrf)
+    return PhoneLoginResponse(
+        session_token=token,
+        csrf_token=csrf,
+        expires_at=session.expires_at,
+        user_id=user.id,
+        business_id=business_id,
+        phone_masked=masked,
+        is_new=is_new,
+    )
+
+
+@router.post("/auth/logout", status_code=204)
+def logout(
+    response: Response,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+) -> Response:
+    identity_service.logout(db, ctx.session)
+    response = Response(status_code=204)
+    response.delete_cookie("mica_session")
+    response.delete_cookie("mica_csrf")
+    return response
+
+
+@router.get("/me", response_model=MeResponse)
+def me(
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+) -> MeResponse:
+    return MeResponse(
+        user_id=ctx.user.id,
+        business_id=ctx.business.id if ctx.business else None,
+        phone_masked=identity_service.phone_for_user(db, ctx.user.id),
+        environment=ctx.user.environment,
+        session_expires_at=ctx.session.expires_at,
+    )

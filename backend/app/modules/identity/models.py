@@ -88,3 +88,25 @@ class LinkChallenge(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow
     )
+
+
+class UserPhone(Base):
+    """Teléfono de acceso (demo): mismo número -> misma usuaria. Nunca en claro."""
+
+    __tablename__ = "user_phones"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True
+    )
+    environment: Mapped[str] = mapped_column(String(10), nullable=False, default="DEMO")
+    phone_encrypted: Mapped[str] = mapped_column(String(512), nullable=False)
+    phone_lookup_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow
+    )
+
+    __table_args__ = (
+        UniqueConstraint("phone_lookup_hash", "environment", name="uq_user_phones_lookup_env"),
+        CheckConstraint("environment IN ('DEMO', 'LIVE')", name="ck_user_phones_environment"),
+    )

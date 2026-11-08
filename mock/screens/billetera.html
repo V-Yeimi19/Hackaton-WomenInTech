@@ -256,10 +256,11 @@
   });
   $('btn-del-confirm').addEventListener('click', function () {
     var name = M.wallet(key).name;
-    var res = M.remove(key, delDest);
-    if (res.error) return setError($('del-error'), res.error);
-    M.go('home');
-    setTimeout(function () { M.toast('Billetera "' + name + '" eliminada'); }, 400);
+    Promise.resolve(M.remove(key, delDest)).then(function (res) {
+      if (res.error) return setError($('del-error'), res.error);
+      M.go('home');
+      setTimeout(function () { M.toast('Billetera "' + name + '" eliminada'); }, 400);
+    });
   });
 
   render();

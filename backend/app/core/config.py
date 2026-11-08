@@ -38,7 +38,13 @@ class Settings(BaseSettings):
 
     # URLs públicas
     public_base_url: str = "http://localhost:8000"
-    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    cors_origins: str = (
+        "http://localhost:5173,http://localhost:3000,http://localhost:5500,"
+        "http://127.0.0.1:5500,https://mock-tawny-tau.vercel.app"
+    )
+    # Límites de yapeo validados en el servidor (soles).
+    payment_limit_pen: int = 500
+    daily_limit_pen: int = 2000
 
     # Twilio / WhatsApp
     twilio_account_sid: str = ""
