@@ -17,8 +17,8 @@ const ITEMS = [
   { icon: "request_quote", label: "Cobrar" },
 ];
 
-/** Menú lateral (solo visual) con Cerrar sesión funcional. */
-export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** Menú lateral (solo visual) con Mica en Telegram y Cerrar sesión funcionales. */
+export function SideMenu({ open, onClose, onMica }: { open: boolean; onClose: () => void; onMica: () => void }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [visible, setVisible] = useState(false);
@@ -52,6 +52,10 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
               <span className="text-base">{item.label}</span>
             </button>
           ))}
+          <button type="button" onClick={onMica} className="flex w-full items-center gap-6 px-6 py-4 text-left hover:bg-surface-container-low">
+            <Icon name="send" className="text-[26px] text-[#229ED9]" />
+            <span className="text-base">Mica en Telegram</span>
+          </button>
         </div>
         <div className="border-t border-outline-variant/50">
           <button type="button" onClick={logout} className="flex w-full items-center gap-6 px-6 py-4 text-left hover:bg-surface-container-low">

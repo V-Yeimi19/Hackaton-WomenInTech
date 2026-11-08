@@ -160,15 +160,19 @@ def _run_weekly_report(db: Session, job: ScheduledJob) -> dict[str, str]:
         )
         job.payload_json = {**payload, "report_id": str(report.id)}
 
-    link = db.scalar(
-        select(ChannelLink)
-        .where(
-            ChannelLink.business_id == business.id,
-            ChannelLink.provider == "twilio",
-            ChannelLink.status == "ACTIVE",
+    link = None
+    for provider in messaging_service.enabled_providers():
+        link = db.scalar(
+            select(ChannelLink)
+            .where(
+                ChannelLink.business_id == business.id,
+                ChannelLink.provider == provider,
+                ChannelLink.status == "ACTIVE",
+            )
+            .order_by(ChannelLink.created_at.asc())
         )
-        .order_by(ChannelLink.created_at.asc())
-    )
+        if link is not None:
+            break
     prefs = db.get(Preference, business.id)
     can_send = (
         kind == "PRELIMINARY"

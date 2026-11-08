@@ -20,7 +20,11 @@ from app.db.session import SessionLocal
 from app.jobs import scheduler
 from app.jobs.service import run_due_jobs
 from app.modules.ledger.models import IdempotencyRecord
-from app.modules.messaging.service import deliver_pending, process_pending_inbound
+from app.modules.messaging.service import (
+    deliver_pending,
+    poll_telegram,
+    process_pending_inbound,
+)
 
 settings = get_settings()
 logger = logging.getLogger("mica.worker")
@@ -38,11 +42,13 @@ def cleanup_expired_idempotency(db: Session) -> int:
 
 
 def run_once(db: Session) -> dict[str, int]:
+    telegram = poll_telegram(db)
     inbound = process_pending_inbound(db, limit=settings.worker_batch_size)
     jobs = run_due_jobs(db, limit=settings.worker_batch_size)
     outbound = deliver_pending(db, limit=settings.worker_batch_size)
     purged = cleanup_expired_idempotency(db)
     return {
+        "telegram": telegram,
         "inbound": inbound,
         "jobs": jobs,
         "outbound": outbound,

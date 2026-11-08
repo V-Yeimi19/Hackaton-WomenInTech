@@ -33,6 +33,8 @@ class DemoSessionResponse(BaseModel):
 class ChannelLinkChallengeResponse(BaseModel):
     code: str
     expires_at: datetime
+    channel: Literal["whatsapp", "telegram"] = "whatsapp"
+    telegram_url: str | None = None
     instructions: str = (
         "Envía por WhatsApp el mensaje 'VINCULAR <código>' al número de prueba configurado."
     )
@@ -53,9 +55,19 @@ class PhoneLoginResponse(BaseModel):
     environment: str = "DEMO"
 
 
+class TelegramStatus(BaseModel):
+    """Estado del agente en Telegram para esta cuenta."""
+
+    enabled: bool
+    linked: bool
+    # Enlace al chat del bot (sin código); null si no hay usuario de bot configurado.
+    bot_url: str | None = None
+
+
 class MeResponse(BaseModel):
     user_id: UUID
     business_id: UUID | None = None
     phone_masked: str | None = None
     environment: str
     session_expires_at: datetime
+    telegram: TelegramStatus

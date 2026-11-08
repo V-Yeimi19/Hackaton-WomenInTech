@@ -1,4 +1,4 @@
-"""Inbox/outbox durable y comandos de WhatsApp (P0).
+"""Inbox/outbox durable y comandos del agente por WhatsApp o Telegram (P0).
 
 El webhook solo valida y persiste el evento antes de responder 2xx. El
 procesamiento puede ocurrir en línea (demo) o en el worker, siempre desde la
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import cast
@@ -21,7 +22,8 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
-from app.integrations import twilio_gateway
+from app.integrations import llm_gateway, telegram_gateway, twilio_gateway
+from app.modules.agent import service as agent_service
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
 from app.modules.classification import service as classification_service
@@ -37,6 +39,7 @@ from app.shared.clock import parse_datetime
 from app.shared.money import Money
 
 settings = get_settings()
+logger = logging.getLogger("mica.messaging")
 
 BACKOFF_SECONDS = [5, 30, 120, 600, 1800]
 MAX_ATTEMPTS = len(BACKOFF_SECONDS)
@@ -60,6 +63,49 @@ HELP_TEXT = (
     "VINCULAR <código> — vincular este WhatsApp\n"
     "AYUDA — mostrar este mensaje"
 )
+
+CHANNEL_NAMES = {"twilio": "WhatsApp", "telegram": "Telegram"}
+
+
+def channel_name(provider: str) -> str:
+    return CHANNEL_NAMES.get(provider, "WhatsApp")
+
+
+def channel_enabled(provider: str) -> bool:
+    if provider == "telegram":
+        return settings.telegram_enabled
+    if provider == "twilio":
+        return settings.whatsapp_enabled
+    return False
+
+
+def enabled_providers() -> list[str]:
+    """Canales activos, en orden de preferencia para mensajes proactivos."""
+    return [p for p in ("twilio", "telegram") if channel_enabled(p)]
+
+
+def help_text(provider: str) -> str:
+    if provider == "telegram":
+        return (
+            "Comandos de Mi Negocio:\n"
+            "/resumen — ver tu semana\n"
+            "/pausar · /reanudar — activar o pausar reportes\n"
+            "1 o 2 — aclarar un movimiento pendiente\n"
+            "/ayuda — mostrar este mensaje\n"
+            "Para vincular, toca «Conectar con Telegram» en la app."
+            + (
+                "\nTambién puedes escribirme lo que quieras saber de tus cuentas."
+                if llm_gateway.is_enabled()
+                else ""
+            )
+        )
+    return HELP_TEXT
+
+
+def _is_simulated(provider: str) -> bool:
+    if provider == "telegram":
+        return not telegram_gateway.is_live()
+    return settings.messaging_mode != "twilio"
 
 
 def _hash(payload: dict) -> str:
@@ -177,6 +223,8 @@ def process_inbound(db: Session, event: InboundEvent) -> InboundEvent:
             _handle_simulator(db, event)
         elif event.provider == "twilio":
             _handle_twilio(db, event)
+        elif event.provider == "telegram":
+            _handle_telegram(db, event)
         else:
             raise AppError("UNKNOWN_PROVIDER", "Proveedor de evento no soportado.", 422)
 
@@ -197,6 +245,34 @@ def process_inbound(db: Session, event: InboundEvent) -> InboundEvent:
         if current is not None:
             _fail_event(db, current, "PROCESSING_ERROR")
     return event
+
+
+_telegram_offset: int | None = None
+
+
+def poll_telegram(db: Session) -> int:
+    """Trae mensajes nuevos con getUpdates y los guarda en el inbox.
+
+    Solo corre con Telegram activo, token configurado y TELEGRAM_POLLING=true.
+    Los repetidos se descartan por update_id (idempotencia del inbox).
+    """
+    global _telegram_offset
+    if not (settings.telegram_enabled and settings.telegram_polling and telegram_gateway.is_live()):
+        return 0
+    try:
+        updates = telegram_gateway.get_updates(_telegram_offset)
+    except Exception as exc:  # red caída o token inválido: se reintenta en el próximo ciclo
+        logger.warning("telegram.poll_failed type=%s", type(exc).__name__)
+        return 0
+    for update in updates:
+        persist_inbound(
+            db,
+            provider="telegram",
+            event_id=str(update["update_id"]),
+            payload=update,
+        )
+        _telegram_offset = int(update["update_id"]) + 1
+    return len(updates)
 
 
 def process_pending_inbound(db: Session, limit: int = 20) -> int:
@@ -300,7 +376,7 @@ def _handle_simulator(db: Session, event: InboundEvent) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Comandos de WhatsApp
+# Comandos del agente (WhatsApp y Telegram comparten la misma lógica)
 # ---------------------------------------------------------------------------
 
 
@@ -367,7 +443,7 @@ def _reply(
         "outbound_message",
         message.id,
         actor_type="SYSTEM",
-        metadata={"channel": "whatsapp", "simulated": settings.messaging_mode != "twilio"},
+        metadata={"channel": link.provider, "simulated": _is_simulated(link.provider)},
     )
     return message
 
@@ -385,8 +461,46 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
         raise AppError("INVALID_PHONE", "Teléfono inválido.", 422) from exc
 
     command, _, argument = body.partition(" ")
-    command = command.upper().strip()
+    _handle_command(db, event, "twilio", phone, command.upper().strip(), argument.strip(), body)
+
+
+def parse_telegram_text(text: str) -> tuple[str, str]:
+    """Convierte '/start CODIGO', '/resumen@MicaBot' o 'resumen' en (COMANDO, argumento)."""
+    command, _, argument = text.strip().partition(" ")
+    command = command.removeprefix("/").split("@", 1)[0].upper().strip()
     argument = argument.strip()
+    if command == "START":
+        command = "VINCULAR" if argument else "AYUDA"
+    return command, argument
+
+
+def _handle_telegram(db: Session, event: InboundEvent) -> None:
+    payload = event.payload_json or {}
+    message = payload.get("message") or {}
+    chat = message.get("chat") or {}
+    chat_id = str(chat.get("id") or "")
+    if not chat_id or chat.get("type", "private") != "private":
+        return  # sin mensaje o chat grupal: el agente solo atiende chats privados
+    text = str(message.get("text") or "")
+    command, argument = parse_telegram_text(text)
+    _handle_command(db, event, "telegram", chat_id, command, argument, text)
+
+
+def _handle_command(
+    db: Session,
+    event: InboundEvent,
+    provider: str,
+    phone: str,
+    command: str,
+    argument: str,
+    text: str = "",
+) -> None:
+    """``phone`` es la dirección del canal: teléfono (WhatsApp) o chat_id (Telegram).
+
+    ``text`` es el mensaje original: si no es un comando, lo responde la IA (si está
+    activa) con los datos de la cuenta; si no, se envía la ayuda.
+    """
+    name = channel_name(provider)
 
     business: Business | None
     link: ChannelLink | None
@@ -395,7 +509,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             raise AppError("LINK_CODE_REQUIRED", "Envía VINCULAR <código>.", 422)
         try:
             business, link = identity_service.consume_link_challenge(
-                db, argument, phone, commit=False
+                db, argument, phone, provider, commit=False
             )
         except AppError as exc:
             if exc.code != "LINK_CODE_USED":
@@ -403,6 +517,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             link = identity_service.find_link_by_phone(
                 db,
                 phone,
+                provider,
                 business_id=event.business_id,
                 environment=event.environment,
             )
@@ -417,13 +532,14 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             business,
             link,
             event,
-            "Tu WhatsApp quedó vinculado a Mi Negocio. Envía AYUDA para ver los comandos.",
+            f"Tu {name} quedó vinculado a Mi Negocio. Envía AYUDA para ver los comandos.",
         )
         return
 
     link = identity_service.find_link_by_phone(
         db,
         phone,
+        provider,
         business_id=event.business_id,
         environment=event.environment,
     )
@@ -435,7 +551,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             "inbound_event",
             event.id,
             actor_type="SYSTEM",
-            metadata={"provider": "twilio"},
+            metadata={"provider": provider},
         )
         return
 
@@ -447,7 +563,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
     link.last_inbound_at = utcnow()
 
     if command == "AYUDA":
-        _reply(db, business, link, event, HELP_TEXT)
+        _reply(db, business, link, event, help_text(provider))
         return
 
     if command == "PAUSAR":
@@ -459,7 +575,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             business,
             link,
             event,
-            "Reportes por WhatsApp pausados. Tus movimientos y saldos siguen disponibles en la app.",
+            f"Reportes por {name} pausados. Tus movimientos y saldos siguen disponibles en la app.",
         )
         return
 
@@ -470,7 +586,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
                 business,
                 link,
                 event,
-                "No tienes consentimiento activo para reportes por WhatsApp. Actívalo en la app.",
+                f"No tienes consentimiento activo para reportes por {name}. Actívalo en la app.",
             )
             return
         prefs = _preferences(db, business.id)
@@ -480,7 +596,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
             business,
             link,
             event,
-            "Reportes por WhatsApp activados. Envía RESUMEN cuando quieras ver tu semana.",
+            f"Reportes por {name} activados. Envía RESUMEN cuando quieras ver tu semana.",
         )
         return
 
@@ -491,7 +607,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
                 business,
                 link,
                 event,
-                "El envío de reportes por WhatsApp no está autorizado. Puedes activarlo en la app.",
+                f"El envío de reportes por {name} no está autorizado. Puedes activarlo en la app.",
             )
             return
         if not _preferences(db, business.id).reports_enabled:
@@ -546,7 +662,8 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
         )
         return
 
-    _reply(db, business, link, event, HELP_TEXT)
+    answer = agent_service.answer(db, business, event, link.id, text, name)
+    _reply(db, business, link, event, answer or help_text(provider))
 
 
 # ---------------------------------------------------------------------------
@@ -603,14 +720,24 @@ def deliver_message(db: Session, message: OutboundMessage) -> OutboundMessage:
     link = db.get(ChannelLink, message.channel_link_id)
     if link is None:
         raise AppError("CHANNEL_NOT_LINKED", "Canal no vinculado.", 409)
-    if settings.messaging_mode == "twilio" and (
-        link.last_inbound_at is None or utcnow() - link.last_inbound_at >= timedelta(hours=24)
+    # Un canal apagado no envía nada real; el modo simulado no contacta a nadie.
+    if not channel_enabled(link.provider) and not _is_simulated(link.provider):
+        message.status = "BLOCKED"
+        message.error_code = "CHANNEL_DISABLED"
+        message.locked_until = None
+        db.commit()
+        return message
+    if (
+        link.provider == "twilio"
+        and settings.messaging_mode == "twilio"
+        and (link.last_inbound_at is None or utcnow() - link.last_inbound_at >= timedelta(hours=24))
     ):
         message.status = "BLOCKED"
         message.error_code = "OUTSIDE_SESSION_WINDOW"
         db.commit()
         return message
-    phone = decrypt_phone(link.phone_encrypted)
+    address = decrypt_phone(link.phone_encrypted)
+    gateway = telegram_gateway if link.provider == "telegram" else twilio_gateway
 
     message.status = "SENDING"
     message.attempts += 1
@@ -618,7 +745,7 @@ def deliver_message(db: Session, message: OutboundMessage) -> OutboundMessage:
     db.commit()
 
     try:
-        result = twilio_gateway.send_text(phone, message.body)
+        result = gateway.send_text(address, message.body)
         message = cast(OutboundMessage, db.get(OutboundMessage, message.id))
         message.provider_sid = result.provider_sid
         message.status = result.status if result.status in STATUS_RANK else "ACCEPTED"

@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import re
 import secrets
 import time
 
@@ -63,6 +64,44 @@ def phone_lookup_hash(phone: str) -> str:
         normalized.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
+
+
+TELEGRAM_CHAT_ID = re.compile(r"^-?\d{1,20}$")
+
+
+def channel_address(provider: str, raw: str) -> str:
+    """Dirección normalizada del canal: teléfono E.164 (WhatsApp) o chat_id (Telegram)."""
+    if provider == "telegram":
+        value = str(raw or "").strip()
+        if not TELEGRAM_CHAT_ID.match(value):
+            raise ValueError("chat_id de Telegram inválido")
+        return value
+    return normalize_phone(raw)
+
+
+def channel_lookup_hash(provider: str, raw: str) -> str:
+    """HMAC para buscar el vínculo sin guardar la dirección en claro.
+
+    Para WhatsApp coincide con ``phone_lookup_hash``; Telegram usa otro espacio
+    de nombres para que un chat_id nunca choque con un teléfono.
+    """
+    address = channel_address(provider, raw)
+    if provider == "telegram":
+        address = "telegram:" + address
+    return hmac.new(
+        settings.phone_lookup_key.encode("utf-8"),
+        address.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def verify_telegram_secret(header_value: str) -> bool:
+    """Valida la cabecera secreta del webhook de Telegram (si está configurada)."""
+    expected = settings.telegram_webhook_secret
+    if not expected:
+        # Sin secreto solo se acepta en modo simulado (sin token): pruebas y demo local.
+        return not settings.telegram_bot_token
+    return hmac.compare_digest(header_value or "", expected)
 
 
 def _simulator_signature(timestamp: str, raw_body: bytes) -> str:
