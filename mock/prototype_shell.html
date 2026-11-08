@@ -18,19 +18,8 @@
            padding:10px 16px; border-radius:14px; font-size:13px; font-weight:700; max-width:85%; text-align:center;
            opacity:0; pointer-events:none; transition:all .25s; z-index:10; }
   #toast.show { opacity:1; transform:translate(-50%,0); }
-  #side { width:260px; font-size:13px; line-height:1.5; }
-  #side h1 { font-size:20px; margin:0 0 4px; color:var(--primary); }
-  #side p { margin:0 0 12px; color:#4f434f; }
-  #side nav { display:flex; flex-direction:column; gap:6px; margin:12px 0; }
-  #side button { font:inherit; font-weight:700; text-align:left; padding:8px 12px; border-radius:12px; border:0;
-                 background:#fff; color:var(--ink); cursor:pointer; }
-  #side button:hover { background:var(--accent); }
-  #side button.reset { background:transparent; color:var(--primary); text-decoration:underline; padding:4px 0; }
-  #balances { background:#fff; border-radius:14px; padding:10px 12px; }
-  #balances div { display:flex; justify-content:space-between; }
   @media (max-width: 760px) {
     body { display:block; }
-    #side { display:none; }
     #phone { width:100%; height:100dvh; border-radius:0; padding:0; box-shadow:none; }
     #screen { border-radius:0; }
   }
@@ -42,14 +31,6 @@
   <div id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<aside id="side">
-  <h1>Prototipo navegable</h1>
-  <p>Mock unido de Stitch. Dinero ficticio; el estado vive en este navegador.</p>
-  <div id="balances"></div>
-  <nav id="jump"></nav>
-  <p id="session-info" style="margin:10px 0 0"></p>
-  <button class="reset" id="reset">Reiniciar demo</button>
-</aside>
 
 <script>
 const SCREENS = /*__SCREENS__*/{};
@@ -1175,31 +1156,8 @@ function enhance(name, win, doc) {
   }
 }
 
-/* ---------- Panel lateral (solo escritorio) ---------- */
-const JUMPS = [["home", "Inicio · Billeteras"], ["yapear", "Yapear a contacto"], ["escanear", "Escanear QR y pagar"],
-               ["mi-qr", "Mi QR por billetera"],
-               ["crear", "Crear billetera"]];
-document.getElementById("jump").innerHTML = JUMPS.map(([k, t]) => `<button data-go="${k}">${t}</button>`).join("");
-document.getElementById("jump").addEventListener("click", e => {
-  const k = e.target.dataset.go;
-  if (!k) return;
-  state.draft = {};
-  if (k === "yapear") { state.openPicker = true; return go("home"); }
-  go(k);
-});
-document.getElementById("reset").addEventListener("click", () => {
-  if (!session) return toast("Primero inicia sesión");
-  state = generateState(session.phone); save(); go("home"); toast("Demo reiniciada");
-});
-
-
-function renderSide() {
-  document.getElementById("session-info").textContent = session ? `Sesión: ${session.phone.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3")}` : "Sin sesión";
-  const rows = activeKeys().map(wallet);
-  document.getElementById("balances").innerHTML =
-    rows.map(w => `<div><span>${w.name}</span><b>S/ ${fmt(w.balance)}</b></div>`).join("") +
-    `<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><span>Total</span><b>S/ ${fmt(total())}</b></div>`;
-}
+/* ---------- Panel lateral de escritorio: retirado (solo se muestra el celular) ---------- */
+function renderSide() {}
 
 renderSide();
 render();
