@@ -8,20 +8,25 @@ import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 import { useWallets } from "@/features/wallets/api";
 
+import { MovementSummary } from "./MovementSummary";
+import { backend } from "@/lib/api/http";
+
 import { topSalesSuggestions } from "./suggestions";
 
-const STEPS = ["Rubro", "Top Ventas", "Promedio", "Costos Fijos"];
+const STEPS = ["Rubro", "Top Ventas", "Promedio", "Costos Fijos", "Reporte"];
 const QUESTIONS = [
   "¿De qué es tu negocio o a qué te dedicas principalmente?",
   "¿Qué productos o servicios vendes más en tu negocio?",
   "En un día normal, ¿más o menos cuánto vendes?",
   "Para tener tu negocio abierto, ¿cuáles son tus gastos del mes?",
+  "Para no interrumpirte mientras trabajas, ¿qué día y a qué hora prefieres recibir tu reporte semanal de tu negocio?",
 ];
 const OPTIONS = [
   ["🏪 Bodega / Abarrotes", "☕ Cafetería / Comida", "👗 Ropa y Calzado", "✂️ Salón / Barbería"],
   ["Comidas y bebidas", "Productos de primera necesidad", "Prendas y accesorios", "Servicios"],
   ["Menos de S/ 100", "S/ 100 – S/ 300", "S/ 300 – S/ 500", "Más de S/ 500"],
   ["Alquiler", "Servicios", "Personal", "Ninguno"],
+  ["Domingo a las 4 p. m.", "Lunes a las 12 p. m.", "Martes a las 9 a. m."],
 ];
 const BENEFITS = [
   { icon: "query_stats", title: "Llevar el control total", text: "Monitoreo automático de ingresos y egresos diarios.", color: "bg-primary-container" },
@@ -86,6 +91,9 @@ export function MicaScreen() {
 function Conversation({ walletId, walletName }: { walletId: string; walletName: string }) {
   const [answers, setAnswers] = useState<string[]>([]);
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [sending, setSending] = useState(false);
+  const [chatError, setChatError] = useState("");
   const [selections, setSelections] = useState<string[]>([]);
   const selected = selections.join(", ");
   const [loaded, setLoaded] = useState(false);
@@ -98,15 +106,42 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
   useEffect(() => {
     try {
       const saved: unknown = JSON.parse(sessionStorage.getItem(storageKey) ?? "[]");
-      if (Array.isArray(saved) && saved.length <= 4 && saved.every((v) => typeof v === "string")) setAnswers(saved);
+      if (Array.isArray(saved) && saved.length <= STEPS.length && saved.every((v) => typeof v === "string")) setAnswers(saved);
     } catch { /* Un almacenamiento no disponible no bloquea el chat. */ }
+    try {
+      const saved: unknown = JSON.parse(sessionStorage.getItem(`${storageKey}:chat`) ?? "[]");
+      if (Array.isArray(saved) && saved.every((turn) => turn && ["user", "assistant"].includes(turn.role) && typeof turn.content === "string")) setMessages(saved);
+    } catch { /* Sigue en memoria. */ }
     setLoaded(true);
   }, [storageKey]);
 
-  function submit(event: FormEvent) {
+  useEffect(() => {
+    if (messages.length || sending) end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length, sending]);
+
+  async function submit(event: FormEvent) {
     event.preventDefault();
     const answer = input.trim() || selected;
-    if (!answer || step >= 4) return;
+    if (!answer || sending) return;
+    if (step >= STEPS.length) {
+      setSending(true);
+      setChatError("");
+      try {
+        const response = await backend<{ reply: string }>("agent/chat", {
+          method: "POST",
+          body: { wallet_id: walletId, message: answer, history: messages.slice(-8) },
+        });
+        const nextMessages = [...messages, { role: "user" as const, content: answer }, { role: "assistant" as const, content: response.reply }];
+        setMessages(nextMessages);
+        setInput("");
+        try { sessionStorage.setItem(`${storageKey}:chat`, JSON.stringify(nextMessages)); } catch { /* Sigue en memoria. */ }
+      } catch {
+        setChatError("No pude enviar tu mensaje. Tu respuesta sigue escrita para que puedas reintentar.");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
     const next = [...answers, answer];
     setAnswers(next);
     try { sessionStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* Sigue en memoria. */ }
@@ -129,27 +164,36 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
           </div>
         </section>
         <section aria-label="Progreso de personalización" className="bg-surface-container-low p-3.5">
-          <div className="mb-2 flex items-center justify-between gap-1 text-xs"><p><strong className="text-sm text-primary">{step < 4 ? `Paso ${step + 1} de 4` : "4 de 4 completados"}</strong><span className="ml-1 text-on-surface-variant"> ● Personalización</span></p></div>
-          <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-surface-variant"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(step + 1, 4) * 25}%` }} /></div>
-          <ol className="grid grid-cols-4 text-center">{STEPS.map((label, i) => <li key={label} aria-current={i === step ? "step" : undefined} className={`flex flex-col items-center gap-1 text-[10px] ${i <= step ? "font-bold text-primary" : "text-on-surface-variant/60"}`}><span className={`flex h-5 w-5 items-center justify-center rounded-full ${i <= step ? "bg-primary text-white" : "bg-surface-variant"}`}>{i < step ? "✓" : i + 1}</span>{label}</li>)}</ol>
+          <div className="mb-2 flex items-center justify-between gap-1 text-xs"><p><strong className="text-sm text-primary">{step < STEPS.length ? `Paso ${step + 1} de ${STEPS.length}` : `${STEPS.length} de ${STEPS.length} completados`}</strong><span className="ml-1 text-on-surface-variant"> ● Personalización</span></p></div>
+          <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-surface-variant"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(step + 1, STEPS.length) / STEPS.length * 100}%` }} /></div>
+          <ol className="grid grid-cols-5 text-center">{STEPS.map((label, i) => <li key={label} aria-current={i === step ? "step" : undefined} className={`flex flex-col items-center gap-1 text-[10px] ${i <= step ? "font-bold text-primary" : "text-on-surface-variant/60"}`}><span className={`flex h-5 w-5 items-center justify-center rounded-full ${i <= step ? "bg-primary text-white" : "bg-surface-variant"}`}>{i < step ? "✓" : i + 1}</span>{label}</li>)}</ol>
         </section>
         <div role="log" aria-label="Conversación con Mica" aria-live="polite" className="space-y-3">
-          {Array.from({ length: Math.min(step + 1, 4) }, (_, i) => <div key={i} className="space-y-3">
+          {Array.from({ length: Math.min(step + 1, STEPS.length) }, (_, i) => <div key={i} className="space-y-3">
             <div className="flex max-w-[94%] items-end gap-2"><Avatar size={30} /><div className="rounded-[20px] bg-white p-3.5 text-sm leading-[21px] shadow-sm">{i === 0 && <p className="mb-2">A partir de hoy me encargaré de analizar tus ingresos por QR, clasificar tus gastos y darte recomendaciones accionables cada semana.</p>}<p className="font-semibold text-primary">{QUESTIONS[i]}</p><span className="mt-1 block text-right text-[10px] text-on-surface-variant/70">Recién</span></div></div>
             {answers[i] && <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-primary-container px-4 py-3 text-sm text-white">{answers[i]}</p>}
           </div>)}
-          {step === 4 && <div className="flex items-end gap-2"><Avatar size={30} /><p className="rounded-2xl bg-white p-4 text-sm leading-6"><strong className="text-primary">¡Gracias! Ya personalizaste tu perfil 🎉</strong><br />Guardé tus respuestas para {walletName} en este navegador. Esta demo todavía no genera recomendaciones automáticas.<br /><Link href="/" className="font-bold text-secondary underline">Volver a mis billeteras</Link></p></div>}
+          {step === STEPS.length && <>
+            <div className="flex items-end gap-2"><Avatar size={30} /><p className="rounded-2xl bg-white p-4 text-sm leading-6"><strong className="text-primary">¡Gracias! Ya personalizaste tu perfil 🎉</strong><br />Guardé tus respuestas para {walletName} en este chat, incluido tu horario preferido: {answers[4]}.</p></div>
+            <div className="flex items-end gap-2"><Avatar size={30} /><div className="rounded-2xl bg-white p-4 text-sm leading-6"><MovementSummary walletId={walletId} walletName={walletName} /></div></div>
+          </>}
         </div>
-        {step < 4 && <section className="space-y-2 pl-10"><h3 className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{step === 3 ? "Puedes elegir varios gastos o ninguno:" : "Toca una opción rápida:"}</h3><div className="flex flex-wrap gap-2">{quickOptions.map((option) => <button key={option} type="button" aria-pressed={selections.includes(option)} onClick={() => { setSelections((current) => {
+        {step < STEPS.length && <section className="space-y-2 pl-10"><h3 className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{step === 3 ? "Puedes elegir varios gastos o ninguno:" : "Toca una opción rápida:"}</h3><div className="flex flex-wrap gap-2">{quickOptions.map((option) => <button key={option} type="button" aria-pressed={selections.includes(option)} onClick={() => { setSelections((current) => {
                   if (step !== 3) return [option];
                   if (option === "Ninguno") return current.includes(option) ? [] : [option];
                   const expenses = current.filter((value) => value !== "Ninguno");
                   return expenses.includes(option) ? expenses.filter((value) => value !== option) : [...expenses, option];
-                }); setInput(""); }} className={`rounded-full px-3.5 py-3 text-left text-xs font-bold shadow-sm transition-colors ${selections.includes(option) ? "bg-primary-container text-white ring-2 ring-secondary-fixed" : "bg-white text-on-surface"}`}>{option}{selections.includes(option) && <span className="ml-2 text-secondary-fixed">✓</span>}</button>)}<button onClick={() => { setSelections([]); field.current?.focus(); }} className="flex items-center gap-1.5 rounded-full bg-surface-container px-4 py-2.5 text-xs font-semibold"><Icon name="edit" size={16} className="text-primary" />{step === 2 ? "Escribir monto o rango…" : "Escribir otro…"}</button></div></section>}
+                }); setInput(""); }} className={`rounded-full px-3.5 py-3 text-left text-xs font-bold shadow-sm transition-colors ${selections.includes(option) ? "bg-primary-container text-white ring-2 ring-secondary-fixed" : "bg-white text-on-surface"}`}>{option}{selections.includes(option) && <span className="ml-2 text-secondary-fixed">✓</span>}</button>)}<button onClick={() => { setSelections([]); field.current?.focus(); }} className="flex items-center gap-1.5 rounded-full bg-surface-container px-4 py-2.5 text-xs font-semibold"><Icon name="edit" size={16} className="text-primary" />{step === 2 ? "Escribir monto o rango…" : step === 4 ? "Escribir día y hora…" : "Escribir otro…"}</button></div></section>}
+        {messages.map((message, index) => <div key={index} className={`flex items-end gap-2 ${message.role === "user" ? "justify-end" : ""}`}>
+          {message.role === "assistant" && <Avatar size={30} />}
+          <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "bg-primary-container text-white" : "bg-white"}`}>{message.content}</p>
+        </div>)}
+        {sending && <div role="status" className="space-y-2"><p className="ml-auto w-fit max-w-[85%] rounded-2xl bg-primary-container px-4 py-3 text-sm text-white">{input}</p><p className="pl-10 text-sm text-secondary">Mica está respondiendo…</p></div>}
+        {chatError && <p role="alert" className="rounded-2xl bg-error-container p-3 text-sm text-error">{chatError}</p>}
         <div ref={end} />
       </main>
       <footer className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md">
-        <form onSubmit={submit} className="flex items-center gap-2"><input ref={field} aria-label="Respuesta a Mica" value={input} disabled={step >= 4 || !loaded} maxLength={500} onChange={(e) => { setInput(e.target.value); setSelections([]); }} placeholder={step >= 4 ? "Personalización completada" : selected || (step === 2 ? "Ej.: S/ 150 o de S/ 100 a S/ 200" : "Responde a Mica o elige una opción…")} className="h-14 min-w-0 flex-1 rounded-full bg-white px-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary-container disabled:opacity-60" /><button type="submit" aria-label="Enviar respuesta" disabled={(!input.trim() && !selected) || step >= 4 || !loaded} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary-fixed-dim text-on-secondary-fixed-variant shadow-md disabled:opacity-40"><Icon name="arrow_upward" /></button></form>
+        <form onSubmit={submit} className="flex items-center gap-2"><input ref={field} aria-label="Respuesta a Mica" value={input} disabled={sending || !loaded} maxLength={500} onChange={(e) => { setInput(e.target.value); setSelections([]); }} placeholder={step >= STEPS.length ? "Escribe tu mensaje a Mica…" : selected || (step === 2 ? "Ej.: S/ 150 o de S/ 100 a S/ 200" : step === 4 ? "Ej.: Viernes a las 6 p. m." : "Responde a Mica o elige una opción…")} className="h-14 min-w-0 flex-1 rounded-full bg-white px-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary-container disabled:opacity-60" /><button type="submit" aria-label="Enviar respuesta" disabled={(!input.trim() && !selected) || sending || !loaded} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary-fixed-dim text-on-secondary-fixed-variant shadow-md disabled:opacity-40"><Icon name="arrow_upward" /></button></form>
       </footer>
     </>
   );

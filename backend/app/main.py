@@ -17,6 +17,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.core.errors import AppError, error_payload
+from app.modules.agent.router import router as agent_router
 from app.modules.audit.router import router as usage_router
 from app.modules.business.router import router as business_router
 from app.modules.classification.router import router as classification_router
@@ -169,6 +170,7 @@ def create_app() -> FastAPI:
             ),
         )
 
+    app.include_router(agent_router, prefix="/api/v1")
     app.include_router(health_router)
     app.include_router(usage_router, prefix="/api/v1")
     app.include_router(education_router, prefix="/api/v1")

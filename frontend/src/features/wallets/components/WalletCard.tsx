@@ -14,6 +14,8 @@ type WalletCardProps = {
   onToggleShown: () => void;
   onOptions: () => void;
   onQr: () => void;
+  onSimulate?: () => void;
+  simulating?: boolean;
 };
 
 const CORNER_COLORS: Record<string, string> = {
@@ -24,8 +26,10 @@ const CORNER_COLORS: Record<string, string> = {
 };
 
 /** Tarjeta del carrusel: la Principal en morado, el resto en blanco con su etiqueta. */
-export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr }: WalletCardProps) {
+export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSimulate, simulating }: WalletCardProps) {
   const primary = wallet.is_primary;
+  const walletIcon = isEmoji(wallet.icon) ? wallet.icon : <Icon name={primary ? "credit_card" : WALLET_ICON[wallet.role]} className="text-[20px]" />;
+  const iconClass = clsx("flex h-7 w-9 shrink-0 items-center justify-center rounded-full text-[18px]", primary ? "bg-white/15 text-secondary-fixed" : "bg-secondary-container/50 text-on-secondary-container");
   return (
     <article
       data-wallet={wallet.id}
@@ -57,9 +61,11 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr }: Wa
       </div>
 
       <div className="z-10 flex min-w-0 items-center gap-2">
-        <span className={clsx("flex h-7 w-9 shrink-0 items-center justify-center rounded-full text-[18px]", primary ? "bg-white/15 text-secondary-fixed" : "bg-secondary-container/50 text-on-secondary-container")}>
-          {isEmoji(wallet.icon) ? wallet.icon : <Icon name={primary ? "credit_card" : WALLET_ICON[wallet.role]} className="text-[20px]" />}
-        </span>
+        {onSimulate ? (
+          <button type="button" onClick={onSimulate} disabled={simulating} aria-busy={simulating} aria-label={`Simular yapeos para ${wallet.name}`} className={clsx(iconClass, "focus-visible:outline-2 focus-visible:outline-primary active:scale-95")}>
+            {walletIcon}
+          </button>
+        ) : <span className={iconClass}>{walletIcon}</span>}
         <div className="min-w-0 flex-1">
           <span className={clsx("block text-[12px] font-bold leading-4", primary ? "text-on-primary-container" : "text-on-surface-variant")}>Saldo disponible</span>
           <div className="flex items-baseline gap-0.5">
