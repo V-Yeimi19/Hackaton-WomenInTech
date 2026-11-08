@@ -22,7 +22,8 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
-from app.integrations import telegram_gateway, twilio_gateway
+from app.integrations import llm_gateway, telegram_gateway, twilio_gateway
+from app.modules.agent import service as agent_service
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
 from app.modules.classification import service as classification_service
@@ -92,6 +93,11 @@ def help_text(provider: str) -> str:
             "1 o 2 — aclarar un movimiento pendiente\n"
             "/ayuda — mostrar este mensaje\n"
             "Para vincular, toca «Conectar con Telegram» en la app."
+            + (
+                "\nTambién puedes escribirme lo que quieras saber de tus cuentas."
+                if llm_gateway.is_enabled()
+                else ""
+            )
         )
     return HELP_TEXT
 
@@ -455,7 +461,7 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
         raise AppError("INVALID_PHONE", "Teléfono inválido.", 422) from exc
 
     command, _, argument = body.partition(" ")
-    _handle_command(db, event, "twilio", phone, command.upper().strip(), argument.strip())
+    _handle_command(db, event, "twilio", phone, command.upper().strip(), argument.strip(), body)
 
 
 def parse_telegram_text(text: str) -> tuple[str, str]:
@@ -475,8 +481,9 @@ def _handle_telegram(db: Session, event: InboundEvent) -> None:
     chat_id = str(chat.get("id") or "")
     if not chat_id or chat.get("type", "private") != "private":
         return  # sin mensaje o chat grupal: el agente solo atiende chats privados
-    command, argument = parse_telegram_text(str(message.get("text") or ""))
-    _handle_command(db, event, "telegram", chat_id, command, argument)
+    text = str(message.get("text") or "")
+    command, argument = parse_telegram_text(text)
+    _handle_command(db, event, "telegram", chat_id, command, argument, text)
 
 
 def _handle_command(
@@ -486,8 +493,13 @@ def _handle_command(
     phone: str,
     command: str,
     argument: str,
+    text: str = "",
 ) -> None:
-    """``phone`` es la dirección del canal: teléfono (WhatsApp) o chat_id (Telegram)."""
+    """``phone`` es la dirección del canal: teléfono (WhatsApp) o chat_id (Telegram).
+
+    ``text`` es el mensaje original: si no es un comando, lo responde la IA (si está
+    activa) con los datos de la cuenta; si no, se envía la ayuda.
+    """
     name = channel_name(provider)
 
     business: Business | None
@@ -650,7 +662,8 @@ def _handle_command(
         )
         return
 
-    _reply(db, business, link, event, help_text(provider))
+    answer = agent_service.answer(db, business, event, link.id, text, name)
+    _reply(db, business, link, event, answer or help_text(provider))
 
 
 # ---------------------------------------------------------------------------

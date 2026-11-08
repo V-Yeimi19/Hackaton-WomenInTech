@@ -102,3 +102,51 @@ def test_telegram_secret_is_required_with_real_token(client, monkeypatch):  # no
         headers={"X-Telegram-Bot-Api-Secret-Token": "secreto-de-prueba"},
     )
     assert ok.status_code == 200
+
+
+def _linked_chat(client, pg_engine, monkeypatch) -> int:  # noqa: F811
+    monkeypatch.setattr(settings, "telegram_enabled", True)
+    headers = session(client, "risk")
+    code = client.post("/api/v1/channel-link-challenges", headers=headers).json()["code"]
+    chat_id = random.randint(10**9, 10**10)
+    assert "vinculado" in _send(client, pg_engine, chat_id, f"/start {code}")[-1]
+    return chat_id
+
+
+def test_free_text_is_answered_by_ai_with_account_data(client, pg_engine, monkeypatch):  # noqa: F811
+    from app.integrations import llm_gateway
+
+    chat_id = _linked_chat(client, pg_engine, monkeypatch)
+    seen: list[list[dict[str, str]]] = []
+
+    def fake_chat(messages, **_):
+        seen.append(messages)
+        return "Hoy vas **bien**, sigue así."
+
+    monkeypatch.setattr(settings, "enable_llm", True)
+    monkeypatch.setattr(settings, "groq_api_key", "gsk_prueba")
+    monkeypatch.setattr(settings, "groq_model", "modelo-prueba")
+    monkeypatch.setattr(llm_gateway, "chat", fake_chat)
+
+    reply = _send(client, pg_engine, chat_id, "¿cómo voy hoy?")[-1]
+    assert reply == "DELIVERED|Hoy vas bien, sigue así."
+    system, data = seen[0][0]["content"], seen[0][1]["content"]
+    assert "Nunca pidas claves" in system and "Telegram" in system
+    assert data.startswith("DATOS DE LA CUENTA") and "Saldo total: S/" in data
+    assert seen[0][-1] == {"role": "user", "content": "¿cómo voy hoy?"}
+
+    # Los comandos no pasan por la IA.
+    calls = len(seen)
+    assert "Tu semana en Mi Negocio" in _send(client, pg_engine, chat_id, "/resumen")[-1]
+    assert len(seen) == calls
+
+
+def test_free_text_falls_back_to_help_when_ai_fails(client, pg_engine, monkeypatch):  # noqa: F811
+    from app.integrations import llm_gateway
+
+    chat_id = _linked_chat(client, pg_engine, monkeypatch)
+    monkeypatch.setattr(settings, "enable_llm", True)
+    monkeypatch.setattr(settings, "groq_api_key", "gsk_prueba")
+    monkeypatch.setattr(settings, "groq_model", "modelo-prueba")
+    monkeypatch.setattr(llm_gateway, "chat", lambda *a, **k: None)
+    assert "/resumen" in _send(client, pg_engine, chat_id, "hola")[-1]

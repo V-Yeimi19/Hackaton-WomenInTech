@@ -37,3 +37,17 @@ def test_telegram_lookup_never_collides_with_phone():
 def test_invalid_telegram_chat_id(raw):
     with pytest.raises(ValueError):
         channel_address("telegram", raw)
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("en *Emprendimiento Café* ok", "en Emprendimiento Café ok"),
+        ("toca **Transferir**.", "toca Transferir."),
+        ("Yapeo a Susan Mar* y Stephen Cuo*", "Yapeo a Susan Mar* y Stephen Cuo*"),
+    ],
+)
+def test_clean_reply_strips_markdown_only(raw, expected):
+    from app.modules.agent.service import clean_reply
+
+    assert clean_reply(raw) == expected
