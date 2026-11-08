@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Icon } from "@/components/ui/Icon";
@@ -18,7 +17,6 @@ const CONFETTI = [
 
 /** Bienvenida y entrada solo con número: el BFF guarda la sesión en una cookie httpOnly. */
 export function LoginScreen() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [step, setStep] = useState<"welcome" | "phone">("welcome");
   const [phone, setPhone] = useState("");
@@ -27,15 +25,18 @@ export function LoginScreen() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (loading) return;
     if (!isPeruMobile(phone)) return setError("Ingresa un celular de 9 dígitos que empiece con 9.");
+    setError(null);
     setLoading(true);
     try {
       await request("/api/auth/login", { method: "POST", body: { phone: phone.replace(/\D/g, "") } });
       await queryClient.cancelQueries();
       queryClient.clear();
       resetBalanceVisibility();
-      router.replace("/");
-      router.refresh();
+      // El BFF ya guardó la cookie. Una nueva navegación evita reutilizar
+      // redirecciones a /login que Next haya cacheado antes de iniciar sesión.
+      window.location.replace("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No pudimos iniciar sesión.");
       setLoading(false);
