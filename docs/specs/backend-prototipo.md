@@ -1,6 +1,6 @@
 # Spec: backend funcional para el prototipo de Mica
 
-> Estado: **implementado F0–F6** (F7 de empalme con el agente: contrato listo) · 2026-11-08
+> Estado: **implementado F0–F6 + frontend Next.js** (F7 de empalme con el agente: contrato listo) · 2026-11-08
 > Objetivo: que `mock/index.html` funcione **igual que antes**, pero contra la API real (FastAPI + PostgreSQL) en lugar de `localStorage`, y dejar el contrato listo para el agente (otra desarrolladora).
 
 ## 1. Por qué (criterio del jurado)
@@ -65,9 +65,18 @@ Todos los mensajes de error vienen en español y listos para mostrar; el fronten
 | F4 | ✅ | Yapeos (contacto, celular y QR) con límites y categorías |
 | F5 | ✅ | Transferencias y eliminar billetera con traslado de saldo |
 | F6 | ✅ | `mock/prototype_shell.html` usa la API si hay backend; sin backend sigue en modo local |
+| F6b | ✅ | **Frontend en Next.js** (`frontend/`): mismo diseño y flujos, BFF con cookie httpOnly, tipos generados del OpenAPI, TanStack Query, Vitest (20) y Playwright (3 escenarios contra la API) |
 | F7 | 🔜 | Empalme con el agente: usa la misma sesión y endpoints; el vínculo de WhatsApp ya se crea en el login |
 
-## 5. Cómo funciona el frontend con el backend
+## 5. Frontend en Next.js (`frontend/`)
+
+Es el frontend oficial; `mock/` queda como prototipo de diseño. Detalle en `frontend/README.md`.
+
+- **Patrón BFF:** el navegador habla solo con Next (`/api/auth/*` y `/api/backend/*`). Next llama a FastAPI con el token guardado en una cookie `httpOnly`, así que el token no queda expuesto al JavaScript y no hace falta CORS.
+- **Contrato tipado:** `npm run api:types` genera los tipos desde `docs/contracts/openapi.json`. El CI de frontend falla si el contrato y los tipos divergen.
+- **Organización por funcionalidad** (`features/wallets`, `features/yapeo`, …) con lógica pura probada aparte.
+
+## 5b. Prototipo HTML (`mock/`) con el backend
 
 - **Con backend** (en localhost se detecta solo; en otro dominio se pasa `?api=https://tu-backend`, que se recuerda): `state` es solo una caché. Cada acción llama a la API y refresca billeteras y movimientos desde el servidor.
 - **Sin backend** (o con `?api=off`): todo funciona en modo local con `localStorage`, como antes. La demo en Vercel sigue funcionando aunque el VPS no esté arriba.
@@ -88,6 +97,10 @@ python build_prototype.py
 python -m http.server 5500 --bind 127.0.0.1
 node tests/e2e-api.mjs                   # contra el backend real
 node tests/e2e-local.mjs                 # modo local (sin backend)
+
+# Frontend Next.js (desde frontend/)
+npm run lint && npm run typecheck && npm test
+npm run build && npm run test:e2e        # Playwright contra el backend real
 ```
 
 ## 7. Fuera de alcance
