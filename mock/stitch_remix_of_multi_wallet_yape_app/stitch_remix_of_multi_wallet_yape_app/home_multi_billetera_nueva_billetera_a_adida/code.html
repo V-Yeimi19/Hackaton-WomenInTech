@@ -12,7 +12,6 @@
 <div class="flex items-center gap-space-sm">
 <button type="button" aria-label="Mi perfil" class="w-9 h-9 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10"><span class="material-symbols-outlined text-[26px]">person</span></button>
 <span class="font-headline-sm text-headline-sm text-on-primary">Hola, Lucía</span>
-<span class="px-2 py-0.5 rounded-md bg-amber-300 text-amber-950 font-label-sm text-label-sm">Gratis</span>
 </div>
 <div class="flex items-center gap-space-xs">
 <button type="button" aria-label="Ayuda" class="w-10 h-10 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10"><span class="material-symbols-outlined text-[24px]">headset_mic</span></button>
@@ -44,11 +43,11 @@
 <p id="shortcut-empty" class="hidden px-space-md mt-space-md text-center font-body-md text-body-md text-on-primary/80">No encontramos esa funcionalidad</p>
 <div class="mt-space-lg">
 <div id="promo-track" class="flex gap-space-sm overflow-x-auto no-scrollbar snap-x snap-mandatory px-space-md">
-<div class="promo snap-center shrink-0 w-[88%] h-36 rounded-[20px] bg-gradient-to-br from-secondary-fixed to-secondary-fixed-dim p-space-md flex items-center gap-space-sm overflow-hidden relative">
+<div class="promo snap-center shrink-0 w-[88%] h-36 rounded-[20px] bg-gradient-to-br from-[#3cf3de] to-[#22d7ce] p-space-md flex items-center gap-space-sm overflow-hidden relative">
 <div class="flex-1 min-w-0">
 <span class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">Mi Negocio</span>
-<p class="mt-2 font-headline-sm text-headline-sm text-on-secondary-fixed leading-tight">Separa la plata de tu negocio y de tu casa</p>
-<p class="mt-1 font-body-sm text-body-sm text-on-secondary-fixed-variant">Gratis, con una billetera para cada cosa.</p>
+<p class="mt-2 text-[18px] font-bold leading-[22px] text-[#002c2b]">Separa la plata de tu negocio y de tu casa</p>
+<p class="mt-1 text-[12px] leading-4 text-[#004441]">Gratis, con una billetera para cada cosa.</p>
 </div>
 <span class="material-symbols-outlined text-[64px] text-primary-container shrink-0" style="font-variation-settings:'FILL' 1">account_balance_wallet</span>
 </div>
@@ -100,13 +99,12 @@
 <div class="px-space-md flex items-center justify-between mb-space-sm">
 <div class="flex items-center gap-space-xs">
 <h2 class="font-headline-sm text-headline-sm text-on-surface">Mis Billeteras</h2>
-<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">Multi-Yape</span>
 </div>
 <button type="button" id="btn-transfer" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-md text-label-md hover:bg-secondary-container active:scale-95 transition"><span class="material-symbols-outlined text-[18px]">swap_horiz</span>Transferir</button>
 </div>
 <!-- Carrusel Horizontal -->
 <div class="flex gap-space-md overflow-x-auto px-space-md no-scrollbar snap-x snap-mandatory py-2"><!-- Tarjeta 1: Principal -->
-<div class="snap-center shrink-0 w-[290px] rounded-lg bg-primary-container text-on-primary p-space-md flex flex-col justify-between shadow-md relative overflow-hidden h-[180px]">
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-gradient-to-r from-primary-container to-[#8c3298] text-on-primary p-space-md flex flex-col justify-between shadow-md relative overflow-hidden h-[168px]">
 <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-on-primary-container/20 blur-xl pointer-events-none"></div>
 <div class="flex items-start justify-between z-10">
 <div class="flex flex-col">
@@ -138,14 +136,14 @@
 </div>
 </div>
 <!-- Tarjeta 2: Emprendimiento Café -->
-<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[180px]">
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[168px]">
 <div class="absolute right-0 top-0 w-24 h-24 bg-secondary-fixed/20 rounded-bl-full pointer-events-none"></div>
 <div class="flex items-start justify-between z-10">
 <div class="flex items-center gap-1.5">
 <span class="font-label-lg text-label-lg text-on-surface font-bold">Emprendimiento Café</span>
 
 </div>
-<div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Negocio / Ventas</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div>
+<div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Negocio</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div>
 </div>
 <div class="flex items-center gap-space-sm z-10 my-auto">
 <div class="w-9 h-9 rounded-full bg-secondary-container/50 flex items-center justify-center text-on-secondary-container shrink-0">
@@ -167,7 +165,7 @@
 </div>
 </div>
 <!-- Tarjeta 3: Ahorro Vacaciones -->
-<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[180px]">
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[168px]">
 <div class="flex items-start justify-between z-10">
 <div class="flex items-center gap-1.5">
 <span class="font-label-lg text-label-lg text-on-surface font-bold">Ahorro Vacaciones</span>
@@ -195,7 +193,7 @@
 </div>
 </div>
 <!-- Tarjeta 4: Botón Nueva Billetera -->
-<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest border-2 border-secondary p-space-md flex flex-col justify-between shadow-md relative overflow-hidden h-[180px]"><div class="absolute right-0 top-0 w-24 h-24 bg-secondary-fixed/20 rounded-bl-full pointer-events-none"></div><div class="flex items-start justify-between z-10"><div class="flex items-center gap-1.5 min-w-0"><span class="font-label-lg text-label-lg text-on-surface font-bold truncate">Mi Tienda Online</span></div><div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-sm shrink-0"><span class="material-symbols-outlined text-[12px]">fiber_new</span>¡Nueva!</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div></div><div class="flex items-center gap-space-sm z-10 my-auto"><div class="w-9 h-9 rounded-full bg-secondary-container/50 flex items-center justify-center text-on-secondary-container shrink-0"><span class="material-symbols-outlined text-[20px]">shopping_bag</span></div><div class="flex flex-col"><div class="flex items-center gap-1"><span class="font-label-sm text-label-sm text-on-surface-variant">Saldo disponible</span><span class="px-1.5 py-0.2 rounded bg-surface-container-high text-[11px] font-semibold text-secondary">Lista para cobrar</span></div><div class="flex items-baseline gap-1"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">S/</span><span class="wallet-val font-headline-lg text-headline-lg text-on-surface" data-amount="0.00">0.00</span><button type="button" class="wallet-eye self-center ml-1 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-on-surface/5 transition" aria-label="Mostrar saldo"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button></div></div></div><div class="flex items-center justify-between gap-2 z-10 pt-1"><button class="flex-1 py-1.5 px-2 rounded-full bg-surface-container-high hover:bg-surface-variant active:scale-95 text-primary-container font-label-sm text-label-sm font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer" onclick="window.openWalletQR('Mi Tienda Online', 'S/ 0.00', 'Ventas de tienda online / Cobros QR', 'shopping_bag')"><span class="material-symbols-outlined text-[14px]">qr_code</span><span>Ver QR</span></button></div></div><div class="snap-center shrink-0 w-[140px] rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col items-center justify-center p-space-md shadow-sm transition-colors cursor-pointer group h-[180px]">
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest border-2 border-secondary p-space-md flex flex-col justify-between shadow-md relative overflow-hidden h-[168px]"><div class="absolute right-0 top-0 w-24 h-24 bg-secondary-fixed/20 rounded-bl-full pointer-events-none"></div><div class="flex items-start justify-between z-10"><div class="flex items-center gap-1.5 min-w-0"><span class="font-label-lg text-label-lg text-on-surface font-bold truncate">Mi Tienda Online</span></div><div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-sm shrink-0"><span class="material-symbols-outlined text-[12px]">fiber_new</span>¡Nueva!</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div></div><div class="flex items-center gap-space-sm z-10 my-auto"><div class="w-9 h-9 rounded-full bg-secondary-container/50 flex items-center justify-center text-on-secondary-container shrink-0"><span class="material-symbols-outlined text-[20px]">shopping_bag</span></div><div class="flex flex-col"><div class="flex items-center gap-1"><span class="font-label-sm text-label-sm text-on-surface-variant">Saldo disponible</span><span class="px-1.5 py-0.2 rounded bg-surface-container-high text-[11px] font-semibold text-secondary">Lista para cobrar</span></div><div class="flex items-baseline gap-1"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">S/</span><span class="wallet-val font-headline-lg text-headline-lg text-on-surface" data-amount="0.00">0.00</span><button type="button" class="wallet-eye self-center ml-1 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-on-surface/5 transition" aria-label="Mostrar saldo"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button></div></div></div><div class="flex items-center justify-between gap-2 z-10 pt-1"><button class="flex-1 py-1.5 px-2 rounded-full bg-surface-container-high hover:bg-surface-variant active:scale-95 text-primary-container font-label-sm text-label-sm font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer" onclick="window.openWalletQR('Mi Tienda Online', 'S/ 0.00', 'Ventas de tienda online / Cobros QR', 'shopping_bag')"><span class="material-symbols-outlined text-[14px]">qr_code</span><span>Ver QR</span></button></div></div><div class="snap-center shrink-0 w-[140px] rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col items-center justify-center p-space-md shadow-sm transition-colors cursor-pointer group h-[168px]">
 <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-space-sm group-hover:scale-105 transition-transform shadow-md">
 <span class="material-symbols-outlined text-[24px]">add</span>
 </div>
@@ -676,6 +674,42 @@
 })();
 </script>
 <!-- Acceso al agente Mica (asesora contable) -->
-<button type="button" id="btn-agent" aria-label="Hablar con Mica, tu asesora contable" class="fixed right-4 bottom-[104px] z-50 w-16 h-16 rounded-full overflow-hidden bg-white ring-4 ring-surface shadow-[0_8px_24px_rgba(89,0,106,0.35)] hover:scale-105 active:scale-95 transition-transform"><img src="__MICA_AVATAR__" alt="" class="w-full h-full object-cover"></button>
+<button type="button" id="btn-agent" aria-label="Hablar con Mica, tu asesora contable" class="fixed right-4 bottom-[104px] z-50 w-16 h-16 rounded-full overflow-hidden bg-white ring-4 ring-surface shadow-[0_8px_24px_rgba(89,0,106,0.35)] hover:scale-105 active:scale-95 transition-transform"><img src="__MICA_AVATAR__" alt="" draggable="false" class="pointer-events-none w-full h-full object-cover"></button>
+<script>
+(function () {
+  // Mica se puede arrastrar verticalmente; un arrastre no cuenta como toque.
+  var b = document.getElementById('btn-agent');
+  if (!b) return;
+  var bottom = 104, drag = null;
+  function clamp(v) { return Math.max(92, Math.min(v, Math.max(92, window.innerHeight - 80))); }
+  try { var saved = Number(sessionStorage.getItem('mica-agent-bottom')); if (saved) bottom = clamp(saved); } catch (e) {}
+  b.style.bottom = bottom + 'px';
+  b.style.touchAction = 'none';
+  b.addEventListener('pointerdown', function (e) {
+    if (!e.isPrimary || e.button !== 0) return;
+    drag = { id: e.pointerId, y: e.clientY, start: bottom, moved: false };
+    b.setPointerCapture(e.pointerId);
+  });
+  b.addEventListener('pointermove', function (e) {
+    if (!drag || drag.id !== e.pointerId) return;
+    var delta = drag.y - e.clientY;
+    if (Math.abs(delta) > 4) drag.moved = true;
+    if (drag.moved) { bottom = clamp(drag.start + delta); b.style.bottom = bottom + 'px'; }
+  });
+  function end(e) {
+    if (!drag || drag.id !== e.pointerId) return;
+    if (drag.moved) {
+      b.dataset.dragged = '1';
+      setTimeout(function () { delete b.dataset.dragged; }, 300);
+      try { sessionStorage.setItem('mica-agent-bottom', String(bottom)); } catch (err) {}
+    }
+    drag = null;
+  }
+  b.addEventListener('pointerup', end);
+  b.addEventListener('pointercancel', end);
+  window.addEventListener('resize', function () { bottom = clamp(bottom); b.style.bottom = bottom + 'px'; });
+})();
+</script>
+
 <nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(116,34,132,0.08)]"><div class="px-space-md py-3 flex gap-space-sm"><button type="button" id="bar-scan" class="flex-1 h-12 rounded-[12px] border-2 border-secondary text-secondary bg-surface-container-lowest font-label-lg text-label-lg uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-secondary/5 active:scale-[0.98] transition"><span class="material-symbols-outlined text-[22px]">qr_code_scanner</span>Escanear QR</button><button type="button" id="bar-yapear" class="flex-1 h-12 rounded-[12px] bg-secondary text-on-secondary font-label-lg text-label-lg uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.98] transition"><span class="material-symbols-outlined text-[22px]">send</span>Yapear</button></div></nav>
 </body></html>

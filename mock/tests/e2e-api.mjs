@@ -74,13 +74,14 @@ try {
   await evaluate(`${H} click(f().getElementById("bar-yapear"));`); await sleep(600);
   await evaluate(`${H} click(f().querySelector('#wallet-picker [data-key="cafe"]'));`); await sleep(2500);
   await evaluate(`${H} const d=f(); ["1","2",".","0","5"].forEach(x=>click(d.querySelector('.pad-key[data-key="'+x+'"]'))); click(d.querySelector('[data-category^="📦"]'));`);
+  const rec = (await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)).trim();
   await evaluate(`${H} click(f().getElementById("pay-submit-btn"));`); await sleep(4000);
   const cons = await evaluate(`${H} const d=f(); return { hash: location.hash, amount: d.querySelector("[class*='text-[42px]']")?.textContent, text: d.body.innerText };`);
   const last = await evaluate(`${H} return (await apiGet("/movements?limit=1")).items[0];`);
   check("Constancia tras yapear", cons.hash === "#constancia-negocio" && cons.amount === "12.05", cons.hash);
   check("Nro. de operación = servidor", cons.text.includes(last.operation_number), last.operation_number);
   check("Código de seguridad = servidor", cons.text.replace(/\s+/g, "").includes(last.security_code.split("").join("")), last.security_code);
-  check("Movimiento en el servidor con categoría", last.title === "Yapeo a Lucía Gómez R." && last.category === "RESTOCK" && last.amount === "-12.05", JSON.stringify({ t: last.title, c: last.category }));
+  check("Movimiento en el servidor con categoría", last.title === "Yapeo a " + rec && last.category === "RESTOCK" && last.amount === "-12.05", JSON.stringify({ t: last.title, c: last.category }));
   const api2 = await evaluate(`${H} return await apiGet("/wallets");`);
   check("Saldo del negocio bajó en el servidor", (Number(api1.items[1].balance) - Number(api2.items[1].balance)).toFixed(2) === "12.05");
 
@@ -112,24 +113,25 @@ try {
   await evaluate(`${H} click(f().getElementById("bar-scan"));`); await sleep(2500);
   await evaluate(`${H} click(f().getElementById("cameraFeedSim").parentElement);`); await sleep(1200);
   await evaluate(`${H} click(f().querySelector('#wallet-picker [data-key="principal"]'));`); await sleep(2500);
+  const qrRec = (await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)).trim();
   await evaluate(`${H} const d=f(); ["7"].forEach(x=>click(d.querySelector('.pad-key[data-key="'+x+'"]'))); click(d.getElementById("pay-submit-btn"));`); await sleep(4000);
   const qr = await evaluate(`${H} return (await apiGet("/movements?limit=1")).items[0];`);
-  check("Pago con QR en el servidor", qr.title === "Yapeo a La Tiendita de Don Pepe" && qr.amount === "-7.00" && qr.from_wallet.name === "Principal" && qr.category === null, JSON.stringify({ t: qr.title, a: qr.amount }));
+  check("Pago con QR en el servidor", qr.title === "Yapeo a " + qrRec && qr.amount === "-7.00" && qr.from_wallet.name === "Principal" && qr.category === null, JSON.stringify({ t: qr.title, a: qr.amount }));
   check("Constancia del QR", (await evaluate(`return location.hash;`)) === "#constancia");
   await evaluate(`${H} click([...f().querySelectorAll("button")].find(b => b.innerText.trim() === "close"));`); await sleep(2500);
   const apiQr = await evaluate(`${H} return await apiGet("/wallets");`);
 
   // 5. Crear billetera
   await evaluate(`${H} click([...f().querySelectorAll(".snap-center, [class*='cursor-pointer']")].find(x => /Nueva Billetera/.test(x.innerText)));`); await sleep(2500);
-  await evaluate(`${H} const d=f(); const i=d.getElementById("name"); i.value="Mi Bodega E2E"; i.dispatchEvent(new Event("input",{bubbles:true})); d.getElementById("form").requestSubmit();`);
+  await evaluate(`${H} const d=f(); const i=d.getElementById("name"); i.value="Mi Bodega Prueba"; i.dispatchEvent(new Event("input",{bubbles:true})); d.getElementById("form").requestSubmit();`);
   await sleep(4000);
   const api4 = await evaluate(`${H} return await apiGet("/wallets");`);
   const custom = api4.items.find(w => w.role === "CUSTOM");
-  check("Billetera creada en el servidor", custom && custom.name === "Mi Bodega E2E" && custom.balance === "0.00");
-  check("Inicio muestra la billetera nueva", (await evaluate(`${H} return location.hash + "|" + f().body.innerText.includes("Mi Bodega E2E");`)) === "#home-nueva|true");
+  check("Billetera creada en el servidor", custom && custom.name === "Mi Bodega Prueba" && custom.balance === "0.00");
+  check("Inicio muestra la billetera nueva", (await evaluate(`${H} return location.hash + "|" + f().body.innerText.includes("Mi Bodega Prueba");`)) === "#home-nueva|true");
 
   // 6. Eliminar la billetera creada (saldo 0)
-  await evaluate(`${H} const card=[...f().querySelectorAll(".snap-center")].find(c => c.innerText.includes("Mi Bodega E2E")); click(card.querySelector('[aria-label="Opciones de billetera"]'));`); await sleep(600);
+  await evaluate(`${H} const card=[...f().querySelectorAll(".snap-center")].find(c => c.innerText.includes("Mi Bodega Prueba")); click(card.querySelector('[aria-label="Opciones de billetera"]'));`); await sleep(600);
   await evaluate(`${H} click(f().querySelector('#wallet-options [data-act="ask-delete"]'));`); await sleep(300);
   await evaluate(`${H} click(f().querySelector('#wallet-options [data-act="confirm"]'));`); await sleep(4000);
   const api5 = await evaluate(`${H} return await apiGet("/wallets");`);
@@ -138,9 +140,9 @@ try {
 
   // 7. Movimientos: tocar el yapeo abre su constancia con el mismo número
   await evaluate(`${H} if (f().getElementById("mov-panel").classList.contains("hidden")) click(f().getElementById("mov-toggle"));`); await sleep(1500);
-  const row = await evaluate(`${H} const r=[...f().querySelectorAll("#tx-container .tx-item")].find(r => r.innerText.includes("Yapeo a Lucía")); return r && r.innerText.split(String.fromCharCode(10)).join(" ");`);
+  const row = await evaluate(`${H} const r=[...f().querySelectorAll("#tx-container .tx-item")].find(r => r.innerText.includes("Yapeo a " + ${JSON.stringify(rec)})); return r && r.innerText.split(String.fromCharCode(10)).join(" ");`);
   check("Movimiento con descripción en Inicio", !!row && row.includes("Para volver a surtir") && row.includes("12.05"), row);
-  await evaluate(`${H} click([...f().querySelectorAll("#tx-container .tx-item")].find(r => r.innerText.includes("Yapeo a Lucía")));`); await sleep(2500);
+  await evaluate(`${H} click([...f().querySelectorAll("#tx-container .tx-item")].find(r => r.innerText.includes("Yapeo a " + ${JSON.stringify(rec)})));`); await sleep(2500);
   check("Constancia desde movimiento = servidor", (await evaluate(`${H} return f().body.innerText;`)).includes(last.operation_number));
   await evaluate(`${H} click([...f().querySelectorAll("button")].find(b => b.innerText.trim() === "close"));`); await sleep(2500);
 

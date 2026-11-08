@@ -241,6 +241,7 @@ async function login(rawPhone) {
     } catch (e) { return e.message; }
   }
   session = { phone, mode, token };
+  resetBalanceVisibility();
   try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
   if (mode === "api") {
     try { await refresh(); } catch (e) { return e.message; }
@@ -255,6 +256,7 @@ async function login(rawPhone) {
 }
 function logout() {
   if (isApi()) api("POST", "/auth/logout").catch(() => {});
+  resetBalanceVisibility();
   session = null;
   try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
   state = structuredClone(DEFAULT_STATE);
@@ -282,6 +284,30 @@ const nowLabel = () => "Hoy - " + new Date().toLocaleTimeString("es-PE", { hour:
 const txSub = t => `${t.when} - ${t.label || (wallet(t.keys[0]) || {}).name || ""}`;
 const txsFor = k => state.txs.filter(t => t.keys.includes(k));
 const round2 = n => Math.round(n * 100) / 100;
+const DEMO_RECIPIENTS = [
+  { name: "BoticaPeru", type: "MERCHANT" },
+  { name: "Restaurante Mary", type: "MERCHANT" },
+  { name: "Susan Mar*", type: "CONTACT" },
+  { name: "Makro", type: "MERCHANT" },
+  { name: "Stephen Cuo*", type: "CONTACT" },
+];
+let recipientIndex = 0;
+/** Avanza solo al iniciar un pago o detectar un QR, nunca al cambiar el monto. */
+function nextDemoRecipient() {
+  let index = recipientIndex;
+  try {
+    const stored = Number(sessionStorage.getItem("mica-recipient-index") ?? "0");
+    if (Number.isSafeInteger(stored) && stored >= 0) index = stored;
+  } catch (e) {}
+  const recipient = DEMO_RECIPIENTS[index % DEMO_RECIPIENTS.length];
+  recipientIndex = (index + 1) % DEMO_RECIPIENTS.length;
+  try { sessionStorage.setItem("mica-recipient-index", String(recipientIndex)); } catch (e) {}
+  return recipient;
+}
+/** Al entrar o salir, los saldos vuelven a estar ocultos. */
+function resetBalanceVisibility() {
+  try { sessionStorage.removeItem("wallet-shown"); sessionStorage.removeItem("total-shown"); } catch (e) {}
+}
 function txDate(l) {
   if (l && l.at) return new Date(l.at);
   const d = new Date(), w = (l && l.when) || "";
@@ -404,17 +430,15 @@ async function pay(amount, key, recipient, note) {
   try {
     const text = String(note || "").replace(/\s+/g, " ").trim();
     const category = CATEGORY_CODES[text];
-    const type = /^Celular/.test(recipient) ? "PHONE" : state.draft.flow === "qr" ? "MERCHANT" : "CONTACT";
+    const type = state.draft.recipientType || (/^Celular/.test(recipient) ? "PHONE" : state.draft.flow === "qr" ? "MERCHANT" : "CONTACT");
     const res = await api("POST", "/yapeos", {
       from_wallet_id: walletIds[key], amount: amount.toFixed(2),
       counterparty: { type, name: recipient, ...(type === "PHONE" ? { phone: recipient.replace(/\D/g, "") } : {}) },
       ...(category ? { category } : text ? { message: text } : {}),
     }, { idem: true });
     const m = res.movement;
-    const contact = state.draft.flow === "contact" ? recipient : state.lastContact;
     await refresh();
     state.last = { amount, walletName: w.name, key, recipient, note: text, op: m.operation_number, code: m.security_code, at: m.occurred_at };
-    state.lastContact = contact;
     state.draft = {};
     save();
     go(key === "principal" ? "constancia" : "constancia-negocio");
@@ -425,8 +449,9 @@ async function pay(amount, key, recipient, note) {
   }
 }
 async function createWallet(opts) {
+  opts = { ...opts, name: normalizeWalletName(opts.name) };
   if (!isApi()) return localCreate(opts);
-  const name = String(opts.name || "").replace(/\s+/g, " ").trim();
+  const name = opts.name;
   const err = nameError(name);
   if (err) return err;
   if (state.extra) return `Por ahora puedes tener una billetera adicional. Elimina "${state.extra.name}" para crear otra.`;
@@ -474,7 +499,6 @@ function localPay(amount, key, recipient, note) {
   state.daily.total = round2(state.daily.total + amount);
   w.balance = Math.round((w.balance - amount) * 100) / 100;
   state.last = { amount, walletName: w.name, key, recipient, note: String(note || "").trim() };
-  if (state.draft.flow === "contact") state.lastContact = recipient;
   note = String(note || "").replace(/\s+/g, " ").trim();
   state.last.op = String(26100000 + Math.floor(Math.random() * 99999));
   state.last.at = new Date().toISOString();
@@ -490,8 +514,13 @@ function receive() {
   go("te-yapearon");
 }
 
+function normalizeWalletName(raw) {
+  const name = String(raw || "").normalize("NFC").replace(/\s+/g, " ").trim();
+  return name.charAt(0).toLocaleUpperCase("es-PE") + name.slice(1);
+}
 function nameError(name, exceptKey) {
   if (!name) return "Escribe un nombre para tu billetera.";
+  if (!/^[\p{L} ]+$/u.test(name)) return "Usa solo letras y espacios.";
   if (name.length < 3) return "El nombre debe tener al menos 3 caracteres.";
   if (name.length > 24) return "Máximo 24 caracteres.";
   if (activeKeys().some(o => o !== exceptKey && wallet(o).name.toLowerCase() === name.toLowerCase())) return "Ya tienes una billetera con ese nombre.";
@@ -607,7 +636,7 @@ const RULES = {
   ],
   escanear: [
     [/^arrow_back$/, () => back()],
-    [/Escanear foto|^image$|photo_library/, (el, win) => scanDetected(win.document, "La Tiendita de Don Pepe", "QR detectado en la foto")],
+    [/Escanear foto|^image$|photo_library/, (el, win) => scanDetected(win.document, null, "QR detectado en la foto")],
     [/Otra$/, () => go("crear")],
     [/Continuar a Pagar/, (el, win) => {
       const phone = win.document.getElementById("phoneInput")?.value?.trim();
@@ -704,6 +733,7 @@ frame.addEventListener("load", () => {
     }
     if (el.id === "btn-agent") {
       e.preventDefault(); e.stopImmediatePropagation();
+      if (el.dataset.dragged) return;
       return toast("Pronto podrás hablar con Mica, tu asesora contable");
     }
     if (el.id === "recipient-name") {
@@ -736,7 +766,7 @@ frame.addEventListener("load", () => {
 const PICKER_ICON = { principal: "account_balance_wallet", cafe: "storefront", vacaciones: "savings", extra: "shopping_bag" };
 function openWalletPicker(doc, opts = {}) {
   const o = Object.assign({ eyebrow: "Yapear", title: "¿Desde qué billetera?", subtitle: "", allowExtra: true,
-                            onPick: k => { state.payWallet = k; state.draft = { flow: "contact", qrRecipient: state.lastContact || "Lucía Gómez R." }; save(); go("confirmar"); } }, opts);
+                            onPick: k => { const r = nextDemoRecipient(); state.payWallet = k; state.draft = { flow: "contact", qrRecipient: r.name, recipientType: r.type }; save(); go("confirmar"); } }, opts);
   doc.getElementById("wallet-picker")?.remove();
   const keys = activeKeys();
   const esc = t => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -1070,9 +1100,9 @@ function paintFrom(doc) {
 
 /* Hoja para elegir a quién yapear (contactos frecuentes u otro número). */
 const CONTACTS = [
-  { name: "Lucía Gómez R.", phone: "987 654 321" },
-  { name: "Carlos Ruiz", phone: "912 345 678" },
-  { name: "Mamá", phone: "987 112 445" },
+  { name: "Lucía Góm*", phone: "987 654 321" },
+  { name: "Carlos Rui*", phone: "912 345 678" },
+  { name: "Susan Mar*", phone: "987 112 445" },
   { name: "Proveedor Café", phone: "998 877 665" },
 ];
 function openContactSheet(doc) {
@@ -1112,7 +1142,9 @@ function openContactSheet(doc) {
   requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); sheet.classList.remove("translate-y-full"); });
   const close = () => { wrap.classList.add("opacity-0"); sheet.classList.add("translate-y-full"); setTimeout(() => wrap.remove(), 250); };
   const choose = name => {
-    state.draft.qrRecipient = name; save();
+    state.draft.qrRecipient = name;
+    state.draft.recipientType = /^Celular/.test(name) ? "PHONE" : "CONTACT";
+    save();
     const h1 = doc.getElementById("recipient-name");
     if (h1 && h1.firstChild) h1.firstChild.textContent = name;
     close();
@@ -1200,7 +1232,10 @@ function openTxDetail(doc, i) {
 }
 
 function scanDetected(doc, recipient, msg) {
-  state.draft = { flow: "qr", qrRecipient: recipient === "La Tiendita de Don Pepe" ? undefined : recipient };
+  // Sin destinatario explícito (QR), se toma el siguiente de la demo.
+  const r = recipient ? { name: recipient, type: /^Celular/.test(recipient) ? "PHONE" : "MERCHANT" } : nextDemoRecipient();
+  recipient = r.name;
+  state.draft = { flow: "qr", qrRecipient: r.name, recipientType: r.type };
   toast(msg || "QR detectado");
   setTimeout(() => openWalletPicker(doc, {
     eyebrow: msg && msg.startsWith("Celular") ? "Yapear a celular" : "QR detectado",
@@ -1292,7 +1327,7 @@ function enhance(name, win, doc) {
     if (feed) {
       const area = feed.parentElement;
       area.style.cursor = "pointer";
-      area.addEventListener("click", e => { if (!e.target.closest("button, label")) scanDetected(doc, "La Tiendita de Don Pepe"); });
+      area.addEventListener("click", e => { if (!e.target.closest("button, label")) scanDetected(doc, null); });
       const hint = doc.createElement("div");
       hint.textContent = "Toca la cámara para simular el escaneo";
       hint.style.cssText = "position:absolute;left:50%;top:58%;transform:translateX(-50%);background:#56faeb;color:#00201d;font:700 12px 'Plus Jakarta Sans';padding:6px 12px;border-radius:999px;z-index:5;pointer-events:none;white-space:nowrap";

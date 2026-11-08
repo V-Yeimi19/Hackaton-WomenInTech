@@ -117,9 +117,9 @@ try {
   check("Hoja de contactos", await evaluate(`${H} return !!f().getElementById("contact-sheet");`));
   await evaluate(`${H} const d=f(); d.querySelector("[data-phone]").value="123"; click(d.querySelector('[data-act="phone"]'));`);
   check("Valida celular", (await evaluate(`${H} return f().querySelector("#contact-sheet [data-error]").textContent;`)).includes("9 dígitos"));
-  await evaluate(`${H} click(f().querySelector('#contact-sheet [data-name="Carlos Ruiz"]'));`);
+  await evaluate(`${H} click(f().querySelector('#contact-sheet [data-name="Carlos Rui*"]'));`);
   await sleep(400);
-  check("Destinatario cambiado", (await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)) === "Carlos Ruiz");
+  check("Destinatario cambiado", (await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)) === "Carlos Rui*");
 
   // Cambiar billetera a Ahorro: categorías ocultas y descripción de categoría limpiada
   await evaluate(`${H} click(f().getElementById("open-wallet-sheet"));`);
@@ -134,7 +134,7 @@ try {
   await evaluate(`${H} click(f().getElementById("pay-submit-btn"));`);
   await sleep(2200);
   const cons = await evaluate(`${H} const d=f(); return { hash: location.hash, amount: d.querySelector("[class*='text-[42px]']")?.textContent, name: d.querySelector("[class*='text-[18px]'].font-bold")?.textContent, text: d.body.innerText.replace(/\\s+/g," ").slice(0,400) };`);
-  check("Constancia", cons.hash === "#constancia-negocio" && cons.amount === "12.05" && cons.name === "Carlos Ruiz", JSON.stringify({ ...cons, text: undefined }));
+  check("Constancia", cons.hash === "#constancia-negocio" && cons.amount === "12.05" && cons.name === "Carlos Rui*", JSON.stringify({ ...cons, text: undefined }));
   check("Constancia muestra Ahorro Vacaciones", cons.text.includes("Ahorro Vacaciones") && /AHORRO|Ahorro/.test(cons.text));
   const stOp = JSON.parse(await evaluate(`return localStorage.getItem("mica-proto:987111222");`)).txs[0].op;
   check("Constancia y movimiento con mismo Nro. de operación", cons.text.includes(stOp), stOp);
@@ -142,7 +142,7 @@ try {
   // Saldo y movimiento
   const st = await evaluate(`return JSON.parse(localStorage.getItem("mica-proto:987111222"));`);
   check("Saldo descontado", st.wallets.vacaciones.balance === 778.05, String(st.wallets.vacaciones.balance));
-  check("Movimiento con descripción", st.txs[0].title === "Yapeo a Carlos Ruiz" && st.txs[0].note === "Regalo cumpleaños" && /pm|am/.test(st.txs[0].when), JSON.stringify(st.txs[0]));
+  check("Movimiento con descripción", st.txs[0].title === "Yapeo a Carlos Rui*" && st.txs[0].note === "Regalo cumpleaños" && /pm|am/.test(st.txs[0].when), JSON.stringify(st.txs[0]));
 
   // Validaciones: monto > saldo y > 500
   await evaluate(`${H} click([...f().querySelectorAll("button")].find(b => /Nuevo yapeo/.test(b.innerText)));`);
@@ -150,7 +150,7 @@ try {
   check("Nuevo yapeo abre hoja en Inicio", await evaluate(`${H} return !!f().getElementById("wallet-picker");`));
   await evaluate(`${H} click(f().querySelector('#wallet-picker [data-key="principal"]'));`);
   await sleep(2200);
-  check("Recuerda último contacto", (await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)) === "Carlos Ruiz");
+  check("Destinatario de demo rota", ["BoticaPeru", "Restaurante Mary", "Susan Mar*", "Makro", "Stephen Cuo*"].includes((await evaluate(`${H} return f().getElementById("recipient-name").firstChild.textContent;`)).trim()));
   check("Principal sin categorías", await evaluate(`${H} return f().getElementById("chips-drawer").classList.contains("hidden");`));
   await evaluate(`${H} const d=f(); ["6","0","0"].forEach(x=>click(d.querySelector('.pad-key[data-key="'+x+'"]'))); click(d.getElementById("pay-submit-btn"));`);
   await sleep(300);
@@ -163,14 +163,14 @@ try {
   await evaluate(`${H} click(f().getElementById("mov-toggle"));`);
   await sleep(1300);
   const mov = await evaluate(`${H} const r=f().querySelector("#tx-container .tx-item"); return r && r.innerText.replace(/\\s+/g," ");`);
-  check("Movimiento en Inicio con descripción", /Yapeo a Carlos Ruiz/.test(mov) && /Descripción: Regalo cumpleaños/.test(mov) && /- S\/ 12\.05/.test(mov), mov);
+  check("Movimiento en Inicio con descripción", /Yapeo a Carlos Rui\*/.test(mov) && /Descripción: Regalo cumpleaños/.test(mov) && /- S\/ 12\.05/.test(mov), mov);
 
   // Tocar un yapeo enviado abre su constancia completa
   const opC = st.txs[0].op;
   await evaluate(`${H} click(f().querySelector("#tx-container .tx-item"));`);
   await sleep(2200);
   const vc = await evaluate(`${H} const d=f(); return { hash: location.hash, amount: d.querySelector("[class*='text-[42px]']")?.textContent, name: d.querySelector("[class*='text-[18px]'].font-bold")?.textContent, text: d.body.innerText.split(String.fromCharCode(10)).join(" ") };`);
-  check("Yapeo abre constancia", vc.hash === "#constancia-negocio" && vc.amount === "12.05" && vc.name === "Carlos Ruiz" && vc.text.includes(opC) && vc.text.includes("Ahorro Vacaciones"), JSON.stringify({ ...vc, text: vc.text.slice(0, 160) }));
+  check("Yapeo abre constancia", vc.hash === "#constancia-negocio" && vc.amount === "12.05" && vc.name === "Carlos Rui*" && vc.text.includes(opC) && vc.text.includes("Ahorro Vacaciones"), JSON.stringify({ ...vc, text: vc.text.slice(0, 160) }));
   await evaluate(`${H} click([...f().querySelectorAll("button")].find(b => b.innerText.trim() === "close"));`);
   await sleep(2200);
   check("Cerrar vuelve a Inicio", (await evaluate(`return location.hash;`)).startsWith("#home"));

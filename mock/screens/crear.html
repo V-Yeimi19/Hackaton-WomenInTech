@@ -32,7 +32,7 @@
         <span id="name-count" class="font-body-sm text-body-sm text-on-surface-variant">0/24</span>
       </div>
       <div class="flex items-center gap-2 rounded-[12px] border-2 border-outline-variant focus-within:border-primary-container bg-surface-container-lowest px-3">
-        <input id="name" maxlength="24" autocomplete="off" placeholder="Ej.: Delivery de postres" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-body-lg text-body-lg text-on-surface" />
+        <input id="name" maxlength="24" autocomplete="off" autocapitalize="sentences" placeholder="Ej.: Delivery de postres" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-body-lg text-body-lg text-on-surface" />
         <button type="button" id="name-clear" aria-label="Borrar nombre" class="hidden text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">cancel</span></button>
       </div>
       <p id="name-hint" class="mt-1.5 font-body-sm text-body-sm text-on-surface-variant">Se verá en tu QR y en tus constancias.</p>
@@ -84,10 +84,10 @@
   var $ = function (id) { return document.getElementById(id); };
   var ICONS = ['🛍️', '☕', '💇', '🚗', '💼', '🎯'];
   var COLORS = {
-    purple:  { label: 'Morado',   dot: 'bg-primary-container',  card: 'from-primary-container to-primary' },
-    teal:    { label: 'Turquesa', dot: 'bg-secondary',          card: 'from-secondary to-on-secondary-fixed-variant' },
-    magenta: { label: 'Magenta',  dot: 'bg-tertiary-container', card: 'from-tertiary-container to-tertiary' },
-    night:   { label: 'Noche',    dot: 'bg-inverse-surface',    card: 'from-inverse-surface to-on-surface' }
+    purple:  { label: 'Violeta',    dot: 'bg-[#8b5ac7]', card: 'from-[#8b5ac7] to-[#7041ad]' },
+    teal:    { label: 'Turquesa',   dot: 'bg-[#168578]', card: 'from-[#168578] to-[#09695f]' },
+    magenta: { label: 'Coral',      dot: 'bg-[#c75560]', card: 'from-[#c75560] to-[#ae3d50]' },
+    night:   { label: 'Azul cielo', dot: 'bg-[#4279c7]', card: 'from-[#4279c7] to-[#2e5fa7]' }
   };
   var f = { name: '', purpose: 'business', icon: ICONS[0], color: 'purple' };
 
@@ -141,7 +141,16 @@
   }
 
   $('btn-back').addEventListener('click', function () { M.back(); });
-  $('name').addEventListener('input', function (e) { f.name = e.target.value; setError(''); paint(); });
+  // Solo letras (con tildes) y espacios; la primera letra en mayúscula.
+  function nameInput(raw) {
+    var letters = raw.normalize('NFC').replace(/[^\p{L} ]/gu, '');
+    return letters.charAt(0).toLocaleUpperCase('es-PE') + letters.slice(1);
+  }
+  $('name').addEventListener('input', function (e) {
+    var clean = nameInput(e.target.value);
+    if (clean !== e.target.value) e.target.value = clean;
+    f.name = clean; setError(''); paint();
+  });
   $('name-clear').addEventListener('click', function () { f.name = ''; $('name').value = ''; $('name').focus(); paint(); });
   $('purpose').addEventListener('click', function (e) {
     var b = e.target.closest('.purpose'); if (!b) return;
