@@ -1,0 +1,692 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_tab" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "on-error": "#ffffff", "on-primary-fixed": "#350040", "tertiary": "#680036", "surface-variant": "#e8e0eb", "error-container": "#ffdad6", "secondary": "#006a63", "primary": "#59006a", "surface": "#fff7ff", "primary-container": "#742284", "on-tertiary-fixed-variant": "#8e004b", "tertiary-fixed": "#ffd9e2", "on-secondary-container": "#007169", "on-primary": "#ffffff", "secondary-container": "#56faeb", "on-tertiary-container": "#ff99bb", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "on-primary-fixed-variant": "#722082", "on-primary-container": "#f196fd", "on-tertiary-fixed": "#3e001e", "on-error-container": "#93000a", "surface-container-highest": "#e8e0eb", "tertiary-fixed-dim": "#ffb0c9", "secondary-fixed": "#56faeb", "on-background": "#1e1a22", "surface-container-high": "#eee5f1", "surface-tint": "#8d3b9c", "primary-fixed": "#ffd6ff", "secondary-fixed-dim": "#28ddcf", "inverse-surface": "#332f37", "surface-bright": "#fff7ff", "outline": "#817380", "surface-container": "#f4ebf7", "background": "#fff7ff", "inverse-on-surface": "#f7eef9", "on-secondary-fixed": "#00201d", "primary-fixed-dim": "#f7acff", "surface-container-low": "#faf1fc", "outline-variant": "#d3c1d0", "on-tertiary": "#ffffff", "on-surface": "#1e1a22", "on-secondary-fixed-variant": "#00504a", "inverse-primary": "#f7acff", "tertiary-container": "#91004d", "error": "#ba1a1a", "on-surface-variant": "#4f434f", "surface-dim": "#e0d7e3" }, borderRadius: { DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px" }, spacing: { "margin-tablet": "2rem", "margin-desktop": "3rem", "space-md": "1rem", "gutter-tablet": "1.5rem", "space-lg": "1.5rem", "margin": "1rem", "gutter-desktop": "2rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "space-xl": "2rem", "gutter": "1rem" }, fontFamily: { "label-md": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "display-amount-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "display-amount": ["Plus Jakarta Sans"] }, fontSize: { "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-xl-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "800" }], "headline-xl": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.03em", fontWeight: "700" }], "headline-md": ["22px", { lineHeight: "30px", letterSpacing: "-0.01em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "500" }], "headline-sm": ["18px", { lineHeight: "24px", fontWeight: "600" }], "display-amount-mobile": ["36px", { lineHeight: "42px", letterSpacing: "-0.03em", fontWeight: "800" }], "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "700" }], "display-amount": ["48px", { lineHeight: "52px", letterSpacing: "-0.03em", fontWeight: "800" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><main class="flex-1 flex flex-col relative w-full pt-0 pb-24 bg-surface"><!-- Cabecera principal (saludo, buscador, accesos y promociones) -->
+<section id="top-home" class="bg-gradient-to-b from-primary-container to-primary pt-safe pb-space-md rounded-b-[28px] shadow-md">
+<div class="h-16 px-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<button type="button" aria-label="Mi perfil" class="w-9 h-9 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10"><span class="material-symbols-outlined text-[26px]">person</span></button>
+<span class="font-headline-sm text-headline-sm text-on-primary">Hola, Lucía</span>
+<span class="px-2 py-0.5 rounded-md bg-amber-300 text-amber-950 font-label-sm text-label-sm">Gratis</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button type="button" aria-label="Ayuda" class="w-10 h-10 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10"><span class="material-symbols-outlined text-[24px]">headset_mic</span></button>
+<button type="button" aria-label="Notificaciones" class="w-10 h-10 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10"><span class="material-symbols-outlined text-[24px]">notifications</span></button>
+</div>
+</div>
+<div class="px-space-md">
+<label class="flex items-center gap-space-sm h-12 rounded-[14px] bg-surface-container-lowest px-3 shadow-sm">
+<span class="w-8 h-8 rounded-[10px] bg-primary-fixed/60 flex items-center justify-center"><span class="material-symbols-outlined text-[20px] text-on-surface">search</span></span>
+<input id="feature-search" type="search" placeholder="Buscar una funcionalidad" autocomplete="off" class="flex-1 bg-transparent border-0 outline-none focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant">
+</label>
+</div>
+<div id="shortcut-grid" class="grid grid-cols-4 gap-x-space-sm gap-y-space-md px-space-md mt-space-lg">
+<button type="button" data-shortcut="Recargar celular" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-primary-container" style="font-variation-settings:'FILL' 1">phone_iphone</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Recargar celular</span></button>
+<button type="button" data-shortcut="Yapear servicios" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-sky-500" style="font-variation-settings:'FILL' 1">water_drop</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Yapear servicios</span></button>
+<button type="button" data-shortcut="Promos" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-amber-500" style="font-variation-settings:'FILL' 1">sell</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Promos</span></button>
+<button type="button" data-shortcut="Código de aprobación" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-primary-container" style="font-variation-settings:'FILL' 1">verified_user</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Código de aprobación</span></button>
+<button type="button" data-shortcut="Créditos" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-secondary" style="font-variation-settings:'FILL' 1">payments</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Créditos</span></button>
+<button type="button" data-shortcut="Tienda" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-primary-container" style="font-variation-settings:'FILL' 1">storefront</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Tienda</span></button>
+<button type="button" data-shortcut="Dólares" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-emerald-600" style="font-variation-settings:'FILL' 1">attach_money</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Dólares</span></button>
+<button type="button" data-shortcut="Remesas" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-sky-600" style="font-variation-settings:'FILL' 1">public</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Remesas</span></button>
+<button type="button" data-shortcut="Seguros y SOAT" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-primary-container" style="font-variation-settings:'FILL' 1">shield</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Seguros y SOAT</span></button>
+<button type="button" data-shortcut="Viajar en bus" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-orange-500" style="font-variation-settings:'FILL' 1">directions_bus</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Viajar en bus</span></button>
+<button type="button" data-shortcut="Entradas" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition"><span class="w-14 h-14 rounded-[18px] bg-surface-container-lowest shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-tertiary-container" style="font-variation-settings:'FILL' 1">confirmation_number</span></span><span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Entradas</span></button>
+<button type="button" data-shortcut="Ver todo" class="shortcut flex flex-col items-center gap-1.5 active:scale-95 transition">
+<span class="w-14 h-14 rounded-full bg-primary-fixed-dim/90 border-4 border-on-primary/70 shadow-sm flex items-center justify-center"><span class="material-symbols-outlined text-[30px] text-primary-container">add</span></span>
+<span class="font-label-sm text-[12px] leading-tight text-on-primary text-center">Ver todo</span></button>
+</div>
+<p id="shortcut-empty" class="hidden px-space-md mt-space-md text-center font-body-md text-body-md text-on-primary/80">No encontramos esa funcionalidad</p>
+<div class="mt-space-lg">
+<div id="promo-track" class="flex gap-space-sm overflow-x-auto no-scrollbar snap-x snap-mandatory px-space-md">
+<div class="promo snap-center shrink-0 w-[88%] h-36 rounded-[20px] bg-gradient-to-br from-secondary-fixed to-secondary-fixed-dim p-space-md flex items-center gap-space-sm overflow-hidden relative">
+<div class="flex-1 min-w-0">
+<span class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">Mi Negocio</span>
+<p class="mt-2 font-headline-sm text-headline-sm text-on-secondary-fixed leading-tight">Separa la plata de tu negocio y de tu casa</p>
+<p class="mt-1 font-body-sm text-body-sm text-on-secondary-fixed-variant">Gratis, con una billetera para cada cosa.</p>
+</div>
+<span class="material-symbols-outlined text-[64px] text-primary-container shrink-0" style="font-variation-settings:'FILL' 1">account_balance_wallet</span>
+</div>
+<div class="promo snap-center shrink-0 w-[88%] h-36 rounded-[20px] bg-surface-container-lowest p-space-md flex items-center gap-space-sm overflow-hidden relative">
+<div class="flex-1 min-w-0">
+<span class="inline-block px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Nuevo</span>
+<p class="mt-2 font-headline-sm text-headline-sm text-primary-container leading-tight">Habla con Mica, tu asesora contable</p>
+<p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Resuelve tus dudas de tu negocio.</p>
+</div>
+<img src="__MICA_AVATAR__" alt="" class="w-20 h-20 rounded-full object-cover shrink-0">
+</div>
+<div class="promo snap-center shrink-0 w-[88%] h-36 rounded-[20px] bg-gradient-to-br from-primary-fixed to-primary-fixed-dim p-space-md flex items-center gap-space-sm overflow-hidden relative">
+<div class="flex-1 min-w-0">
+<span class="inline-block px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm">Sin comisiones</span>
+<p class="mt-2 font-headline-sm text-headline-sm text-on-primary-fixed leading-tight">Transfiere entre tus billeteras al instante</p>
+<p class="mt-1 font-body-sm text-body-sm text-on-primary-fixed-variant">Usa el botón Transferir de abajo.</p>
+</div>
+<span class="material-symbols-outlined text-[64px] text-primary-container shrink-0">swap_horiz</span>
+</div>
+</div>
+<div id="promo-dots" class="flex justify-center gap-1.5 mt-space-sm" aria-hidden="true">
+<span class="h-1.5 w-5 rounded-full bg-on-primary transition-all"></span><span class="h-1.5 w-1.5 rounded-full bg-on-primary/40 transition-all"></span><span class="h-1.5 w-1.5 rounded-full bg-on-primary/40 transition-all"></span>
+</div>
+</div>
+</section>
+<script>
+(function () {
+  // Buscador: filtra los accesos por nombre (sin tildes).
+  var norm = function (t) { return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+  var input = document.getElementById('feature-search');
+  var tiles = [].slice.call(document.querySelectorAll('.shortcut'));
+  input.addEventListener('input', function () {
+    var q = norm(input.value.trim()), shown = 0;
+    tiles.forEach(function (t) { var ok = !q || norm(t.getAttribute('data-shortcut')).indexOf(q) >= 0; t.classList.toggle('hidden', !ok); if (ok) shown++; });
+    document.getElementById('shortcut-empty').classList.toggle('hidden', shown > 0);
+  });
+  // Indicador de la promo visible.
+  var track = document.getElementById('promo-track'), dots = document.getElementById('promo-dots').children;
+  track.addEventListener('scroll', function () {
+    var cards = track.querySelectorAll('.promo'), mid = track.scrollLeft + track.clientWidth / 2, best = 0, dist = 1e9;
+    [].forEach.call(cards, function (c, i) { var d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = i; } });
+    [].forEach.call(dots, function (d, i) { d.className = 'h-1.5 rounded-full transition-all ' + (i === best ? 'w-5 bg-on-primary' : 'w-1.5 bg-on-primary/40'); });
+  }, { passive: true });
+})();
+</script>
+<div class="flex flex-col w-full pb-8">
+<!-- Carrusel de Billeteras Activas -->
+<section class="mt-space-md">
+<div class="px-space-md flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Mis Billeteras</h2>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">Multi-Yape</span>
+</div>
+<button type="button" id="btn-transfer" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-md text-label-md hover:bg-secondary-container active:scale-95 transition"><span class="material-symbols-outlined text-[18px]">swap_horiz</span>Transferir</button>
+</div>
+<!-- Carrusel Horizontal -->
+<div class="flex gap-space-md overflow-x-auto px-space-md no-scrollbar snap-x snap-mandatory py-2"><!-- Tarjeta 1: Principal -->
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-primary-container text-on-primary p-space-md flex flex-col justify-between shadow-md relative overflow-hidden h-[180px]">
+  <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-on-primary-container/20 blur-xl pointer-events-none"></div>
+  <div class="flex items-start justify-between z-10">
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1.5">
+        <span class="font-label-lg text-label-lg font-bold">Principal</span>
+        <span class="material-symbols-outlined text-[16px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;" title="Oficial vinculada a DNI">verified</span>
+      </div>
+      <span class="font-label-sm text-label-sm text-on-primary-container">DNI / Celular Oficial</span>
+    </div>
+    <div class="flex items-center gap-1 shrink-0"><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-primary hover:bg-on-primary/10 transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div>
+  </div>
+  <div class="flex items-center gap-space-sm z-10 my-auto">
+    <div class="w-9 h-7 rounded bg-secondary-fixed/30 flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-secondary-fixed text-[20px]">credit_card</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="font-label-sm text-label-sm text-on-primary-container">Saldo disponible</span>
+      <div class="flex items-baseline gap-1">
+        <span class="font-headline-sm text-headline-sm font-semibold">S/</span>
+        <span class="wallet-val font-headline-lg text-headline-lg" data-amount="1,820.50">1,820.50</span><button type="button" class="wallet-eye self-center ml-1 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-on-surface/5 transition" aria-label="Mostrar saldo"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center justify-between gap-2 z-10 pt-1">
+    <button onclick="window.openWalletQR('Principal', 'S/ 1,820.50', 'DNI / Celular Oficial', 'qr_code_2')" class="flex-1 py-1.5 px-2 rounded-full bg-surface-container-lowest/20 hover:bg-surface-container-lowest/30 active:scale-95 text-on-primary font-label-sm text-label-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
+      <span class="material-symbols-outlined text-[14px]">qr_code_2</span>
+      <span class="">Ver QR</span>
+    </button>
+    </div>
+</div>
+
+<!-- Tarjeta 2: Emprendimiento Café -->
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[180px]">
+  <div class="absolute right-0 top-0 w-24 h-24 bg-secondary-fixed/20 rounded-bl-full pointer-events-none"></div>
+  <div class="flex items-start justify-between z-10">
+    <div class="flex items-center gap-1.5">
+      <span class="font-label-lg text-label-lg text-on-surface font-bold">Emprendimiento Café</span>
+      
+    </div>
+    <div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold">Negocio / Ventas</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div>
+  </div>
+  <div class="flex items-center gap-space-sm z-10 my-auto">
+    <div class="w-9 h-9 rounded-full bg-secondary-container/50 flex items-center justify-center text-on-secondary-container shrink-0">
+      <span class="material-symbols-outlined text-[20px]">storefront</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Saldo disponible</span>
+      <div class="flex items-baseline gap-1">
+        <span class="font-headline-sm text-headline-sm text-on-surface font-semibold">S/</span>
+        <span class="wallet-val font-headline-lg text-headline-lg text-on-surface" data-amount="840.20">840.20</span><button type="button" class="wallet-eye self-center ml-1 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-on-surface/5 transition" aria-label="Mostrar saldo"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center justify-between gap-2 z-10 pt-1">
+    <button onclick="window.openWalletQR('Emprendimiento Café', 'S/ 840.20', 'Negocio / Cobro directo', 'storefront')" class="flex-1 py-1.5 px-2 rounded-full bg-surface-container-high hover:bg-surface-variant active:scale-95 text-primary-container font-label-sm text-label-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
+      <span class="material-symbols-outlined text-[14px]">qr_code</span>
+      <span class="">Ver QR</span>
+    </button>
+    </div>
+</div>
+
+<!-- Tarjeta 3: Ahorro Vacaciones -->
+<div class="snap-center shrink-0 w-[290px] rounded-lg bg-surface-container-lowest p-space-md flex flex-col justify-between shadow-sm relative overflow-hidden h-[180px]">
+  <div class="flex items-start justify-between z-10">
+    <div class="flex items-center gap-1.5">
+      <span class="font-label-lg text-label-lg text-on-surface font-bold">Ahorro Vacaciones</span>
+      
+    </div>
+    <div class="flex items-center gap-1 shrink-0"><span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">Ahorro</span><button aria-label="Opciones de billetera" class="w-8 h-8 -my-1 -mr-2 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-[22px]">more_vert</span></button></div>
+  </div>
+  <div class="flex items-center gap-space-sm z-10 my-auto">
+    <div class="w-9 h-9 rounded-full bg-tertiary-fixed/30 flex items-center justify-center text-tertiary shrink-0">
+      <span class="material-symbols-outlined text-[20px]">savings</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="font-label-sm text-label-sm text-on-surface-variant">Saldo disponible</span>
+      <div class="flex items-baseline gap-1">
+        <span class="font-headline-sm text-headline-sm text-on-surface font-semibold">S/</span>
+        <span class="wallet-val font-headline-lg text-headline-lg text-on-surface" data-amount="790.10">790.10</span><button type="button" class="wallet-eye self-center ml-1 w-8 h-8 rounded-full flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-on-surface/5 transition" aria-label="Mostrar saldo"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-center justify-between gap-2 z-10 pt-1">
+    <button onclick="window.openWalletQR('Ahorro Vacaciones', 'S/ 790.10', 'Depósito directo al ahorro', 'savings')" class="flex-1 py-1.5 px-2 rounded-full bg-surface-container-high hover:bg-surface-variant active:scale-95 text-primary-container font-label-sm text-label-sm transition-all flex items-center justify-center gap-1 cursor-pointer">
+      <span class="material-symbols-outlined text-[14px]">qr_code</span>
+      <span class="">Ver QR</span>
+    </button>
+    </div>
+</div>
+
+<!-- Tarjeta 4: Botón Nueva Billetera -->
+<div class="snap-center shrink-0 w-[140px] rounded-lg bg-surface-container-low hover:bg-surface-container flex flex-col items-center justify-center p-space-md shadow-sm transition-colors cursor-pointer group h-[180px]">
+  <div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-space-sm group-hover:scale-105 transition-transform shadow-md">
+    <span class="material-symbols-outlined text-[24px]">add</span>
+  </div>
+  <span class="font-label-md text-label-md text-primary-container text-center font-bold leading-tight">+ Nueva Billetera</span>
+  <span class="font-body-sm text-body-sm text-on-surface-variant text-center mt-1">Separa gastos o negocios</span>
+</div></div>
+</section>
+<!-- Saldo total (compacto) -->
+<section class="px-space-md mt-space-md">
+<button type="button" id="total-row" aria-pressed="false" aria-label="Mostrar saldo total" class="w-full flex items-center gap-space-sm bg-surface-container-lowest rounded-lg shadow-sm px-space-md py-4 hover:bg-surface-container-low transition-colors text-left">
+<span class="material-symbols-outlined text-[24px] text-primary-container" style="font-variation-settings:'FILL' 1">account_balance</span>
+<span class="flex-1 font-label-lg text-[15px] text-primary-container">Saldo total</span>
+<span class="font-label-lg text-[15px] text-on-surface">S/ <span id="total-amount" data-amount="3,450.80">****</span></span>
+<span id="total-eye" class="material-symbols-outlined text-[22px] text-outline">visibility_off</span>
+</button>
+</section>
+<script>
+(function () {
+  // Saldos ocultos por defecto (****). El ojito de cada billetera los muestra; se recuerda en la sesión.
+  var KEY = 'wallet-shown', MASK = '****', shown;
+  try { shown = JSON.parse(sessionStorage.getItem(KEY)) || []; } catch (e) { shown = []; }
+  function save() { try { sessionStorage.setItem(KEY, JSON.stringify(shown)); } catch (e) {} }
+  function nameOf(card) { var n = card.querySelector('.font-label-lg'); return n ? n.textContent.trim() : ''; }
+  var cards = [].slice.call(document.querySelectorAll('.wallet-eye')).map(function (e) { return e.closest('.snap-center'); }).filter(Boolean);
+  function apply(card) {
+    var visible = shown.indexOf(nameOf(card)) >= 0;
+    card.querySelectorAll('[data-amount]').forEach(function (v) { v.textContent = visible ? v.getAttribute('data-amount') : MASK; });
+    var eye = card.querySelector('.wallet-eye');
+    eye.firstElementChild.textContent = visible ? 'visibility' : 'visibility_off';
+    eye.setAttribute('aria-label', visible ? 'Ocultar saldo' : 'Mostrar saldo');
+  }
+  // Saldo total: oculto por defecto; se muestra al tocar la fila.
+  var totalShown = false;
+  try { totalShown = sessionStorage.getItem('total-shown') === '1'; } catch (e) {}
+  function applyTotal() {
+    var t = document.getElementById('total-amount'), row = document.getElementById('total-row');
+    if (!t || !row) return;
+    t.textContent = totalShown ? t.getAttribute('data-amount') : MASK;
+    document.getElementById('total-eye').textContent = totalShown ? 'visibility' : 'visibility_off';
+    row.setAttribute('aria-pressed', totalShown ? 'true' : 'false');
+    row.setAttribute('aria-label', totalShown ? 'Ocultar saldo total' : 'Mostrar saldo total');
+  }
+  var totalRow = document.getElementById('total-row');
+  if (totalRow) totalRow.addEventListener('click', function () {
+    totalShown = !totalShown;
+    try { sessionStorage.setItem('total-shown', totalShown ? '1' : ''); } catch (e) {}
+    applyTotal();
+  });
+  cards.forEach(function (card) {
+    apply(card);
+    card.querySelector('.wallet-eye').addEventListener('click', function () {
+      var name = nameOf(card), i = shown.indexOf(name);
+      if (i >= 0) shown.splice(i, 1); else shown.push(name);
+      save(); apply(card);
+    });
+  });
+  applyTotal();
+})();
+</script>
+<!-- Movimientos Recientes con Filtros -->
+<section class="px-space-md mt-space-sm">
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+<button type="button" id="mov-toggle" aria-expanded="false" aria-controls="mov-panel" class="w-full flex items-center gap-space-sm px-space-md py-4 hover:bg-surface-container-low transition-colors"><span class="material-symbols-outlined text-[24px] text-primary-container" style="font-variation-settings:'FILL' 1">receipt_long</span><span id="mov-label" class="flex-1 text-left font-label-lg text-[15px] text-primary-container">Mostrar movimientos</span><span id="mov-chevron" class="material-symbols-outlined text-[22px] text-outline transition-transform duration-200">expand_more</span></button>
+<div id="mov-panel" class="hidden">
+<div class="flex gap-space-xs overflow-x-auto no-scrollbar px-space-md pb-space-sm">
+<button type="button" class="mov-pill px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors bg-surface-container-high text-on-surface" data-wallet="all">Todas</button>
+<button type="button" class="mov-pill px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors bg-surface-container-high text-on-surface" data-wallet="principal">Principal</button>
+<button type="button" class="mov-pill px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors bg-surface-container-high text-on-surface" data-wallet="emprendimiento">Emprendimiento Café</button>
+<button type="button" class="mov-pill px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors bg-surface-container-high text-on-surface" data-wallet="ahorro">Ahorro Vacaciones</button>
+</div>
+<div id="mov-skeleton" class="hidden" aria-busy="true" aria-label="Cargando movimientos">
+<div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+<div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+<div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+<div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+</div>
+<div class="hidden flex flex-col" id="tx-container">
+<div class="tx-item flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high cursor-pointer hover:bg-surface-container-low transition-colors" data-wallets="emprendimiento all"><div class="min-w-0"><p class="tx-title font-label-lg text-[15px] text-on-surface truncate">Pago de Carlos Ruiz</p><p class="tx-sub font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate">Hoy - 3:42 pm - Emprendimiento Café</p></div><span class="tx-amount font-label-lg text-[15px] shrink-0 text-on-surface">S/ 45.00</span></div>
+<div class="tx-item flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high cursor-pointer hover:bg-surface-container-low transition-colors" data-wallets="principal emprendimiento all"><div class="min-w-0"><p class="tx-title font-label-lg text-[15px] text-on-surface truncate">Pase desde Emprendimiento</p><p class="tx-sub font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate">Hoy - 1:15 pm - Entre billeteras</p></div><span class="tx-amount font-label-lg text-[15px] shrink-0 text-on-surface">S/ 300.00</span></div>
+<div class="tx-item flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high cursor-pointer hover:bg-surface-container-low transition-colors" data-wallets="principal all"><div class="min-w-0"><p class="tx-title font-label-lg text-[15px] text-on-surface truncate">Supermercado Metro</p><p class="tx-sub font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate">Ayer - 7:20 pm - Principal</p></div><span class="tx-amount font-label-lg text-[15px] shrink-0 text-tertiary-container">- S/ 142.80</span></div>
+<div class="tx-item flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high cursor-pointer hover:bg-surface-container-low transition-colors" data-wallets="principal all"><div class="min-w-0"><p class="tx-title font-label-lg text-[15px] text-on-surface truncate">Yape de Lucía Gómez</p><p class="tx-sub font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate">Ayer - 4:10 pm - Principal</p></div><span class="tx-amount font-label-lg text-[15px] shrink-0 text-on-surface">S/ 85.00</span></div>
+<div class="tx-item flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high cursor-pointer hover:bg-surface-container-low transition-colors" data-wallets="ahorro all"><div class="min-w-0"><p class="tx-title font-label-lg text-[15px] text-on-surface truncate">Aporte a Vacaciones</p><p class="tx-sub font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate">12 May. - 10:00 am - Ahorro Vacaciones</p></div><span class="tx-amount font-label-lg text-[15px] shrink-0 text-on-surface">S/ 100.00</span></div>
+</div>
+<p id="mov-empty" class="hidden px-space-md py-6 border-t border-surface-container-high text-center font-body-md text-body-md text-on-surface-variant">Aún no hay movimientos en esta billetera</p>
+</div>
+</div>
+</section>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var toggle = $('mov-toggle'), panel = $('mov-panel'), sk = $('mov-skeleton'), list = $('tx-container'), empty = $('mov-empty');
+  if (!toggle || !panel) return;
+  var store = { get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+                set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
+  var current = store.get('mov-filter') || 'all', isOpen = false, timer;
+  function paintPills() {
+    document.querySelectorAll('.mov-pill').forEach(function (p) {
+      var on = p.getAttribute('data-wallet') === current;
+      p.classList.toggle('bg-primary-container', on); p.classList.toggle('text-on-primary', on);
+      p.classList.toggle('bg-surface-container-high', !on); p.classList.toggle('text-on-surface', !on);
+    });
+  }
+  function apply() {
+    var n = 0;
+    list.querySelectorAll('.tx-item').forEach(function (r) {
+      var show = current === 'all' || (r.getAttribute('data-wallets') || '').split(' ').indexOf(current) >= 0;
+      r.classList.toggle('hidden', !show); if (show) n++;
+    });
+    empty.classList.toggle('hidden', n > 0);
+  }
+  function load(ms) {
+    clearTimeout(timer);
+    list.classList.add('hidden'); empty.classList.add('hidden'); sk.classList.remove('hidden');
+    timer = setTimeout(function () { sk.classList.add('hidden'); list.classList.remove('hidden'); apply(); }, ms);
+  }
+  function setOpen(open, ms) {
+    isOpen = open;
+    panel.classList.toggle('hidden', !open);
+    $('mov-label').textContent = open ? 'Ocultar movimientos' : 'Mostrar movimientos';
+    $('mov-chevron').style.transform = open ? 'rotate(180deg)' : '';
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    store.set('mov-open', open ? '1' : '');
+    if (open) load(ms); else clearTimeout(timer);
+  }
+  toggle.addEventListener('click', function () { setOpen(!isOpen, 900); });
+  document.querySelectorAll('.mov-pill').forEach(function (p) {
+    p.addEventListener('click', function () { current = p.getAttribute('data-wallet'); store.set('mov-filter', current); paintPills(); load(450); });
+  });
+  paintPills();
+  if (store.get('mov-open') === '1') setOpen(true, 600);
+})();
+</script>
+<!-- Script interactivo local para Toggle de Saldo y Filtro de Billeteras -->
+<script>
+    (function() {
+      // 1. Balance Visibility Toggle
+      let isHidden = false;
+      const toggleBtn = document.getElementById('toggle-balance-btn');
+      const eyeIcon = document.getElementById('eye-icon');
+      const balanceDisplay = document.getElementById('balance-display');
+      const walletVals = document.querySelectorAll('.wallet-val');
+
+      if (toggleBtn && balanceDisplay) {
+        toggleBtn.addEventListener('click', function() {
+          isHidden = !isHidden;
+          if (isHidden) {
+            eyeIcon.textContent = 'visibility_off';
+            balanceDisplay.textContent = '••••••';
+            walletVals.forEach(el => el.textContent = '••••••');
+          } else {
+            eyeIcon.textContent = 'visibility';
+            balanceDisplay.textContent = balanceDisplay.getAttribute('data-amount') || '3,450.80';
+            walletVals.forEach(el => el.textContent = el.getAttribute('data-amount') || '0.00');
+          }
+        });
+      }
+
+      // 2. Transaction Filter Pills
+      const filterPills = document.querySelectorAll('.wallet-filter-pill');
+      const txItems = document.querySelectorAll('.tx-item');
+      const filterLabel = document.getElementById('active-filter-label');
+
+      const labels = {
+        'all': 'Mostrando todas las billeteras',
+        'principal': 'Billetera Principal seleccionada',
+        'emprendimiento': 'Emprendimiento Café seleccionado',
+        'ahorro': 'Ahorro Vacaciones seleccionado'
+      };
+
+      filterPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          const selected = this.getAttribute('data-wallet');
+          
+          // Style active pill
+          filterPills.forEach(p => {
+            p.classList.remove('bg-primary-container', 'text-on-primary', 'shadow-sm');
+            p.classList.add('bg-surface-container-high', 'text-on-surface');
+          });
+          this.classList.remove('bg-surface-container-high', 'text-on-surface');
+          this.classList.add('bg-primary-container', 'text-on-primary', 'shadow-sm');
+
+          // Update header label
+          if (filterLabel && labels[selected]) {
+            filterLabel.textContent = labels[selected];
+          }
+
+          // Filter elements
+          txItems.forEach(item => {
+            const wallets = item.getAttribute('data-wallets') || '';
+            if (selected === 'all' || wallets.includes(selected)) {
+              item.style.display = 'flex';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+        });
+      });
+    })();
+  </script>
+<!-- MODAL: Ver QR de Billetera -->
+<div id="wallet-qr-modal" class="fixed inset-0 z-[70] flex items-end justify-center bg-inverse-surface/60 backdrop-blur-sm transition-opacity opacity-0 pointer-events-none" style="transition: opacity 0.25s ease-out;">
+  <div id="wallet-qr-sheet" class="w-full max-w-md bg-surface-container-lowest rounded-t-xl p-space-lg flex flex-col items-center gap-space-sm shadow-xl transform translate-y-full transition-transform pb-safe" style="transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div class="w-10 h-1.5 bg-outline-variant rounded-full mb-1 cursor-pointer" onclick="window.closeWalletQR()"></div>
+    <div class="w-full flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-full bg-secondary-container/50 flex items-center justify-center text-on-secondary-container" id="qr-modal-icon-container">
+          <span class="material-symbols-outlined text-[20px]" id="qr-modal-icon">qr_code_2</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-headline-sm text-headline-sm text-on-surface" id="qr-modal-title">Billetera Principal</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant" id="qr-modal-subtitle">Cobro directo a esta billetera</span>
+        </div>
+      </div>
+      <button onclick="window.closeWalletQR()" class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant hover:text-primary-container flex items-center justify-center transition-colors">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- QR Visual Container -->
+    <div class="my-2 p-space-md rounded-lg bg-surface flex flex-col items-center justify-center border border-surface-container-high shadow-sm w-full">
+      <div class="relative p-4 bg-surface-container-lowest rounded-lg border-2 border-primary/20 flex flex-col items-center justify-center shadow-sm">
+        <svg class="w-44 h-44 text-primary" viewBox="0 0 100 100" fill="currentColor">
+          <!-- QR visual corners -->
+          <rect x="5" y="5" width="28" height="28" rx="4" fill="#59006a"></rect>
+          <rect x="10" y="10" width="18" height="18" fill="#ffffff"></rect>
+          <rect x="14" y="14" width="10" height="10" rx="2" fill="#59006a"></rect>
+          <rect x="67" y="5" width="28" height="28" rx="4" fill="#59006a"></rect>
+          <rect x="72" y="10" width="18" height="18" fill="#ffffff"></rect>
+          <rect x="76" y="14" width="10" height="10" rx="2" fill="#59006a"></rect>
+          <rect x="5" y="67" width="28" height="28" rx="4" fill="#59006a"></rect>
+          <rect x="10" y="72" width="18" height="18" fill="#ffffff"></rect>
+          <rect x="14" y="76" width="10" height="10" rx="2" fill="#59006a"></rect>
+          <!-- Data blocks -->
+          <rect x="38" y="8" width="6" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="48" y="14" width="6" height="6" rx="1" fill="#006a63"></rect>
+          <rect x="56" y="8" width="6" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="38" y="22" width="6" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="48" y="26" width="10" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="10" y="40" width="6" height="12" rx="1" fill="#59006a"></rect>
+          <rect x="20" y="46" width="10" height="6" rx="1" fill="#006a63"></rect>
+          <rect x="36" y="40" width="10" height="10" rx="2" fill="#742284"></rect>
+          <rect x="52" y="42" width="8" height="8" rx="1" fill="#59006a"></rect>
+          <rect x="66" y="40" width="12" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="84" y="44" width="6" height="12" rx="1" fill="#006a63"></rect>
+          <rect x="38" y="60" width="6" height="14" rx="1" fill="#59006a"></rect>
+          <rect x="48" y="68" width="14" height="6" rx="1" fill="#742284"></rect>
+          <rect x="68" y="58" width="8" height="8" rx="1" fill="#59006a"></rect>
+          <rect x="82" y="64" width="8" height="8" rx="1" fill="#59006a"></rect>
+          <rect x="38" y="82" width="14" height="8" rx="1" fill="#59006a"></rect>
+          <rect x="58" y="80" width="8" height="12" rx="1" fill="#006a63"></rect>
+          <rect x="72" y="78" width="18" height="6" rx="1" fill="#59006a"></rect>
+          <rect x="80" y="88" width="10" height="6" rx="1" fill="#742284"></rect>
+          <!-- Center logo badge -->
+          <circle cx="50" cy="50" r="10" fill="#56faeb"></circle>
+          <circle cx="50" cy="50" r="8" fill="#742284"></circle>
+          <text x="50" y="54" font-size="10" font-weight="bold" fill="#56faeb" text-anchor="middle">Y</text>
+        </svg>
+      </div>
+      <span class="font-label-md text-label-md text-on-surface-variant mt-2 text-center">Escanea con Yape o cualquier billetera para pagar aquí</span>
+    </div>
+
+    <!-- Exportar QR -->
+    <div class="w-full pt-1">
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">Exportar QR</p>
+      <div class="grid grid-cols-4 gap-space-xs">
+        <button type="button" data-export="share" class="flex flex-col items-center gap-1.5 py-2 rounded-[14px] hover:bg-surface-container-low transition">
+          <span class="w-12 h-12 rounded-full bg-secondary-container/60 text-on-secondary-container flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">share</span></span>
+          <span class="font-label-sm text-label-sm text-on-surface">Compartir</span>
+        </button>
+        <button type="button" data-export="png" class="flex flex-col items-center gap-1.5 py-2 rounded-[14px] hover:bg-surface-container-low transition">
+          <span class="w-12 h-12 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">image</span></span>
+          <span class="font-label-sm text-label-sm text-on-surface">Imagen</span>
+        </button>
+        <button type="button" data-export="pdf" class="flex flex-col items-center gap-1.5 py-2 rounded-[14px] hover:bg-surface-container-low transition">
+          <span class="w-12 h-12 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">picture_as_pdf</span></span>
+          <span class="font-label-sm text-label-sm text-on-surface">PDF</span>
+        </button>
+        <button type="button" data-export="print" class="flex flex-col items-center gap-1.5 py-2 rounded-[14px] hover:bg-surface-container-low transition">
+          <span class="w-12 h-12 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">print</span></span>
+          <span class="font-label-sm text-label-sm text-on-surface">Imprimir</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Yapear desde Billetera Seleccionada -->
+<div id="wallet-send-modal" class="fixed inset-0 z-50 flex items-end justify-center bg-inverse-surface/60 backdrop-blur-sm transition-opacity opacity-0 pointer-events-none" style="transition: opacity 0.25s ease-out;">
+  <div id="wallet-send-sheet" class="w-full max-w-md bg-surface-container-lowest rounded-t-xl p-space-lg flex flex-col gap-space-sm shadow-xl transform translate-y-full transition-transform pb-safe" style="transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div class="w-10 h-1.5 bg-outline-variant rounded-full mx-auto mb-1 cursor-pointer" onclick="window.closeWalletSend()"></div>
+    <div class="flex items-center justify-between">
+      <div class="flex flex-col">
+        <span class="font-label-sm text-label-sm text-secondary font-bold uppercase tracking-wider">Yapear dinero</span>
+        <span class="font-headline-sm text-headline-sm text-on-surface">Billetera de Origen</span>
+      </div>
+      <button onclick="window.closeWalletSend()" class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant hover:text-primary-container flex items-center justify-center transition-colors">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Selected Origin Wallet Pill Card -->
+    <div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between border border-surface-container-high">
+      <div class="flex items-center gap-space-sm">
+        <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+          <span class="material-symbols-outlined text-[20px] text-secondary-fixed">account_balance_wallet</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-label-md text-label-md font-bold text-on-surface" id="send-modal-wallet-name">Principal</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant" id="send-modal-wallet-balance">Disponible: S/ 1,820.50</span>
+        </div>
+      </div>
+      <span class="material-symbols-outlined text-[20px] text-secondary">check_circle</span>
+    </div>
+
+    <!-- Quick Target Contacts Input / Options -->
+    <div class="flex flex-col gap-2 mt-1">
+      <label class="font-label-sm text-label-sm text-on-surface-variant">¿A quién deseas yapear?</label>
+      <div class="flex items-center gap-2 bg-surface-container-high p-2 rounded-lg">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">search</span>
+        <input id="yape-dest-input" type="text" placeholder="Ingresa celular o busca contacto..." class="bg-transparent w-full text-body-md text-on-surface outline-none placeholder:text-on-surface-variant/70">
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-2">
+        <button onclick="window.selectQuickContact('Mamá', '987654321')" class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high flex flex-col items-center gap-1 transition-colors active:scale-95 text-center">
+          <div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-[12px]">M</div>
+          <span class="font-label-sm text-label-sm text-on-surface truncate w-full">Mamá</span>
+        </button>
+        <button onclick="window.selectQuickContact('Carlos Ruiz', '912345678')" class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high flex flex-col items-center gap-1 transition-colors active:scale-95 text-center">
+          <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-[12px]">CR</div>
+          <span class="font-label-sm text-label-sm text-on-surface truncate w-full">Carlos Ruiz</span>
+        </button>
+        <button onclick="window.selectQuickContact('Proveedor Café', '998877665')" class="p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high flex flex-col items-center gap-1 transition-colors active:scale-95 text-center">
+          <div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-[12px]">PC</div>
+          <span class="font-label-sm text-label-sm text-on-surface truncate w-full">Proveedor</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm / Continue Button -->
+    <div class="pt-2">
+      <button onclick="window.confirmYapeAction()" class="w-full py-3 px-4 rounded-full bg-secondary-container hover:brightness-95 active:scale-95 text-on-secondary-container font-headline-sm text-headline-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer">
+        <span class="material-symbols-outlined text-[20px]">send</span>
+        <span class="">Continuar al Monto</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Toast for interactive feedback -->
+<div id="wallet-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-full font-label-md text-label-md flex items-center gap-2 shadow-lg transition-all opacity-0 pointer-events-none transform -translate-y-2">
+  <span class="material-symbols-outlined text-[18px] text-secondary-fixed" id="toast-icon">check_circle</span>
+  <span id="toast-message" class="">Acción completada</span>
+</div>
+
+<!-- Script with Handlers -->
+<script>
+  (function() {
+    const qrModal = document.getElementById('wallet-qr-modal');
+    const qrSheet = document.getElementById('wallet-qr-sheet');
+    const sendModal = document.getElementById('wallet-send-modal');
+    const sendSheet = document.getElementById('wallet-send-sheet');
+    const toast = document.getElementById('wallet-toast');
+    const toastMsg = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+
+    function showToast(text, iconName = 'check_circle') {
+      if (!toast) return;
+      toastMsg.textContent = text;
+      if (toastIcon) toastIcon.textContent = iconName;
+      toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
+      }, 2500);
+    }
+
+    window.openWalletQR = function(name, balance, subtitle, icon) {
+      if (!qrModal || !qrSheet) return;
+      document.getElementById('qr-modal-title').textContent = name;
+      document.getElementById('qr-modal-subtitle').textContent = subtitle || 'Cobro directo a ' + name;
+      if (icon) {
+        document.getElementById('qr-modal-icon').textContent = icon;
+      }
+      qrModal.classList.remove('pointer-events-none', 'opacity-0');
+      qrModal.classList.add('opacity-100');
+      setTimeout(() => {
+        qrSheet.classList.remove('translate-y-full');
+        qrSheet.classList.add('translate-y-0');
+      }, 10);
+    };
+
+    window.closeWalletQR = function() {
+      if (!qrModal || !qrSheet) return;
+      qrSheet.classList.remove('translate-y-0');
+      qrSheet.classList.add('translate-y-full');
+      setTimeout(() => {
+        qrModal.classList.add('opacity-0', 'pointer-events-none');
+        qrModal.classList.remove('opacity-100');
+      }, 250);
+    };
+
+    window.openWalletSend = function(name, balance) {
+      if (!sendModal || !sendSheet) return;
+      document.getElementById('send-modal-wallet-name').textContent = name;
+      document.getElementById('send-modal-wallet-balance').textContent = 'Disponible: ' + balance;
+      sendModal.classList.remove('pointer-events-none', 'opacity-0');
+      sendModal.classList.add('opacity-100');
+      setTimeout(() => {
+        sendSheet.classList.remove('translate-y-full');
+        sendSheet.classList.add('translate-y-0');
+      }, 10);
+    };
+
+    window.closeWalletSend = function() {
+      if (!sendModal || !sendSheet) return;
+      sendSheet.classList.remove('translate-y-0');
+      sendSheet.classList.add('translate-y-full');
+      setTimeout(() => {
+        sendModal.classList.add('opacity-0', 'pointer-events-none');
+        sendModal.classList.remove('opacity-100');
+      }, 250);
+    };
+
+    window.simulateShareQR = function() {
+      showToast('Enlace de cobro QR copiado al portapapeles', 'share');
+      setTimeout(window.closeWalletQR, 900);
+    };
+
+    window.simulateDownloadQR = function() {
+      showToast('Código QR guardado en la galería', 'download_done');
+      setTimeout(window.closeWalletQR, 900);
+    };
+
+    window.selectQuickContact = function(contactName, phone) {
+      const input = document.getElementById('yape-dest-input');
+      if (input) input.value = contactName + ' (' + phone + ')';
+    };
+
+    window.confirmYapeAction = function() {
+      const origin = document.getElementById('send-modal-wallet-name').textContent;
+      const input = document.getElementById('yape-dest-input');
+      const target = (input && input.value) ? input.value : 'destinatario';
+      showToast('Iniciando envío desde ' + origin, 'send');
+      setTimeout(window.closeWalletSend, 900);
+    };
+
+    // Close on backdrop click
+    qrModal?.addEventListener('click', function(e) { if (e.target === qrModal) window.closeWalletQR(); });
+    sendModal?.addEventListener('click', function(e) { if (e.target === sendModal) window.closeWalletSend(); });
+  })();
+</script></div></main><!-- Menú lateral (solo visual, sin navegación) -->
+<div id="side-menu" class="fixed inset-0 z-[80] hidden" aria-hidden="true">
+<div data-menu-close class="menu-backdrop absolute inset-0 bg-inverse-surface/50 opacity-0 transition-opacity duration-300"></div>
+<nav class="menu-panel absolute left-0 top-0 bottom-0 w-[80%] max-w-[320px] bg-surface-container-lowest shadow-xl -translate-x-full transition-transform duration-300 flex flex-col pt-safe pb-safe" aria-label="Menú">
+<div class="flex-1 pt-12">
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors bg-primary-fixed/40 border-b border-outline-variant/40"><span class="material-symbols-outlined text-[26px] text-primary-container">person</span><span class="font-body-lg text-body-lg text-on-surface">Mi perfil</span></button>
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">smartphone</span><span class="font-body-lg text-body-lg text-on-surface">Recargar celular</span></button>
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">payments</span><span class="font-body-lg text-body-lg text-on-surface">Créditos</span></button>
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">percent</span><span class="font-body-lg text-body-lg text-on-surface">Promociones</span></button>
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">lock</span><span class="font-body-lg text-body-lg text-on-surface">Código de aprobación</span></button>
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">request_quote</span><span class="font-body-lg text-body-lg text-on-surface">Cobrar</span></button>
+</div>
+<div class="border-t border-outline-variant/50">
+<button type="button" class="menu-item w-full flex items-center gap-space-lg px-space-lg py-4 text-left transition-colors hover:bg-surface-container-low"><span class="material-symbols-outlined text-[26px] text-primary-container">logout</span><span class="font-body-lg text-body-lg text-on-surface">Cerrar sesión</span></button>
+</div>
+</nav>
+</div>
+<script>
+(function () {
+  var menu = document.getElementById('side-menu');
+  var panel = menu.querySelector('.menu-panel'), backdrop = menu.querySelector('.menu-backdrop');
+  function open() {
+    menu.classList.remove('hidden'); menu.classList.add('is-open'); menu.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(function () { backdrop.classList.remove('opacity-0'); panel.classList.remove('-translate-x-full'); });
+  }
+  function close() {
+    backdrop.classList.add('opacity-0'); panel.classList.add('-translate-x-full');
+    menu.classList.remove('is-open'); menu.setAttribute('aria-hidden', 'true');
+    setTimeout(function () { menu.classList.add('hidden'); }, 300);
+  }
+  var btn = document.querySelector('#top-home [aria-label="Mi perfil"]');
+  if (btn) btn.addEventListener('click', open);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menu.classList.contains('is-open')) close(); });
+})();
+</script>
+<!-- Acceso al agente Mica (asesora contable) -->
+<button type="button" id="btn-agent" aria-label="Hablar con Mica, tu asesora contable" class="fixed right-4 bottom-[104px] z-50 w-16 h-16 rounded-full overflow-hidden bg-white ring-4 ring-surface shadow-[0_8px_24px_rgba(89,0,106,0.35)] hover:scale-105 active:scale-95 transition-transform"><img src="__MICA_AVATAR__" alt="" class="w-full h-full object-cover"></button>
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(116,34,132,0.08)]"><div class="px-space-md py-3 flex gap-space-sm"><button type="button" id="bar-scan" class="flex-1 h-12 rounded-[12px] border-2 border-secondary text-secondary bg-surface-container-lowest font-label-lg text-label-lg uppercase tracking-wide flex items-center justify-center gap-2 hover:bg-secondary/5 active:scale-[0.98] transition"><span class="material-symbols-outlined text-[22px]">qr_code_scanner</span>Escanear QR</button><button type="button" id="bar-yapear" class="flex-1 h-12 rounded-[12px] bg-secondary text-on-secondary font-label-lg text-label-lg uppercase tracking-wide flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-[0.98] transition"><span class="material-symbols-outlined text-[22px]">send</span>Yapear</button></div></nav>
+
+
+
+</body></html>

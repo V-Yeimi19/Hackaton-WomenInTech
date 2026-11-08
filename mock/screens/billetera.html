@@ -1,0 +1,269 @@
+<!--STITCH_HEAD-->
+<body class="bg-surface font-body-md text-on-surface min-h-screen">
+<header class="fixed top-0 w-full z-40 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+  <div class="h-16 px-space-md flex items-center gap-space-sm">
+    <button type="button" id="btn-back" aria-label="Volver" class="w-10 h-10 rounded-full bg-surface-container-high text-primary-container flex items-center justify-center">
+      <span class="material-symbols-outlined text-[22px]">arrow_back</span>
+    </button>
+    <h1 class="font-headline-sm text-headline-sm text-primary-container">Mi billetera</h1>
+  </div>
+</header>
+
+<main class="pt-20 pb-10 px-space-md flex flex-col gap-space-md">
+  <!-- Tarjeta resumen -->
+  <section class="rounded-lg bg-gradient-to-br from-primary-container to-primary text-on-primary p-space-md shadow-md relative overflow-hidden">
+    <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-secondary-fixed/15 blur-xl pointer-events-none"></div>
+    <div class="flex items-center gap-space-sm relative">
+      <span class="w-12 h-12 rounded-full bg-on-primary/15 flex items-center justify-center shrink-0">
+        <span id="w-icon" class="material-symbols-outlined text-secondary-fixed text-[26px]">account_balance_wallet</span>
+      </span>
+      <div class="min-w-0">
+        <p id="w-name" class="font-headline-sm text-headline-sm truncate"></p>
+        <span id="w-tag" class="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-on-primary/15 font-label-sm text-label-sm"></span>
+      </div>
+    </div>
+    <p class="font-label-md text-label-md text-on-primary-container mt-space-md relative">Saldo disponible</p>
+    <p class="relative flex items-baseline gap-1"><span class="font-headline-sm text-headline-sm">S/</span><span id="w-balance" class="font-display-amount-mobile text-display-amount-mobile"></span></p>
+    <p id="w-locked" class="hidden relative mt-space-sm font-body-sm text-body-sm text-on-primary-container flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">lock</span>Billetera oficial vinculada a tu DNI: no se puede eliminar.
+    </p>
+  </section>
+
+  <!-- Movimientos de esta billetera -->
+  <section class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+    <button type="button" id="mov-toggle" aria-expanded="false" aria-controls="mov-panel" class="w-full flex items-center gap-space-sm px-space-md py-4 hover:bg-surface-container-low transition-colors">
+      <span class="material-symbols-outlined text-[24px] text-primary-container" style="font-variation-settings:'FILL' 1">receipt_long</span>
+      <span id="mov-label" class="flex-1 text-left font-label-lg text-[15px] text-primary-container">Mostrar movimientos</span>
+      <span id="tx-count" class="font-label-md text-label-md text-on-surface-variant"></span>
+      <span id="mov-chevron" class="material-symbols-outlined text-[22px] text-outline transition-transform duration-200">expand_more</span>
+    </button>
+    <div id="mov-panel" class="hidden">
+      <div id="mov-skeleton" class="hidden" aria-busy="true" aria-label="Cargando movimientos">
+      <div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+      <div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+      <div class="flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high animate-pulse"><div class="flex-1 min-w-0"><div class="h-3.5 w-2/5 rounded-full bg-surface-container-high"></div><div class="h-3 w-3/5 rounded-full bg-surface-container mt-2"></div></div><div class="h-3.5 w-16 rounded-full bg-surface-container-high"></div></div>
+      </div>
+      <div id="tx-list" class="hidden"></div>
+    </div>
+  </section>
+
+  <!-- Zona de eliminación -->
+  <section id="danger" class="bg-surface-container-lowest rounded-lg shadow-sm p-space-md">
+    <h2 class="font-label-lg text-[16px] text-on-surface">Eliminar billetera</h2>
+    <p id="danger-text" class="font-body-sm text-body-sm text-on-surface-variant mt-1"></p>
+    <button type="button" id="btn-delete" class="mt-space-sm w-full h-12 rounded-[12px] border-2 border-error text-error font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-error-container/40">
+      <span class="material-symbols-outlined text-[20px]">delete</span>Eliminar billetera
+    </button>
+  </section>
+</main>
+
+<!-- Diálogo de eliminación -->
+<div id="del-modal" class="hidden fixed inset-0 z-50 bg-inverse-surface/50 items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="del-title">
+  <div class="w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl">
+    <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+    <div class="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center mb-space-sm">
+      <span id="del-icon" class="material-symbols-outlined text-[26px]">delete</span>
+    </div>
+    <h3 id="del-title" class="font-headline-sm text-headline-sm text-on-surface"></h3>
+    <p id="del-body" class="font-body-md text-body-md text-on-surface-variant mt-1"></p>
+    <div id="del-move" class="hidden mt-space-md">
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">Mover el saldo a</p>
+      <button type="button" id="del-dest" aria-haspopup="dialog" class="dest-field w-full flex items-center gap-3 rounded-[12px] border-2 border-outline-variant hover:border-primary-container/60 bg-surface px-3 py-2.5 text-left transition">
+      <span class="dest-icon w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span></span>
+      <span class="flex-1 min-w-0"><span class="dest-name block font-label-lg text-[15px] text-on-surface-variant truncate">Elige una billetera</span><span class="dest-bal block font-body-sm text-body-sm text-on-surface-variant"></span></span>
+      <span class="material-symbols-outlined text-[22px] text-primary-container">expand_more</span>
+    </button>
+    </div>
+    <div class="mt-space-md flex items-start gap-2 rounded-[12px] bg-error-container/50 p-3">
+      <span class="material-symbols-outlined text-error text-[20px]">warning</span>
+      <p id="del-warning" class="font-body-sm text-body-sm text-on-error-container"></p>
+    </div>
+    <p id="del-error" class="hidden mt-2 font-body-sm text-body-sm text-error" role="alert"></p>
+    <div class="flex gap-space-sm mt-space-md">
+      <button type="button" id="btn-del-cancel" class="flex-1 h-12 rounded-[12px] border-2 border-outline-variant text-on-surface-variant font-label-lg text-label-lg">Cancelar</button>
+      <button type="button" id="btn-del-confirm" class="flex-1 h-12 rounded-[12px] bg-error text-on-error font-label-lg text-label-lg"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Hoja: elegir billetera de destino -->
+<div id="dest-sheet" class="hidden fixed inset-0 z-[60] bg-inverse-surface/50 items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="dest-title">
+  <div class="w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl flex flex-col max-h-[80vh]">
+    <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3 shrink-0"></div>
+    <div class="flex items-start justify-between mb-space-sm shrink-0">
+      <div>
+        <h3 id="dest-title" class="font-headline-sm text-headline-sm text-on-surface">¿A qué billetera?</h3>
+        <p id="dest-sub" class="font-body-sm text-body-sm text-on-surface-variant"></p>
+      </div>
+      <button type="button" id="dest-close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+        <span class="material-symbols-outlined text-[20px]">close</span></button>
+    </div>
+    <label id="dest-search-wrap" class="hidden shrink-0 mb-space-sm flex items-center gap-2 rounded-full bg-surface-container-high px-3">
+      <span class="material-symbols-outlined text-[20px] text-on-surface-variant">search</span>
+      <input id="dest-search" placeholder="Buscar billetera" autocomplete="off" class="flex-1 h-11 bg-transparent border-0 outline-none focus:ring-0 font-body-md text-body-md text-on-surface" />
+    </label>
+    <div id="dest-list" class="flex flex-col gap-1 overflow-y-auto -mx-1 px-1"></div>
+    <p id="dest-empty" class="hidden py-6 text-center font-body-md text-body-md text-on-surface-variant">No encontramos esa billetera</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var M = parent.Mica;
+  if (!M) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var key = M.state.viewWallet;
+  var delDest = null;
+
+  function show(el, on) { el.classList.toggle('hidden', !on); if (el.id === 'del-modal' || el.id === 'dest-sheet') el.classList.toggle('flex', on); }
+  function setError(el, msg) { el.textContent = msg || ''; show(el, !!msg); }
+  function money(n) { return 'S/ ' + M.fmt(n); }
+  // Muestra la billetera elegida dentro del campo desplegable.
+  function paintField(btn, k) {
+    var w = k && M.wallet(k);
+    var icon = btn.querySelector('.dest-icon'), name = btn.querySelector('.dest-name'), bal = btn.querySelector('.dest-bal');
+    icon.firstElementChild.textContent = w ? M.ICON[k] : 'account_balance_wallet';
+    icon.className = 'dest-icon w-10 h-10 rounded-full flex items-center justify-center shrink-0 ' +
+      (w ? 'bg-primary-fixed text-primary-container' : 'bg-surface-container-high text-on-surface-variant');
+    name.textContent = w ? w.name : 'Elige una billetera';
+    name.classList.toggle('text-on-surface', !!w); name.classList.toggle('text-on-surface-variant', !w);
+    bal.textContent = w ? 'Saldo: ' + money(w.balance) : '';
+    btn.classList.toggle('border-primary-container', !!w); btn.classList.toggle('border-outline-variant', !w);
+  }
+
+  // Hoja inferior con todas las billeteras de destino. Con más de 5 aparece el buscador.
+  var SEARCH_FROM = 6, sheetPick = null, sheetSel = null;
+  function others() { return M.activeKeys().filter(function (k) { return k !== key; }); }
+  function renderSheet() {
+    var q = $('dest-search').value.trim().toLowerCase(), list = $('dest-list'), shown = 0;
+    list.innerHTML = '';
+    others().forEach(function (k) {
+      var w = M.wallet(k);
+      if (q && w.name.toLowerCase().indexOf(q) < 0) return;
+      shown++;
+      var on = k === sheetSel;
+      var b = document.createElement('button');
+      b.type = 'button'; b.dataset.key = k;
+      b.className = 'w-full flex items-center gap-3 p-3 rounded-[16px] text-left transition ' + (on ? 'bg-primary-fixed/50' : 'hover:bg-surface-container-low');
+      b.innerHTML = '<span class="w-11 h-11 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[22px]"></span></span>' +
+        '<span class="flex-1 min-w-0"><span class="block font-label-lg text-[15px] text-on-surface truncate"></span><span class="block font-body-sm text-body-sm text-on-surface-variant"></span></span>' +
+        '<span class="material-symbols-outlined text-[22px] ' + (on ? 'text-primary-container' : 'text-transparent') + '">check_circle</span>';
+      var spans = b.querySelectorAll('span');
+      spans[1].textContent = M.ICON[k]; spans[3].textContent = w.name; spans[4].textContent = 'Saldo: ' + money(w.balance);
+      list.appendChild(b);
+    });
+    show($('dest-empty'), shown === 0);
+  }
+  function openSheet(selected, subtitle, onPick) {
+    sheetSel = selected; sheetPick = onPick;
+    $('dest-sub').textContent = subtitle;
+    $('dest-search').value = '';
+    show($('dest-search-wrap'), others().length >= SEARCH_FROM);
+    renderSheet();
+    show($('dest-sheet'), true);
+  }
+  function closeSheet() { show($('dest-sheet'), false); }
+  $('dest-search').addEventListener('input', renderSheet);
+  $('dest-close').addEventListener('click', closeSheet);
+  $('dest-sheet').addEventListener('click', function (e) { if (e.target.id === 'dest-sheet') closeSheet(); });
+  $('dest-list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    closeSheet(); sheetPick(b.dataset.key);
+  });
+
+  function render() {
+    var w = M.wallet(key);
+    if (!w) { M.go('home'); return; }
+    var locked = key === 'principal';
+    show($('w-locked'), locked);
+    $('w-icon').textContent = M.ICON[key];
+    $('w-name').textContent = w.name;
+    $('w-tag').textContent = M.TAG[key];
+    $('w-balance').textContent = M.fmt(w.balance);
+    show($('danger'), !locked);
+
+
+    // Movimientos
+    var txs = M.txsFor(key);
+    $('tx-count').textContent = txs.length ? String(txs.length) : '';
+    var list = $('tx-list'); list.innerHTML = '';
+    if (!txs.length) {
+      var p = document.createElement('p');
+      p.className = 'px-space-md py-6 border-t border-surface-container-high text-center font-body-md text-body-md text-on-surface-variant';
+      p.textContent = 'Aún no hay movimientos en esta billetera';
+      list.appendChild(p);
+    }
+    txs.forEach(function (t) {
+      var row = document.createElement('div');
+      row.className = 'flex items-center justify-between gap-space-sm px-space-md py-3.5 border-t border-surface-container-high';
+      var left = document.createElement('div'); left.className = 'min-w-0';
+      var a = document.createElement('p'); a.className = 'font-label-lg text-[15px] text-on-surface truncate'; a.textContent = t.title;
+      var b = document.createElement('p'); b.className = 'font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate'; b.textContent = M.txSub(t);
+      left.append(a, b);
+      var amt = document.createElement('span');
+      amt.className = 'font-label-lg text-[15px] shrink-0 ' + (t.amount < 0 ? 'text-tertiary-container' : 'text-on-surface');
+      amt.textContent = (t.amount < 0 ? '- ' : '') + money(Math.abs(t.amount));
+      row.append(left, amt); list.appendChild(row);
+    });
+
+    // Texto de eliminación según saldo
+    $('danger-text').textContent = w.balance > 0
+      ? 'Tiene ' + money(w.balance) + '. Para eliminarla primero moverás ese dinero a otra billetera.'
+      : 'Se eliminarán la billetera y sus movimientos. Esta acción no se puede deshacer.';
+  }
+
+  // --- Volver
+  $('btn-back').addEventListener('click', function () { M.back(); });
+
+  // --- Movimientos: plegable con skeleton
+  var movOpen = false, movTimer;
+  function loadMovs(ms) {
+    clearTimeout(movTimer);
+    show($('tx-list'), false); show($('mov-skeleton'), true);
+    movTimer = setTimeout(function () { show($('mov-skeleton'), false); show($('tx-list'), true); }, ms);
+  }
+  $('mov-toggle').addEventListener('click', function () {
+    movOpen = !movOpen;
+    show($('mov-panel'), movOpen);
+    $('mov-label').textContent = movOpen ? 'Ocultar movimientos' : 'Mostrar movimientos';
+    $('mov-chevron').style.transform = movOpen ? 'rotate(180deg)' : '';
+    this.setAttribute('aria-expanded', movOpen ? 'true' : 'false');
+    if (movOpen) loadMovs(800); else clearTimeout(movTimer);
+  });
+
+  // --- Eliminar
+  function openDelete() {
+    var w = M.wallet(key), n = M.txsFor(key).length, hasMoney = w.balance > 0;
+    var movs = n === 1 ? 'su único movimiento' : (n ? 'sus ' + n + ' movimientos' : 'su historial');
+    $('del-title').textContent = hasMoney ? 'Tu billetera tiene ' + money(w.balance) : '¿Eliminar ' + w.name + '?';
+    $('del-body').textContent = hasMoney
+      ? 'Antes de eliminar ' + w.name + ', elige a qué billetera mover tu dinero.'
+      : 'La billetera dejará de aparecer en tu inicio y su QR dejará de funcionar.';
+    $('del-icon').textContent = hasMoney ? 'account_balance_wallet' : 'delete';
+    $('del-warning').textContent = 'También se eliminará ' + movs + '. Esta acción no se puede deshacer.';
+    $('btn-del-confirm').textContent = hasMoney ? 'Mover y eliminar' : 'Eliminar';
+    delDest = null;
+    show($('del-move'), hasMoney);
+    if (hasMoney) paintField($('del-dest'), null);
+    setError($('del-error'), '');
+    show($('del-modal'), true);
+  }
+  $('btn-delete').addEventListener('click', openDelete);
+  $('btn-del-cancel').addEventListener('click', function () { show($('del-modal'), false); });
+  $('del-modal').addEventListener('click', function (e) { if (e.target.id === 'del-modal') show($('del-modal'), false); });
+  $('del-dest').addEventListener('click', function () {
+    openSheet(delDest, 'Recibirá ' + money(M.wallet(key).balance), function (k) { delDest = k; paintField($('del-dest'), k); setError($('del-error'), ''); });
+  });
+  $('btn-del-confirm').addEventListener('click', function () {
+    var name = M.wallet(key).name;
+    var res = M.remove(key, delDest);
+    if (res.error) return setError($('del-error'), res.error);
+    M.go('home');
+    setTimeout(function () { M.toast('Billetera "' + name + '" eliminada'); }, 400);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

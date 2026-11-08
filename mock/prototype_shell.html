@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Mica · Prototipo Multi-Billetera</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f4ebf7; --ink:#1e1a22; --primary:#742284; --accent:#56faeb; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--bg); font-family:"Plus Jakarta Sans",system-ui,sans-serif; color:var(--ink); }
+  body { display:flex; align-items:center; justify-content:center; gap:32px; }
+  #phone { position:relative; width:412px; height:min(880px, calc(100dvh - 32px)); border-radius:44px;
+           background:#111; padding:10px; box-shadow:0 30px 80px rgba(89,0,106,.25); }
+  #screen { width:100%; height:100%; border:0; border-radius:34px; background:#fff7ff; display:block; }
+  #toast { position:absolute; left:50%; top:84px; transform:translate(-50%,-8px); background:#332f37; color:#fff;
+           padding:10px 16px; border-radius:14px; font-size:13px; font-weight:700; max-width:85%; text-align:center;
+           opacity:0; pointer-events:none; transition:all .25s; z-index:10; }
+  #toast.show { opacity:1; transform:translate(-50%,0); }
+  @media (max-width: 760px) {
+    body { display:block; }
+    #phone { width:100%; height:100dvh; border-radius:0; padding:0; box-shadow:none; }
+    #screen { border-radius:0; }
+  }
+</style>
+</head>
+<body>
+<div id="phone">
+  <iframe id="screen" title="Pantalla del prototipo"></iframe>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+
+<script>
+const SCREENS = /*__SCREENS__*/{};
+
+/* ---------- Estado compartido ---------- */
+const DEFAULT_STATE = {
+  wallets: {
+    principal:  { name: "Principal",           balance: 1820.50 },
+    cafe:       { name: "Emprendimiento Café", balance: 840.20 },
+    vacaciones: { name: "Ahorro Vacaciones",   balance: 790.10 },
+  },
+  extra: null,          // billetera creada por la usuaria: { name, balance }
+  txs: [],              // movimientos (más reciente primero); ver SEED_TXS
+  v: 2,
+  draft: {},            // datos que viajan entre pantallas del flujo yapear
+  payWallet: "cafe",    // billetera elegida en el escáner
+  last: null,           // último pago para la constancia
+};
+const DEFAULT_NAMES = { principal: "Principal", cafe: "Emprendimiento Café", vacaciones: "Ahorro Vacaciones" };
+// keys: billeteras a las que pertenece el movimiento; label: texto fijo en vez del nombre de la billetera.
+const SEED_TXS = [
+  { title: "Pago de Carlos Ruiz", when: "Hoy - 3:42 pm", amount: 45, keys: ["cafe"] },
+  { title: "Transferencia entre billeteras", when: "Hoy - 1:15 pm", amount: 300, keys: ["principal", "cafe"], label: "Emprendimiento Café → Principal" },
+  { title: "Supermercado Metro", when: "Ayer - 7:20 pm", amount: -142.8, keys: ["principal"] },
+  { title: "Yape de Lucía Gómez", when: "Ayer - 4:10 pm", amount: 85, keys: ["principal"] },
+  { title: "Aporte a Vacaciones", when: "12 May. - 10:00 am", amount: 100, keys: ["vacaciones"] },
+];
+DEFAULT_STATE.txs = structuredClone(SEED_TXS);
+
+/* ---------- Sesión de demo: cada número tiene su propia cuenta ficticia en este navegador ---------- */
+const SESSION_KEY = "mica-session";
+let session = (() => { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; } })();
+const stateKey = () => "mica-proto:" + (session ? session.phone : "anon");
+
+// Generador pseudoaleatorio con semilla: el mismo número siempre parte de los mismos datos.
+function seededRandom(seed) {
+  let h = 1779033703 ^ seed.length;
+  for (const c of seed) { h = Math.imul(h ^ c.charCodeAt(0), 3432918353); h = (h << 13) | (h >>> 19); }
+  let a = h >>> 0;
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function generateState(phone) {
+  const r = seededRandom(String(phone || "demo"));
+  const pick = a => a[Math.floor(r() * a.length)];
+  const money = (min, max, step = 0.1) => Math.round(Math.round((min + r() * (max - min)) / step) * step * 100) / 100;
+  const st = structuredClone(DEFAULT_STATE);
+  st.wallets.principal.balance = money(400, 2800);
+  st.wallets.cafe.balance = money(150, 2200);
+  st.wallets.vacaciones.balance = money(50, 1200);
+  const people = ["María Quispe", "Carlos Ruiz", "Rosa Huamán", "Jorge Paredes", "Ana Torres", "Luis Mendoza", "Carmen Flores", "Pedro Salazar"];
+  const shops = ["Bodega Don Lucho", "Mercado Central", "Farmacia del barrio", "Panadería San José"];
+  const providers = ["Distribuidora Andina", "Proveedor de abarrotes", "Molino La Esperanza"];
+  const cats = ["📦 Para volver a surtir", "💡 Para pagar local/servicios/ayudantes"];
+  const make = [
+    () => ({ title: `Pago de ${pick(people)}`, amount: money(8, 150, 0.5), keys: ["cafe"] }),
+    () => ({ title: `Pago de ${pick(people)}`, amount: money(8, 150, 0.5), keys: ["cafe"] }),
+    () => ({ title: `Pago de ${pick(people)}`, amount: money(8, 150, 0.5), keys: ["cafe"] }),
+    () => ({ title: `Yapeo a ${pick(providers)}`, amount: -money(40, 260, 0.5), keys: ["cafe"], note: pick(cats) }),
+    () => ({ title: `Yape de ${pick(people)}`, amount: money(10, 200, 0.5), keys: ["principal"] }),
+    () => ({ title: `Yapeo a ${pick(people)}`, amount: -money(5, 120, 0.5), keys: ["principal"] }),
+    () => ({ title: pick(shops), amount: -money(10, 180, 0.5), keys: ["principal"] }),
+    () => ({ title: "Aporte a Vacaciones", amount: money(50, 200, 10), keys: ["vacaciones"] }),
+    () => ({ title: "Transferencia entre billeteras", amount: money(50, 400, 10), keys: ["principal", "cafe"], label: "Emprendimiento Café → Principal" }),
+  ];
+  const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
+  const txs = make.map(f => ({ ...f(), _day: Math.floor(r() * 9), _min: 7 * 60 + Math.floor(r() * 14 * 60) }));
+  txs[0]._day = 0;  // siempre hay algo de hoy
+  txs.sort((x, y) => x._day - y._day || y._min - x._min);
+  st.txs = txs.map(({ _day, _min, ...t }) => {
+    const h = Math.floor(_min / 60), m = _min % 60;
+    const time = `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
+    const d = new Date(); d.setDate(d.getDate() - _day);
+    const day = _day === 0 ? "Hoy" : _day === 1 ? "Ayer" : `${d.getDate()} ${MONTHS[d.getMonth()]}.`;
+    return { ...t, when: `${day} - ${time}` };
+  });
+  return st;
+}
+
+let state = load();
+
+function load() {
+  if (!session) return structuredClone(DEFAULT_STATE);
+  try {
+    const s = JSON.parse(localStorage.getItem(stateKey()));
+    if (s && s.wallets) {
+      if (!s.v) {  // estado guardado por versiones anteriores del prototipo
+        s.txs = (s.txs || []).map(t => ({ title: t.title, amount: t.amount, keys: [t.key], when: "Hoy" })).concat(structuredClone(SEED_TXS));
+        s.v = 2;
+      }
+      return s;
+    }
+  } catch (e) {}
+  return generateState(session.phone);
+}
+function save() { if (session) { try { localStorage.setItem(stateKey(), JSON.stringify(state)); } catch (e) {} } renderSide(); }
+
+// Punto único de inicio de sesión: aquí se conectará el backend.
+function login(rawPhone) {
+  const phone = String(rawPhone || "").replace(/\D/g, "");
+  if (!/^9\d{8}$/.test(phone)) return "Ingresa un celular de 9 dígitos que empiece con 9.";
+  session = { phone };
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+  state = load();
+  save();
+  history.replaceState(null, "", location.pathname.replace(/login\/?$/, "") + "#home");
+  render();
+  setTimeout(() => toast("¡Bienvenid@! Tus saldos son de prueba"), 500);
+  return null;
+}
+function logout() {
+  session = null;
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+  state = structuredClone(DEFAULT_STATE);
+  renderSide();
+  history.replaceState(null, "", location.pathname + "#login");
+  render();
+}
+
+const fmt = n => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtShort = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
+const total = () => Object.values(state.wallets).reduce((a, w) => a + w.balance, 0) + (state.extra ? state.extra.balance : 0);
+function walletKey(name = "") {
+  name = name.toLowerCase();
+  for (const k of activeKeys()) if (name.includes(wallet(k).name.toLowerCase()) && k !== "principal") return k;
+  if (name.includes("princ") || name.includes("personal")) return "principal";
+  if (name.includes("caf")) return "cafe";
+  if (name.includes("vacac") || name.includes("ahorro")) return "vacaciones";
+  if (state.extra && name.includes(state.extra.name.toLowerCase())) return "extra";
+  return null;
+}
+const wallet = k => k === "extra" ? state.extra : state.wallets[k];
+const activeKeys = () => ["principal", "cafe", "vacaciones"].filter(k => state.wallets[k]).concat(state.extra ? ["extra"] : []);
+const nowLabel = () => "Hoy - " + new Date().toLocaleTimeString("es-PE", { hour: "numeric", minute: "2-digit", hour12: true })
+  .replace(/\s*([ap])\.?\s*m\.?\s*$/i, (_, x) => " " + x.toLowerCase() + "m");
+const txSub = t => `${t.when} - ${t.label || (wallet(t.keys[0]) || {}).name || ""}`;
+const txsFor = k => state.txs.filter(t => t.keys.includes(k));
+const round2 = n => Math.round(n * 100) / 100;
+function txDate(l) {
+  if (l && l.at) return new Date(l.at);
+  const d = new Date(), w = (l && l.when) || "";
+  if (/^Ayer/.test(w)) d.setDate(d.getDate() - 1);
+  else if (!/^Hoy/.test(w)) {
+    const m = w.match(/^(\d+) (\w+)\./);
+    const mi = m ? ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"].indexOf(m[2].toLowerCase()) : -1;
+    if (mi >= 0) { d.setMonth(mi); d.setDate(Number(m[1])); }
+  }
+  const t = w.match(/(\d+):(\d+) ([ap])m/);
+  if (t) d.setHours((Number(t[1]) % 12) + (t[3] === "p" ? 12 : 0), Number(t[2]));
+  return d;
+}
+const isBusiness = k => k === "cafe" || (k === "extra" && !!state.extra && state.extra.purpose !== "savings");
+
+/* ---------- Saldos: cada pantalla trae números distintos; se reemplazan por el estado ---------- */
+const BAL = {
+  "home":          { "1,820.50": "principal", "840.20": "cafe", "790.10": "vacaciones", "3,450.80": "total" },
+  "home-nueva":    { "1,820.50": "principal", "840.20": "cafe", "790.10": "vacaciones", "3,450.80": "total" },
+  "yapear":        { "2,450.80": "principal", "840.20": "cafe", "159.80": "vacaciones", "3,450.80": "total",
+                     "balance: 2450.80": "raw:principal", "balance: 840.20": "raw:cafe", "balance: 159.80": "raw:vacaciones",
+                     "2450.80 + 840.20 + 159.80": "raw:total" },
+  "desglose":      { "1,450.80": "principal", "1,450.00": "cafe", "550.00": "vacaciones", "3,450.80": "total" },
+  "mi-qr":         { "2,450.80": "principal", "840.20": "cafe", "1,320.00": "vacaciones" },
+  "gestionar":     { "1,450.80": "principal", "890.00": "cafe", "550.00": "vacaciones" },
+  "escanear":      { "1,450.80": "principal", "1,450.00": "cafe", "550.00": "vacaciones" },
+  "escanear-foto": { "850.00": "principal", "1,450.00": "cafe", "320.00": "vacaciones" },
+};
+
+function valueFor(target) {
+  const raw = target.startsWith("raw:");
+  const key = raw ? target.slice(4) : target;
+  const n = key === "total" ? total() : (wallet(key) ? wallet(key).balance : 0);
+  if (!raw) return fmt(n);
+  return key === "total" ? n.toFixed(2) : "balance: " + n.toFixed(2);
+}
+
+function prepare(name) {
+  let html = SCREENS[name];
+  const table = Object.assign({}, BAL[name] || {});
+  const extraText = {};
+  extraText["Hola, Lucía"] = "Hola, Yaper@";
+  for (const k of ["cafe", "vacaciones"]) {
+    if (state.wallets[k] && state.wallets[k].name !== DEFAULT_NAMES[k]) extraText[DEFAULT_NAMES[k]] = state.wallets[k].name;
+  }
+  if (name === "home-nueva" && state.extra) {
+    extraText["Mi Tienda Online"] = state.extra.name;
+    extraText["S/ 0.00"] = "S/ " + fmt(state.extra.balance);
+  }
+  if (name === "yapear" && state.draft.recipient) extraText["Lucía Gómez R."] = state.draft.recipient;
+  if (name === "confirmar") {
+    if (!wallet(state.payWallet)) state.payWallet = "principal";
+    const w = wallet(state.payWallet);
+    extraText["Emprendimiento Café"] = w.name;
+    table["1,450.00"] = state.payWallet;
+    if (state.draft.qrRecipient) extraText["La Tiendita de Don Pepe"] = state.draft.qrRecipient;
+  }
+  if (name.startsWith("constancia") || name === "te-yapearon") {
+    const now = state.last ? txDate(state.last) : new Date();
+    const date = now.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }).replace(/ de /g, " ");
+    const time = now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
+    for (const d of ["19 dic. 2025", "18 may. 2025"]) extraText[d] = date;
+    for (const t of ["12:50 p. m.", "01:15 p. m.", "04:35 p. m."]) extraText[t] = time;
+    const op = (state.last && state.last.op) || String(26100000 + Math.floor(Math.random() * 99999));
+    extraText["26101992"] = op; extraText["26102048"] = op;
+    if (name === "constancia-negocio" && state.last) extraText["Emprendimiento Café"] = state.last.walletName;
+  }
+  const replacements = {};
+  for (const [k, v] of Object.entries(table)) if (v === "total" || v.startsWith("raw:") || wallet(v)) replacements[k] = valueFor(v);
+  Object.assign(replacements, extraText);
+  const keys = Object.keys(replacements).sort((a, b) => b.length - a.length);
+  if (keys.length) {
+    const re = new RegExp(keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g");
+    // Solo el <body>: el <head> trae la config de Tailwind y no debe tocarse.
+    const i = html.indexOf("<body");
+    html = html.slice(0, i) + html.slice(i).replace(re, m => replacements[m]);
+  }
+  return html;
+}
+
+/* ---------- Navegación ---------- */
+const frame = document.getElementById("screen");
+let current = null;
+
+function homeRoute() { return state.extra ? "home-nueva" : "home"; }
+function go(name) { if (name === "home") name = homeRoute(); if (location.hash.slice(1) === name) render(); else location.hash = name; }
+function back() { history.length > 1 ? history.back() : go("home"); }
+function render() {
+  let name = location.hash.slice(1) || homeRoute();
+  if (!session || /\/login\/?$/.test(location.pathname)) {
+    name = "login";
+    if (location.hash !== "#login") history.replaceState(null, "", location.pathname + "#login");
+  }
+  else if (name === "login") name = homeRoute();
+  if (name === "home" || name === "home-nueva") name = homeRoute();
+  if (!SCREENS[name]) name = homeRoute();
+  current = name;
+  frame.srcdoc = prepare(name);
+}
+window.addEventListener("hashchange", render);
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ---------- Acciones de negocio ---------- */
+function pay(amount, key, recipient, note) {
+  const w = wallet(key);
+  if (!w) return toast("Elige una billetera de origen");
+  if (!(amount > 0)) return toast("Ingresa un monto mayor a S/ 0");
+  if (amount > 500) return toast("Límite por yapeo: S/ 500");
+  if (amount > w.balance) return toast(`Saldo insuficiente en ${w.name}. Disponible: S/ ${fmt(w.balance)}`);
+  const today = new Date().toISOString().slice(0, 10);
+  if (!state.daily || state.daily.date !== today) state.daily = { date: today, total: 0 };
+  if (state.daily.total + amount > 2000) return toast(`Superas el límite diario de S/ 2,000. Hoy te quedan S/ ${fmt(2000 - state.daily.total)}`);
+  state.daily.total = round2(state.daily.total + amount);
+  w.balance = Math.round((w.balance - amount) * 100) / 100;
+  state.last = { amount, walletName: w.name, key, recipient, note: String(note || "").trim() };
+  if (state.draft.flow === "contact") state.lastContact = recipient;
+  note = String(note || "").replace(/\s+/g, " ").trim();
+  state.last.op = String(26100000 + Math.floor(Math.random() * 99999));
+  state.last.at = new Date().toISOString();
+  state.txs.unshift({ title: `Yapeo a ${recipient}`, amount: -amount, keys: [key], when: nowLabel(), at: state.last.at, op: state.last.op, ...(note ? { note } : {}) });
+  state.draft = {};
+  save();
+  go(key === "principal" ? "constancia" : "constancia-negocio");
+}
+function receive() {
+  state.wallets.principal.balance = Math.round((state.wallets.principal.balance + 85) * 100) / 100;
+  state.txs.unshift({ title: "Yape de Lucía Gómez", amount: 85, keys: ["principal"], when: nowLabel() });
+  save();
+  go("te-yapearon");
+}
+
+function nameError(name, exceptKey) {
+  if (!name) return "Escribe un nombre para tu billetera.";
+  if (name.length < 3) return "El nombre debe tener al menos 3 caracteres.";
+  if (name.length > 24) return "Máximo 24 caracteres.";
+  if (activeKeys().some(o => o !== exceptKey && wallet(o).name.toLowerCase() === name.toLowerCase())) return "Ya tienes una billetera con ese nombre.";
+  return null;
+}
+function createWallet(opts) {
+  const name = String(opts.name || "").replace(/\s+/g, " ").trim();
+  const err = nameError(name);
+  if (err) return err;
+  // El diseño de Inicio tiene un solo espacio para billeteras creadas por la usuaria.
+  if (state.extra) return `Por ahora puedes tener una billetera adicional. Elimina "${state.extra.name}" para crear otra.`;
+  state.extra = { name, balance: 0, icon: opts.icon, color: opts.color, purpose: opts.purpose };
+  save();
+  return null;
+}
+function renameWallet(k, raw) {
+  if (k === "principal") return "La billetera Principal no se puede renombrar.";
+  const name = String(raw || "").replace(/\s+/g, " ").trim();
+  const err = nameError(name, k);
+  if (err) return err;
+  wallet(k).name = name;
+  save();
+  return null;
+}
+function transferMoney(from, to, amount, note) {
+  const a = wallet(from), b = wallet(to);
+  if (!b || from === to) return "Elige la billetera de destino.";
+  if (!Number.isFinite(amount) || amount <= 0) return "Ingresa un monto mayor a S/ 0.";
+  if (Math.abs(round2(amount) - amount) > 1e-9) return "Usa como máximo 2 decimales.";
+  if (amount > a.balance + 1e-9) return `No tienes saldo suficiente. Disponible: S/ ${fmt(a.balance)}.`;
+  note = String(note || "").replace(/\s+/g, " ").trim();
+  if (note.length > 40) return "La descripción puede tener hasta 40 caracteres.";
+  a.balance = round2(a.balance - amount);
+  b.balance = round2(b.balance + amount);
+  const when = nowLabel();
+  const extra = note ? { note } : {};
+  state.txs.unshift({ title: `Transferencia de ${a.name}`, amount, keys: [to], when, ...extra });
+  state.txs.unshift({ title: `Transferencia a ${b.name}`, amount: -amount, keys: [from], when, ...extra });
+  save();
+  return null;
+}
+function removeWallet(k, moveTo) {
+  const w = wallet(k);
+  if (!w) return { error: "La billetera ya no existe." };
+  if (k === "principal") return { error: "La billetera Principal no se puede eliminar." };
+  if (w.balance > 0) {
+    if (!moveTo) return { error: "Elige a qué billetera mover tu saldo antes de eliminarla." };
+    const err = transferMoney(k, moveTo, w.balance);
+    if (err) return { error: err };
+  }
+  const removed = txsFor(k).length;
+  // Un pase entre billeteras sigue siendo movimiento de la otra: solo se le quita esta billetera.
+  state.txs = state.txs.flatMap(t => !t.keys.includes(k) ? [t] : t.keys.length > 1 ? [{ ...t, keys: t.keys.filter(x => x !== k) }] : []);
+  if (k === "extra") state.extra = null; else delete state.wallets[k];
+  if (state.payWallet === k) state.payWallet = "principal";
+  save();
+  return { removedTxs: removed };
+}
+// API para pantallas propias (screens/*.html) que corren dentro del iframe.
+window.Mica = {
+  get state() { return state; }, wallet, activeKeys, txsFor, txSub, fmt, go, back, toast,
+  ICON: { principal: "account_balance_wallet", cafe: "storefront", vacaciones: "savings", extra: "shopping_bag" },
+  TAG: { principal: "Oficial · DNI", cafe: "Negocio", vacaciones: "Ahorro", extra: "Personalizada" },
+  rename: renameWallet, transfer: transferMoney, remove: removeWallet, createWallet, login, logout,
+  // Solo para pruebas automáticas: deja la cuenta con los datos fijos de ejemplo.
+  _useExampleData() { state = structuredClone(DEFAULT_STATE); save(); render(); },
+};
+
+/* ---------- Reglas de botones por pantalla ----------
+   Se comparan con el texto visible del botón (incluye el nombre del ícono). */
+const GLOBAL_RULES = [
+  [/^account_balance_wallet Billeteras$/, () => go("home")],
+  [/^qr_code_2 Mi QR$/, () => go("mi-qr")],
+  [/^send_money$/, () => go("yapear")],
+  [/^local_offer Promos$/, () => toast("Promos: próximamente")],
+  [/^qr_code_scanner$/, () => go("escanear")],
+  // La campana no hace nada por ahora; "te-yapearon" se usará más adelante tras yapear.
+  [/^notifications$/, () => {}],
+  [/^headphones Necesito ayuda$/, () => toast("Ayuda: próximamente")],
+  [/^headset_mic$/, () => toast("Ayuda: próximamente")],
+  [/^logout Cerrar sesión$/, () => logout()],
+];
+
+const RULES = {
+  home: [
+    [/^send_money Yapear$/, () => { state.draft = {}; go("yapear"); }],
+    [/^qr_code_scanner Escanear$/, () => go("escanear")],
+    [/Mover plata/, () => toast("Mover plata entre billeteras: próximamente")],
+    [/Nueva Billetera|^add$/, () => go("crear")],
+    [/^more_vert$/, (el, win) => {
+      const card = el.closest(".snap-center");
+      const k = card && walletKey(label(card));
+      if (!k) return toast("No se encontró la billetera");
+      openWalletOptions(win.document, k);
+    }],
+    [/^Cambiar( expand_more)?$/, () => { state.draft = {}; go("yapear"); }],
+    [/Continuar al Monto/, (el, win) => {
+      const doc = win.document;
+      const wName = doc.getElementById("send-modal-wallet-name")?.textContent || "Principal";
+      const input = doc.querySelector("#wallet-send-modal input");
+      state.draft = { walletKey: walletKey(wName), recipient: state.draft.contact || (input && input.value) || undefined };
+      go("yapear");
+    }],
+  ],
+  yapear: [
+    [/^arrow_back$/, () => back()],
+    [/^swap_horiz$/, () => go("home")],
+    [/^send_money Yapear/, (el, win) => {
+      const amount = win.eval("getAmount()");
+      const key = win.eval("selectedWalletKey");
+      pay(amount, key, state.draft.recipient || "Lucía Gómez R.");
+    }],
+  ],
+  escanear: [
+    [/^arrow_back$/, () => back()],
+    [/Escanear foto|^image$|photo_library/, (el, win) => scanDetected(win.document, "La Tiendita de Don Pepe", "QR detectado en la foto")],
+    [/Otra$/, () => go("crear")],
+    [/Continuar a Pagar/, (el, win) => {
+      const phone = win.document.getElementById("phoneInput")?.value?.trim();
+      if (!phone) return toast("Escribe un número de celular");
+      win.closeManualPhoneModal?.();
+      scanDetected(win.document, `Celular ${phone}`, `Celular ${phone}`);
+    }],
+  ],
+  "escanear-foto": [
+    [/^close$/, (el) => el.closest("#walletSheetPanel") || el.id === "closeWalletSheetBtn" ? "pass" : go("home")],
+    [/Vincular otra cuenta/, () => go("crear")],
+    [/Subir foto/, () => { toast("QR detectado en la foto"); state.draft = {}; setTimeout(() => go("confirmar"), 700); }],
+    [/^$/, (el) => { if (el.tagName !== "BUTTON") return "pass"; state.draft = {}; save(); go("confirmar"); }],
+  ],
+  confirmar: [
+    [/^arrow_back$/, () => back()],
+    [/^Desde:/, (el, win) => openWalletPicker(win.document, {
+      eyebrow: "Cambiar billetera", title: "¿Desde qué billetera?",
+      onPick: k => { state.payWallet = k; save(); paintFrom(win.document); },
+    })],
+    [/^close$/, () => go("home")],
+    [/^Otros bancos$/, () => toast("Otros bancos: próximamente")],
+    [/^Yapear/, (el, win) => {
+      const amount = parseFloat(win.document.getElementById("amount-text")?.textContent || "0");
+      const note = win.document.getElementById("tx-note")?.value;
+      pay(amount, state.payWallet, state.draft.qrRecipient || "La Tiendita de Don Pepe", note);
+    }],
+  ],
+  constancia: [[/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; state.openPicker = true; go("home"); }]],
+  "constancia-negocio": [[/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; state.openPicker = true; go("home"); }]],
+  "te-yapearon": [[/^info$/, () => toast("Verifica que el código coincida con el de quien te yapeó")], [/^close$/, () => go("home")], [/Nuevo yapeo/, () => { state.draft = {}; state.openPicker = true; go("home"); }]],
+  // Versión original de Stitch (sin enlace); la pantalla "crear" actual es screens/crear.html.
+  "crear-original": [
+    [/^arrow_back$/, () => back()],
+    [/^close$/, (el) => el.id === "clearInputBtn" ? "pass" : back()],
+    [/Crear y activar billetera/, (el, win) => {
+      const name = win.document.getElementById("walletNameInput")?.value.trim() || "Mi Nueva Billetera";
+      state.extra = { name, balance: 0 }; save();
+      go("home");
+      setTimeout(() => toast(`Billetera "${name}" creada`), 400);
+    }],
+  ],
+  desglose: [
+    [/^arrow_back$|^close$/, () => go("home")],
+    [/Ver movimientos/, () => go("home")],
+    [/Ver QR de cobro/, () => go("mi-qr")],
+    [/Gestionar meta/, () => toast("Metas de ahorro: próximamente")],
+    [/Mover plata/, () => toast("Mover plata entre billeteras: próximamente")],
+    [/Crear nueva billetera/, () => go("crear")],
+    [/^download$/, () => toast("Estado de cuenta descargado (simulado)")],
+  ],
+  gestionar: [
+    [/^arrow_back$|^Listo$/, () => go("home")],
+    [/Crear nueva billetera/, () => go("crear")],
+    [/Guardar cambios/, () => { setTimeout(() => go("home"), 900); return "pass"; }],
+  ],
+};
+RULES["home-nueva"] = RULES.home;
+
+const label = el => (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+
+frame.addEventListener("load", () => {
+  const win = frame.contentWindow, doc = frame.contentDocument;
+  if (!doc) return;
+  const name = current;
+  doc.addEventListener("click", e => {
+    if (e.target.closest("#wallet-picker, #wallet-options, #wallet-transfer, #contact-sheet, #tx-detail")) return;
+    const el = e.target.closest("button, a, [onclick], [role=button], [class*='cursor-pointer'], .tx-item");
+    if (!el) return;
+    if (el.dataset.export) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      const name = doc.getElementById("qr-modal-title")?.textContent || "tu billetera";
+      const MSG = {
+        share: `Elige con quién compartir el QR de ${name}`,
+        png: `QR de ${name} guardado como imagen (simulado)`,
+        pdf: `QR de ${name} guardado en PDF para imprimir (simulado)`,
+        print: `Enviando el QR de ${name} a imprimir (simulado)`,
+      };
+      return toast(MSG[el.dataset.export]);
+    }
+    if (el.classList.contains("tx-item") && el.dataset.tx !== undefined) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return openTxDetail(doc, Number(el.dataset.tx));
+    }
+    if (el.dataset.micaAd) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return toast({ agent: "Pronto podrás hablar con Mica, tu asesora contable",
+                     resumen: "Tu resumen semanal con Mica: próximamente",
+                     ahorro: "Metas de ahorro con Mica: próximamente" }[el.dataset.micaAd]);
+    }
+    if (el.dataset.shortcut) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return toast(`${el.dataset.shortcut}: próximamente`);
+    }
+    if (el.id === "btn-agent") {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return toast("Pronto podrás hablar con Mica, tu asesora contable");
+    }
+    if (el.id === "recipient-name") {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return openContactSheet(doc);
+    }
+    if (el.id === "total-row") return;  // lo maneja la propia pantalla (mostrar/ocultar total)
+    if (el.id === "btn-transfer") {
+      e.preventDefault(); e.stopImmediatePropagation();
+      return openTransferSheet(frame.contentDocument);
+    }
+    if (el.id === "bar-scan" || el.id === "bar-yapear") {
+      e.preventDefault(); e.stopImmediatePropagation();
+      state.draft = {};
+      return el.id === "bar-scan" ? go("escanear") : openWalletPicker(frame.contentDocument);
+    }
+    const text = label(el);
+    for (const [re, fn] of [...(RULES[name] || []), ...GLOBAL_RULES]) {
+      if (re.test(text)) {
+        const r = fn(el, win);
+        if (r !== "pass") { e.preventDefault(); e.stopImmediatePropagation(); }
+        return;
+      }
+    }
+  }, true);
+  enhance(name, win, doc);
+});
+
+/* ---------- Hoja "¿Desde qué billetera yapeas?" (botón YAPEAR de la barra) ---------- */
+const PICKER_ICON = { principal: "account_balance_wallet", cafe: "storefront", vacaciones: "savings", extra: "shopping_bag" };
+function openWalletPicker(doc, opts = {}) {
+  const o = Object.assign({ eyebrow: "Yapear", title: "¿Desde qué billetera?", subtitle: "", allowExtra: true,
+                            onPick: k => { state.payWallet = k; state.draft = { flow: "contact", qrRecipient: state.lastContact || "Lucía Gómez R." }; save(); go("confirmar"); } }, opts);
+  doc.getElementById("wallet-picker")?.remove();
+  const keys = activeKeys();
+  const esc = t => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const rows = keys.map(k => {
+    const w = wallet(k);
+    // La pantalla Yapear solo conoce las tres billeteras del diseño; la nueva queda sin saldo para pagar.
+    const disabled = w.balance <= 0 || (k === "extra" && !o.allowExtra);
+    return `<button type="button" data-key="${k}" ${disabled ? "disabled" : ""}
+      class="picker-row w-full flex items-center gap-3 p-3 rounded-[16px] text-left transition ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-surface-container-low active:scale-[0.99]"}">
+      <span class="w-11 h-11 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-[22px]">${PICKER_ICON[k]}</span></span>
+      <span class="flex-1 min-w-0"><span class="block font-label-lg text-[15px] text-on-surface truncate">${esc(w.name)}</span>
+        <span class="block font-body-sm text-body-sm text-on-surface-variant">${disabled ? "Sin saldo disponible" : "Disponible: S/ " + fmt(w.balance)}</span></span>
+      <span class="material-symbols-outlined text-[20px] text-outline">chevron_right</span></button>`;
+  }).join("");
+  const wrap = doc.createElement("div");
+  wrap.id = "wallet-picker";
+  wrap.className = "fixed inset-0 z-[60] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  wrap.innerHTML = `<div class="picker-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl translate-y-full transition-transform duration-300" role="dialog" aria-modal="true" aria-label="Elegir billetera">
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+      <div class="flex items-start justify-between mb-2">
+        <div><p class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">${esc(o.eyebrow)}</p>
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">${esc(o.title)}</h3>
+          ${o.subtitle ? `<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">${esc(o.subtitle)}</p>` : ""}</div>
+        <button type="button" class="picker-close w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant" aria-label="Cerrar">
+          <span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+      <div class="flex flex-col gap-1">${rows}</div></div>`;
+  doc.body.appendChild(wrap);
+  const sheet = wrap.querySelector(".picker-sheet");
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); sheet.classList.remove("translate-y-full"); });
+  const close = () => { wrap.classList.add("opacity-0"); sheet.classList.add("translate-y-full"); setTimeout(() => wrap.remove(), 250); };
+  // Captura propia: el enrutador global no debe interpretar estos botones.
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    if (e.target === wrap || e.target.closest(".picker-close")) return close();
+    const row = e.target.closest(".picker-row");
+    if (row && !row.disabled) { close(); o.onPick(row.dataset.key); }
+  });
+}
+
+/* ---------- Menú ⋮ de cada billetera: eliminar con validaciones ----------
+   Saldo 0: confirma y avisa que se borran sus movimientos.
+   Con saldo: obliga a elegir a qué billetera mover el dinero y luego elimina. */
+function openWalletOptions(doc, k) {
+  doc.getElementById("wallet-options")?.remove();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const ICON = window.Mica.ICON, SEARCH_FROM = 6;
+  const wrap = doc.createElement("div");
+  wrap.id = "wallet-options";
+  wrap.className = "fixed inset-0 z-[60] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  doc.body.appendChild(wrap);
+  let dest = null, listOpen = false;
+
+  const header = w => `
+    <div class="flex items-center gap-3 mb-space-md">
+      <span class="w-12 h-12 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[24px]">${ICON[k]}</span></span>
+      <div class="flex-1 min-w-0"><p class="font-label-lg text-[16px] text-on-surface truncate">${esc(w.name)}</p>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Saldo: S/ ${fmt(w.balance)}</p></div>
+      <button type="button" data-act="close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">close</span></button>
+    </div>`;
+
+  function menuView() {
+    const w = wallet(k);
+    if (k === "principal") return header(w) + `
+      <div class="w-full flex items-center gap-3 p-3 rounded-[16px] opacity-60" aria-disabled="true">
+        <span class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">lock</span></span>
+        <span class="flex-1"><span class="block font-label-lg text-[15px] text-on-surface">Eliminar billetera</span>
+          <span class="block font-body-sm text-body-sm text-on-surface-variant">Es tu billetera oficial vinculada a tu DNI: no se puede eliminar.</span></span>
+      </div>`;
+    return header(w) + `
+      <button type="button" data-act="ask-delete" class="w-full flex items-center gap-3 p-3 rounded-[16px] text-left hover:bg-error-container/40 transition">
+        <span class="w-10 h-10 rounded-full bg-error-container text-error flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">delete</span></span>
+        <span class="flex-1"><span class="block font-label-lg text-[15px] text-error">Eliminar billetera</span>
+          <span class="block font-body-sm text-body-sm text-on-surface-variant">${w.balance > 0 ? "Primero moverás su saldo a otra billetera" : "Se borrará junto con sus movimientos"}</span></span>
+        <span class="material-symbols-outlined text-[20px] text-outline">chevron_right</span>
+      </button>`;
+  }
+
+  function destRows(q) {
+    const rows = activeKeys().filter(o => o !== k && (!q || wallet(o).name.toLowerCase().includes(q)));
+    if (!rows.length) return `<p class="py-4 text-center font-body-md text-body-md text-on-surface-variant">No encontramos esa billetera</p>`;
+    return rows.map(o => `
+      <button type="button" data-dest="${o}" class="w-full flex items-center gap-3 p-2.5 rounded-[14px] text-left transition ${o === dest ? "bg-primary-fixed/50" : "hover:bg-surface-container-low"}">
+        <span class="w-9 h-9 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">${ICON[o]}</span></span>
+        <span class="flex-1 min-w-0"><span class="block font-label-md text-label-md text-on-surface truncate">${esc(wallet(o).name)}</span>
+          <span class="block font-body-sm text-[11px] text-on-surface-variant">Saldo: S/ ${fmt(wallet(o).balance)}</span></span>
+        <span class="material-symbols-outlined text-[20px] ${o === dest ? "text-primary-container" : "text-transparent"}">check_circle</span>
+      </button>`).join("");
+  }
+
+  function deleteView() {
+    const w = wallet(k), n = txsFor(k).length, hasMoney = w.balance > 0;
+    const movs = n === 1 ? "su único movimiento" : n ? `sus ${n} movimientos` : "su historial";
+    const d = dest && wallet(dest);
+    const many = activeKeys().length - 1 >= SEARCH_FROM;
+    return `
+      <div class="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center mb-space-sm"><span class="material-symbols-outlined text-[26px]">${hasMoney ? "account_balance_wallet" : "delete"}</span></div>
+      <h3 class="font-headline-sm text-headline-sm text-on-surface">${hasMoney ? `${esc(w.name)} tiene S/ ${fmt(w.balance)}` : `¿Eliminar ${esc(w.name)}?`}</h3>
+      <p class="font-body-md text-body-md text-on-surface-variant mt-1">${hasMoney ? "Para eliminarla, primero elige a qué billetera mover tu dinero." : "La billetera dejará de aparecer en tu inicio y su QR dejará de funcionar."}</p>
+      ${hasMoney ? `
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mt-space-md mb-2">Mover el saldo a</p>
+      <button type="button" data-act="toggle-list" aria-expanded="${listOpen}" class="w-full flex items-center gap-3 rounded-[12px] border-2 ${d ? "border-primary-container" : "border-outline-variant"} bg-surface px-3 py-2.5 text-left">
+        <span class="w-10 h-10 rounded-full ${d ? "bg-primary-fixed text-primary-container" : "bg-surface-container-high text-on-surface-variant"} flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[20px]">${d ? ICON[dest] : "account_balance_wallet"}</span></span>
+        <span class="flex-1 min-w-0"><span class="block font-label-lg text-[15px] ${d ? "text-on-surface" : "text-on-surface-variant"} truncate">${d ? esc(d.name) : "Elige una billetera"}</span>
+          ${d ? `<span class="block font-body-sm text-body-sm text-on-surface-variant">Recibirá S/ ${fmt(w.balance)}</span>` : ""}</span>
+        <span class="material-symbols-outlined text-[22px] text-primary-container transition-transform ${listOpen ? "rotate-180" : ""}">expand_more</span>
+      </button>
+      <div class="${listOpen ? "" : "hidden"} mt-1 rounded-[14px] border border-surface-container-high p-1">
+        ${many ? `<label class="flex items-center gap-2 rounded-full bg-surface-container-high px-3 mb-1"><span class="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
+          <input data-search placeholder="Buscar billetera" autocomplete="off" class="flex-1 h-10 bg-transparent border-0 outline-none focus:ring-0 font-body-md text-body-md"></label>` : ""}
+        <div data-rows class="max-h-52 overflow-y-auto">${destRows("")}</div>
+      </div>` : ""}
+      <div class="mt-space-md flex items-start gap-2 rounded-[12px] bg-error-container/50 p-3">
+        <span class="material-symbols-outlined text-error text-[20px]">warning</span>
+        <p class="font-body-sm text-body-sm text-on-error-container">También se eliminará ${movs}. Esta acción no se puede deshacer.</p>
+      </div>
+      <p data-error class="hidden mt-2 font-body-sm text-body-sm text-error" role="alert"></p>
+      <div class="flex gap-space-sm mt-space-md">
+        <button type="button" data-act="close" class="flex-1 h-12 rounded-[12px] border-2 border-outline-variant text-on-surface-variant font-label-lg text-label-lg">Cancelar</button>
+        <button type="button" data-act="confirm" class="flex-1 h-12 rounded-[12px] bg-error text-on-error font-label-lg text-label-lg">${hasMoney ? "Mover y eliminar" : "Eliminar"}</button>
+      </div>`;
+  }
+
+  function paint(view) {
+    wrap.innerHTML = `<div class="opt-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl max-h-[85vh] overflow-y-auto ${wrap.dataset.shown ? "" : "translate-y-full"} transition-transform duration-300" role="dialog" aria-modal="true" aria-label="Opciones de billetera">
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>${view()}</div>`;
+    wrap.dataset.view = view === menuView ? "menu" : "delete";
+  }
+  function close() {
+    wrap.classList.add("opacity-0");
+    wrap.querySelector(".opt-sheet")?.classList.add("translate-y-full");
+    setTimeout(() => wrap.remove(), 250);
+  }
+
+  paint(menuView);
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); wrap.querySelector(".opt-sheet").classList.remove("translate-y-full"); wrap.dataset.shown = "1"; });
+
+  wrap.addEventListener("input", e => {
+    if (e.target.matches("[data-search]")) wrap.querySelector("[data-rows]").innerHTML = destRows(e.target.value.trim().toLowerCase());
+  });
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    if (e.target === wrap) return close();
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.dataset.dest) { dest = btn.dataset.dest; listOpen = false; return paint(deleteView); }
+    const act = btn.dataset.act;
+    if (act === "close") return close();
+    if (act === "ask-delete") return paint(deleteView);
+    if (act === "toggle-list") { listOpen = !listOpen; return paint(deleteView); }
+    if (act === "confirm") {
+      const name = wallet(k).name;
+      const res = removeWallet(k, dest);
+      if (res.error) {
+        const p = wrap.querySelector("[data-error]");
+        p.textContent = res.error; p.classList.remove("hidden");
+        return;
+      }
+      close();
+      go("home");
+      setTimeout(() => toast(`Billetera "${name}" eliminada`), 400);
+    }
+  });
+}
+
+/* ---------- Transferir entre billeteras (botón junto a "Mis Billeteras") ---------- */
+function openTransferSheet(doc) {
+  doc.getElementById("wallet-transfer")?.remove();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const ICON = window.Mica.ICON, SEARCH_FROM = 6;
+  if (activeKeys().length < 2) return toast("Necesitas al menos dos billeteras para transferir");
+  const withMoney = activeKeys().filter(k => wallet(k).balance > 0);
+  const f = { from: withMoney.length === 1 ? withMoney[0] : null, to: null, amount: "", note: "", open: null, q: "", error: "" };
+  const wrap = doc.createElement("div");
+  wrap.id = "wallet-transfer";
+  wrap.className = "fixed inset-0 z-[60] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  doc.body.appendChild(wrap);
+
+  const parse = () => { const r = f.amount.replace(",", ".").trim(); return r === "" ? NaN : Number(r); };
+
+  function field(which, labelText) {
+    const k = f[which], w = k && wallet(k), open = f.open === which;
+    const opts = activeKeys().filter(o => which === "to" ? o !== f.from : true)
+      .filter(o => !f.q || !open || wallet(o).name.toLowerCase().includes(f.q));
+    const total = activeKeys().length - (which === "to" ? 1 : 0);
+    const rows = opts.map(o => {
+      const disabled = which === "from" && wallet(o).balance <= 0;
+      return `<button type="button" data-pick="${which}:${o}" ${disabled ? "disabled" : ""} class="w-full flex items-center gap-3 p-2.5 rounded-[14px] text-left transition ${o === k ? "bg-primary-fixed/50" : disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-surface-container-low"}">
+        <span class="w-9 h-9 rounded-full bg-primary-fixed text-primary-container flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">${ICON[o]}</span></span>
+        <span class="flex-1 min-w-0"><span class="block font-label-md text-label-md text-on-surface truncate">${esc(wallet(o).name)}</span>
+          <span class="block font-body-sm text-[11px] text-on-surface-variant">${disabled ? "Sin saldo" : "Saldo: S/ " + fmt(wallet(o).balance)}</span></span>
+        <span class="material-symbols-outlined text-[20px] ${o === k ? "text-primary-container" : "text-transparent"}">check_circle</span></button>`;
+    }).join("") || `<p class="py-4 text-center font-body-md text-body-md text-on-surface-variant">${which === "to" && !f.from ? "Primero elige el origen" : "No encontramos esa billetera"}</p>`;
+    return `
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-2">${labelText}</p>
+      <button type="button" data-toggle="${which}" aria-expanded="${open}" class="w-full flex items-center gap-3 rounded-[12px] border-2 ${w ? "border-primary-container" : "border-outline-variant"} bg-surface px-3 py-2.5 text-left">
+        <span class="w-10 h-10 rounded-full ${w ? "bg-primary-fixed text-primary-container" : "bg-surface-container-high text-on-surface-variant"} flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[20px]">${w ? ICON[k] : "account_balance_wallet"}</span></span>
+        <span class="flex-1 min-w-0"><span class="block font-label-lg text-[15px] ${w ? "text-on-surface" : "text-on-surface-variant"} truncate">${w ? esc(w.name) : "Elige una billetera"}</span>
+          ${w ? `<span class="block font-body-sm text-body-sm text-on-surface-variant">Saldo: S/ ${fmt(w.balance)}</span>` : ""}</span>
+        <span class="material-symbols-outlined text-[22px] text-primary-container transition-transform ${open ? "rotate-180" : ""}">expand_more</span>
+      </button>
+      <div class="${open ? "" : "hidden"} mt-1 rounded-[14px] border border-surface-container-high p-1">
+        ${total >= SEARCH_FROM ? `<label class="flex items-center gap-2 rounded-full bg-surface-container-high px-3 mb-1"><span class="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
+          <input data-search value="${esc(f.q)}" placeholder="Buscar billetera" autocomplete="off" class="flex-1 h-10 bg-transparent border-0 outline-none focus:ring-0 font-body-md text-body-md"></label>` : ""}
+        <div class="max-h-48 overflow-y-auto">${rows}</div>
+      </div>`;
+  }
+
+  function view() {
+    const n = parse(), src = f.from && wallet(f.from);
+    return `
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+      <div class="flex items-start justify-between mb-space-md">
+        <div><p class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Entre mis billeteras</p>
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">Transferir</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant">Al instante y sin comisiones.</p></div>
+        <button type="button" data-act="close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+      ${field("from", "Desde")}
+      <div class="flex justify-center -my-1 relative z-10">
+        <button type="button" data-act="swap" aria-label="Intercambiar origen y destino" class="mt-2 w-9 h-9 rounded-full bg-surface-container-high text-primary-container flex items-center justify-center hover:bg-primary-fixed transition"><span class="material-symbols-outlined text-[20px]">swap_vert</span></button>
+      </div>
+      ${field("to", "Hacia")}
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mt-space-md mb-2">Monto</p>
+      <div class="flex items-center gap-2 rounded-[12px] border-2 border-outline-variant focus-within:border-primary-container px-3 bg-surface">
+        <span class="font-headline-sm text-headline-sm text-primary-container">S/</span>
+        <input data-amount inputmode="decimal" placeholder="0.00" value="${esc(f.amount)}" autocomplete="off" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-headline-sm text-headline-sm text-on-surface">
+        <button type="button" data-act="all" class="px-3 py-1 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-md text-label-md">Todo</button>
+      </div>
+      <p class="mt-1.5 font-body-sm text-body-sm text-on-surface-variant">${src ? "Disponible: S/ " + fmt(src.balance) : "Elige la billetera de origen"}</p>
+      <div class="flex items-center justify-between mt-space-md mb-2">
+        <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Descripción <span class="normal-case tracking-normal font-normal">(opcional)</span></p>
+        <span data-note-count class="font-body-sm text-body-sm text-on-surface-variant">${f.note.length}/40</span>
+      </div>
+      <label class="flex items-center gap-2 rounded-[12px] border-2 border-outline-variant focus-within:border-primary-container px-3 bg-surface">
+        <span class="material-symbols-outlined text-[20px] text-on-surface-variant">edit_note</span>
+        <input data-note maxlength="40" value="${esc(f.note)}" placeholder="Ej.: Para comprar mercadería" autocomplete="off" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-body-md text-body-md text-on-surface">
+      </label>
+      <p data-error class="${f.error ? "" : "hidden"} mt-1.5 font-body-sm text-body-sm text-error" role="alert">${esc(f.error)}</p>
+      <button type="button" data-act="send" class="mt-space-md w-full h-12 rounded-[12px] bg-secondary text-on-secondary font-label-lg text-label-lg flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">swap_horiz</span><span data-send-label>${n > 0 ? "Transferir S/ " + fmt(n) : "Transferir"}</span></button>`;
+  }
+
+  function paint(keepFocus) {
+    const sheet = wrap.querySelector(".tr-sheet");
+    const scroll = sheet ? sheet.scrollTop : 0;
+    wrap.innerHTML = `<div class="tr-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl max-h-[88vh] overflow-y-auto ${wrap.dataset.shown ? "" : "translate-y-full"} transition-transform duration-300" role="dialog" aria-modal="true" aria-label="Transferir entre billeteras">${view()}</div>`;
+    wrap.querySelector(".tr-sheet").scrollTop = scroll;
+    if (keepFocus) { const i = wrap.querySelector(keepFocus); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
+  }
+  function close() {
+    wrap.classList.add("opacity-0");
+    wrap.querySelector(".tr-sheet")?.classList.add("translate-y-full");
+    setTimeout(() => wrap.remove(), 250);
+  }
+
+  paint();
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); wrap.querySelector(".tr-sheet").classList.remove("translate-y-full"); wrap.dataset.shown = "1"; });
+
+  wrap.addEventListener("input", e => {
+    if (e.target.matches("[data-amount]")) {
+      f.amount = e.target.value; f.error = "";
+      const n = parse();
+      wrap.querySelector("[data-send-label]").textContent = n > 0 ? "Transferir S/ " + fmt(n) : "Transferir";
+      wrap.querySelector("[data-error]").classList.add("hidden");
+    }
+    if (e.target.matches("[data-note]")) {
+      f.note = e.target.value;
+      wrap.querySelector("[data-note-count]").textContent = f.note.length + "/40";
+    }
+    if (e.target.matches("[data-search]")) { f.q = e.target.value.trim().toLowerCase(); paint("[data-search]"); }
+  });
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    if (e.target === wrap) return close();
+    const btn = e.target.closest("button");
+    if (!btn || btn.disabled) return;
+    if (btn.dataset.toggle) { f.open = f.open === btn.dataset.toggle ? null : btn.dataset.toggle; f.q = ""; return paint(); }
+    if (btn.dataset.pick) {
+      const [which, k] = btn.dataset.pick.split(":");
+      f[which] = k; f.open = null; f.q = ""; f.error = "";
+      if (which === "from" && f.to === k) f.to = null;
+      return paint();
+    }
+    const act = btn.dataset.act;
+    if (act === "close") return close();
+    if (act === "swap") {
+      if (f.to && wallet(f.to).balance <= 0) { f.error = `${wallet(f.to).name} no tiene saldo para transferir.`; return paint(); }
+      [f.from, f.to] = [f.to, f.from]; f.error = ""; return paint();
+    }
+    if (act === "all") {
+      if (!f.from) { f.error = "Primero elige la billetera de origen."; return paint(); }
+      f.amount = wallet(f.from).balance.toFixed(2); f.error = ""; return paint();
+    }
+    if (act === "send") {
+      if (!f.from) { f.error = "Elige la billetera de origen."; return paint(); }
+      const err = transferMoney(f.from, f.to, parse(), f.note);
+      if (err) { f.error = err; return paint(); }
+      const n = parse(), toName = wallet(f.to).name;
+      close();
+      go("home");
+      setTimeout(() => toast(`S/ ${fmt(n)} transferidos a ${toName}`), 400);
+    }
+  });
+}
+
+/* Pantalla de monto: billetera de origen y categorías según el tipo de billetera. */
+function paintFrom(doc) {
+  if (!wallet(state.payWallet)) state.payWallet = "principal";
+  const w = wallet(state.payWallet);
+  const n = doc.getElementById("active-wallet-name"), b = doc.getElementById("active-wallet-balance");
+  if (n) n.textContent = w.name;
+  if (b) b.textContent = "S/ " + fmt(w.balance);
+  const chips = doc.getElementById("chips-drawer");
+  if (chips) {
+    chips.classList.toggle("hidden", !isBusiness(state.payWallet));
+    // Si cambia a una billetera sin categorías, se limpia una categoría ya elegida.
+    const note = doc.getElementById("tx-note");
+    if (!isBusiness(state.payWallet) && note && [...chips.querySelectorAll("[data-category]")].some(c => c.dataset.category === note.value)) {
+      note.value = ""; note.readOnly = false; note.classList.remove("text-primary-container", "cursor-default"); note.dispatchEvent(new Event("input"));
+    }
+  }
+}
+
+/* Hoja para elegir a quién yapear (contactos frecuentes u otro número). */
+const CONTACTS = [
+  { name: "Lucía Gómez R.", phone: "987 654 321" },
+  { name: "Carlos Ruiz", phone: "912 345 678" },
+  { name: "Mamá", phone: "987 112 445" },
+  { name: "Proveedor Café", phone: "998 877 665" },
+];
+function openContactSheet(doc) {
+  doc.getElementById("contact-sheet")?.remove();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const initials = n => n.split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase();
+  const current = doc.getElementById("recipient-name")?.firstChild?.textContent.trim();
+  const wrap = doc.createElement("div");
+  wrap.id = "contact-sheet";
+  wrap.className = "fixed inset-0 z-[60] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  wrap.innerHTML = `<div class="cs-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl translate-y-full transition-transform duration-300" role="dialog" aria-modal="true" aria-label="Elegir contacto">
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+      <div class="flex items-start justify-between mb-space-sm">
+        <div><p class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Yapear</p>
+          <h3 class="font-headline-sm text-headline-sm text-on-surface">¿A quién le yapeas?</h3></div>
+        <button type="button" data-act="close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+      <div class="flex flex-col gap-1">${CONTACTS.map(c => `
+        <button type="button" data-name="${esc(c.name)}" class="w-full flex items-center gap-3 p-2.5 rounded-[14px] text-left transition ${c.name === current ? "bg-primary-fixed/50" : "hover:bg-surface-container-low"}">
+          <span class="w-10 h-10 rounded-full bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center">${esc(initials(c.name))}</span>
+          <span class="flex-1 min-w-0"><span class="block font-label-lg text-[15px] text-on-surface truncate">${esc(c.name)}</span>
+            <span class="block font-body-sm text-body-sm text-on-surface-variant">${c.phone}</span></span>
+          <span class="material-symbols-outlined text-[20px] ${c.name === current ? "text-primary-container" : "text-transparent"}">check_circle</span>
+        </button>`).join("")}</div>
+      <p class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mt-space-md mb-2">Otro número</p>
+      <div class="flex gap-space-sm">
+        <label class="flex-1 flex items-center gap-2 rounded-[12px] border-2 border-outline-variant focus-within:border-primary-container px-3 bg-surface">
+          <span class="material-symbols-outlined text-[20px] text-on-surface-variant">smartphone</span>
+          <input data-phone inputmode="numeric" maxlength="11" placeholder="9XX XXX XXX" autocomplete="off" class="flex-1 h-12 bg-transparent border-0 outline-none focus:ring-0 font-body-lg text-body-lg">
+        </label>
+        <button type="button" data-act="phone" class="px-4 rounded-[12px] bg-secondary text-on-secondary font-label-lg text-label-lg">Usar</button>
+      </div>
+      <p data-error class="hidden mt-1.5 font-body-sm text-body-sm text-error" role="alert"></p>
+    </div>`;
+  doc.body.appendChild(wrap);
+  const sheet = wrap.querySelector(".cs-sheet");
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); sheet.classList.remove("translate-y-full"); });
+  const close = () => { wrap.classList.add("opacity-0"); sheet.classList.add("translate-y-full"); setTimeout(() => wrap.remove(), 250); };
+  const choose = name => {
+    state.draft.qrRecipient = name; save();
+    const h1 = doc.getElementById("recipient-name");
+    if (h1 && h1.firstChild) h1.firstChild.textContent = name;
+    close();
+  };
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    if (e.target === wrap) return close();
+    const btn = e.target.closest("button"); if (!btn) return;
+    if (btn.dataset.name) return choose(btn.dataset.name);
+    if (btn.dataset.act === "close") return close();
+    if (btn.dataset.act === "phone") {
+      const digits = wrap.querySelector("[data-phone]").value.replace(/\D/g, "");
+      if (!/^9\d{8}$/.test(digits)) {
+        const p = wrap.querySelector("[data-error]");
+        p.textContent = "Ingresa un celular de 9 dígitos que empiece con 9.";
+        return p.classList.remove("hidden");
+      }
+      choose(`Celular ${digits.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3")}`);
+    }
+  });
+}
+
+/* ---------- Detalle de un movimiento (al tocarlo en "Mostrar movimientos") ---------- */
+function opNumber(tx) {
+  if (tx.op) return tx.op;
+  let h = 0;  // número estable para los movimientos de ejemplo
+  for (const c of tx.title + tx.when + tx.amount) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return String(26100000 + (h % 99999));
+}
+function openTxDetail(doc, i) {
+  const tx = state.txs[i];
+  if (!tx) return;
+  if (!/^Transferencia/.test(tx.title)) {
+    const out = tx.amount < 0, key = tx.keys[0];
+    state.last = {
+      amount: Math.abs(tx.amount), key, op: opNumber(tx), at: tx.at, when: tx.when, note: tx.note,
+      walletName: (wallet(key) || {}).name || "Billetera eliminada",
+      recipient: out ? tx.title.replace(/^Yapeo a /, "") : tx.title.replace(/^(Yape de|Pago de) /, ""),
+    };
+    save();
+    return go(!out ? "te-yapearon" : key === "principal" ? "constancia" : "constancia-negocio");
+  }
+  doc.getElementById("tx-detail")?.remove();
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const out = tx.amount < 0;
+  const kind = /^Transferencia/.test(tx.title) ? "Transferencia entre billeteras" : out ? "Yapeo enviado" : "Yapeo recibido";
+  const walletName = tx.label || (wallet(tx.keys[0]) || {}).name || "Billetera eliminada";
+  const row = (k, v) => `<div class="flex items-start justify-between gap-space-md py-2.5 border-t border-surface-container-high">
+      <span class="font-body-md text-body-md text-on-surface-variant shrink-0">${k}</span>
+      <span class="font-label-lg text-[15px] text-on-surface text-right break-words min-w-0">${v}</span></div>`;
+  const wrap = doc.createElement("div");
+  wrap.id = "tx-detail";
+  wrap.className = "fixed inset-0 z-[70] flex items-end justify-center bg-inverse-surface/50 opacity-0 transition-opacity duration-200";
+  wrap.innerHTML = `<div class="td-sheet w-full max-w-md bg-surface-container-lowest rounded-t-[28px] px-space-md pt-3 pb-6 shadow-xl translate-y-full transition-transform duration-300 max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-label="Detalle del movimiento">
+      <div class="w-10 h-1.5 rounded-full bg-outline-variant mx-auto mb-3"></div>
+      <div class="flex items-start justify-between">
+        <span class="w-12 h-12 rounded-full ${out ? "bg-tertiary-fixed text-tertiary-container" : "bg-secondary-container/60 text-on-secondary-container"} flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">${/^Transferencia/.test(tx.title) ? "swap_horiz" : out ? "north_east" : "south_west"}</span></span>
+        <button type="button" data-act="close" aria-label="Cerrar" class="w-9 h-9 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center"><span class="material-symbols-outlined text-[20px]">close</span></button>
+      </div>
+      <p class="mt-space-sm font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">${kind}</p>
+      <p class="font-headline-sm text-headline-sm text-on-surface">${esc(tx.title)}</p>
+      <p class="mt-1 font-display-amount-mobile text-display-amount-mobile ${out ? "text-tertiary-container" : "text-on-surface"}">${out ? "- " : ""}S/ ${fmt(Math.abs(tx.amount))}</p>
+      <div class="mt-space-md">
+        ${row("Fecha y hora", esc(tx.when))}
+        ${row("Billetera", esc(walletName))}
+        ${tx.note ? row("Descripción", esc(tx.note)) : ""}
+        ${row("Nro. de operación", opNumber(tx))}
+      </div>
+      <button type="button" data-act="share" class="mt-space-md w-full h-12 rounded-[12px] border-2 border-secondary text-secondary font-label-lg text-label-lg flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[20px]">share</span>Compartir constancia</button>
+    </div>`;
+  doc.body.appendChild(wrap);
+  const sheet = wrap.querySelector(".td-sheet");
+  requestAnimationFrame(() => { wrap.classList.remove("opacity-0"); sheet.classList.remove("translate-y-full"); });
+  const close = () => { wrap.classList.add("opacity-0"); sheet.classList.add("translate-y-full"); setTimeout(() => wrap.remove(), 250); };
+  wrap.addEventListener("click", e => {
+    e.stopPropagation();
+    const act = e.target.closest("button")?.dataset.act;
+    if (e.target === wrap || act === "close") return close();
+    if (act === "share") toast("Constancia lista para compartir (simulado)");
+  });
+}
+
+function scanDetected(doc, recipient, msg) {
+  state.draft = { flow: "qr", qrRecipient: recipient === "La Tiendita de Don Pepe" ? undefined : recipient };
+  toast(msg || "QR detectado");
+  setTimeout(() => openWalletPicker(doc, {
+    eyebrow: msg && msg.startsWith("Celular") ? "Yapear a celular" : "QR detectado",
+    title: "¿Desde qué billetera pagas?",
+    subtitle: recipient,
+    allowExtra: true,
+    onPick: k => { state.payWallet = k; save(); go("confirmar"); },
+  }), 450);
+}
+
+/* ---------- Ajustes por pantalla tras cargar ---------- */
+function enhance(name, win, doc) {
+  // El logo remoto de Stitch no carga: se oculta en vez de mostrar texto roto.
+  doc.querySelectorAll("img[alt*='Logo'], img[alt*='logo']").forEach(img => {
+    const hide = () => { img.style.display = "none"; };
+    if (img.complete && !img.naturalWidth) hide(); else img.addEventListener("error", hide);
+  });
+
+  if (name === "home" || name === "home-nueva") {
+    const wrap = (fn, cb) => { const orig = win[fn]; if (orig) win[fn] = function (...a) { cb(...a); return orig.apply(this, a); }; };
+    wrap("selectQuickContact", contact => { state.draft.contact = contact; });
+    if (state.openPicker) { delete state.openPicker; setTimeout(() => openWalletPicker(doc), 200); }
+    const agent = doc.getElementById("btn-agent");
+    if (agent) {
+      const overlayOpen = () =>
+        !!doc.querySelector("#wallet-picker, #wallet-options, #wallet-transfer, #tx-detail, #side-menu.is-open") ||
+        ["wallet-qr-modal", "wallet-send-modal"].some(id => { const m = doc.getElementById(id); return m && !m.classList.contains("pointer-events-none"); });
+      const sync = () => { agent.style.display = overlayOpen() ? "none" : ""; };
+      new win.MutationObserver(sync).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+      sync();
+    }
+    // Movimientos desde el estado (incluye los de ejemplo), con su billetera para el filtro.
+    const first = doc.querySelector(".tx-item");
+    if (first) {
+      const box = first.parentNode, tpl = first.cloneNode(true);
+      box.querySelectorAll(".tx-item").forEach(r => r.remove());
+      const FILTER = { principal: "principal", cafe: "emprendimiento", vacaciones: "ahorro", extra: "extra" };
+      state.txs.forEach((tx, i) => {
+        const row = tpl.cloneNode(true);
+        row.dataset.tx = i;
+        row.setAttribute("role", "button");
+        row.setAttribute("aria-label", `Ver detalle: ${tx.title}`);
+        row.querySelector(".tx-title").textContent = tx.title;
+        row.querySelector(".tx-sub").textContent = txSub(tx);
+        if (tx.note) {  // descripción opcional de las transferencias
+          const note = doc.createElement("p");
+          note.className = "tx-note font-body-sm text-body-sm text-on-surface-variant mt-0.5 truncate";
+          const lbl = doc.createElement("span");
+          lbl.className = "font-semibold text-on-surface";
+          lbl.textContent = "Descripción: ";
+          note.append(lbl, tx.note);
+          row.querySelector(".tx-sub").after(note);
+        }
+        const amt = row.querySelector(".tx-amount");
+        amt.textContent = (tx.amount < 0 ? "- S/ " : "S/ ") + fmt(Math.abs(tx.amount));
+        amt.classList.toggle("text-tertiary-container", tx.amount < 0);
+        amt.classList.toggle("text-on-surface", tx.amount >= 0);
+        row.dataset.wallets = "all " + tx.keys.map(k => FILTER[k]).join(" ");
+        box.appendChild(row);
+      });
+    }
+    // Billeteras eliminadas: fuera su tarjeta y su filtro.
+    const PILL = { cafe: "emprendimiento", vacaciones: "ahorro" };
+    for (const k of ["cafe", "vacaciones"]) {
+      if (state.wallets[k]) continue;
+      doc.querySelectorAll(".snap-center").forEach(c => { if (label(c).includes(DEFAULT_NAMES[k])) c.remove(); });
+      doc.querySelector(`.mov-pill[data-wallet="${PILL[k]}"]`)?.remove();
+    }
+    // Saldo de la billetera creada (en el HTML viene fijo en 0.00).
+    if (state.extra) {
+      doc.querySelectorAll(".snap-center").forEach(c => {
+        if (!label(c).includes(state.extra.name)) return;
+        const v = c.querySelector("[data-amount]");
+        if (v) { v.dataset.amount = fmt(state.extra.balance); if (v.textContent !== "****") v.textContent = fmt(state.extra.balance); }
+      });
+    }
+  }
+
+  if (name === "yapear") {
+    if (state.draft.walletKey && state.draft.walletKey !== "extra") { try { win.eval(`selectWallet('${state.draft.walletKey}')`); } catch (e) {} }
+    for (const k of ["cafe", "vacaciones"]) {
+      if (!state.wallets[k]) doc.querySelector(`[onclick="selectWallet('${k}')"]`)?.remove();
+    }
+    try { win.eval("updateCalculations()"); } catch (e) {}
+  }
+
+  if (name === "escanear") {
+    const feed = doc.getElementById("cameraFeedSim");
+    if (feed) {
+      const area = feed.parentElement;
+      area.style.cursor = "pointer";
+      area.addEventListener("click", e => { if (!e.target.closest("button, label")) scanDetected(doc, "La Tiendita de Don Pepe"); });
+      const hint = doc.createElement("div");
+      hint.textContent = "Toca la cámara para simular el escaneo";
+      hint.style.cssText = "position:absolute;left:50%;top:58%;transform:translateX(-50%);background:#56faeb;color:#00201d;font:700 12px 'Plus Jakarta Sans';padding:6px 12px;border-radius:999px;z-index:5;pointer-events:none;white-space:nowrap";
+      area.appendChild(hint);
+    }
+  }
+
+  if (name === "escanear-foto") {
+    const laser = doc.getElementById("scannerLaser");
+    const area = laser && laser.parentElement;
+    if (area) {
+      area.style.cursor = "pointer";
+      area.addEventListener("click", () => { state.draft = {}; go("confirmar"); });
+    }
+    // La billetera elegida en la hoja inferior se usa para pagar.
+    doc.getElementById("walletSheetPanel")?.addEventListener("click", e => {
+      const b = e.target.closest("button"); const k = b && walletKey(label(b));
+      if (k) { state.payWallet = k; save(); }
+    });
+  }
+
+  if (name === "confirmar") {
+    paintFrom(doc);
+    const h1 = doc.getElementById("recipient-name");
+    if (h1 && state.draft.flow === "contact") {  // en el flujo de contacto se puede cambiar a quién yapear
+      h1.classList.add("cursor-pointer", "inline-flex", "items-center", "gap-1");
+      h1.setAttribute("role", "button");
+      h1.setAttribute("aria-label", "Cambiar destinatario");
+      const ic = doc.createElement("span");
+      ic.className = "material-symbols-outlined text-[24px] text-primary-container/70";
+      ic.textContent = "expand_more";
+      h1.appendChild(ic);
+    }
+  }
+
+  if (name === "constancia-negocio" && state.last) {
+    const TAG = { cafe: "Negocio", vacaciones: "Ahorro", extra: state.extra && state.extra.purpose === "savings" ? "Ahorro" : "Negocio" };
+    [...doc.querySelectorAll("span")].find(sp => sp.textContent.trim() === "Negocio" && sp.className.includes("uppercase"))
+      ?.replaceChildren(TAG[state.last.key] || "Billetera");
+  }
+
+  if (name === "te-yapearon" && state.last) {
+    const amountEl = doc.querySelector("[class*='text-[42px]']");
+    if (amountEl) amountEl.textContent = fmtShort(state.last.amount);
+    const nameEl = doc.querySelector("[class*='text-[17px]'].font-bold");
+    if (nameEl) nameEl.textContent = state.last.recipient;
+  }
+
+  if ((name === "constancia" || name === "constancia-negocio") && state.last) {
+    const amountEl = doc.querySelector("[class*='text-[42px]']");
+    if (amountEl) amountEl.textContent = fmtShort(state.last.amount);
+    const nameEl = doc.querySelector("[class*='text-[18px]'].font-bold");
+    if (nameEl) nameEl.textContent = state.last.recipient;
+  }
+}
+
+/* ---------- Panel lateral de escritorio: retirado (solo se muestra el celular) ---------- */
+function renderSide() {}
+
+renderSide();
+render();
+</script>
+</body>
+</html>
