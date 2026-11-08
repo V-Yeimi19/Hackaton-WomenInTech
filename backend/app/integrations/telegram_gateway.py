@@ -17,6 +17,7 @@ from app.core.config import get_settings
 from app.integrations.twilio_gateway import SendResult
 
 settings = get_settings()
+logger = logging.getLogger("mica.telegram")
 
 # La URL de la Bot API lleva el token: httpx la registra completa en nivel INFO.
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -36,14 +37,19 @@ def _url(method: str) -> str:
     return f"{API_BASE}/bot{settings.telegram_bot_token}/{method}"
 
 
-def send_text(chat_id: str, body: str) -> SendResult:
+def send_text(
+    chat_id: str, body: str, *, reply_markup: dict[str, Any] | None = None
+) -> SendResult:
     if not is_live():
         return SendResult(
             provider_sid=f"TGDEMO{uuid.uuid4().hex[:24]}", status="DELIVERED", simulated=True
         )
+    payload: dict[str, Any] = {"chat_id": chat_id, "text": body[:MAX_TEXT]}
+    if reply_markup is not None:
+        payload["reply_markup"] = reply_markup
     response = httpx.post(
         _url("sendMessage"),
-        json={"chat_id": chat_id, "text": body[:MAX_TEXT]},
+        json=payload,
         timeout=TIMEOUT,
     )
     data = response.json()
@@ -53,11 +59,25 @@ def send_text(chat_id: str, body: str) -> SendResult:
     return SendResult(provider_sid=f"TG{chat_id}:{message_id}", status="DELIVERED", simulated=False)
 
 
+def answer_callback_query(callback_query_id: str) -> None:
+    """Quita el indicador de carga del botón inline pulsado."""
+    if not is_live() or not callback_query_id:
+        return
+    response = httpx.post(
+        _url("answerCallbackQuery"),
+        json={"callback_query_id": callback_query_id},
+        timeout=TIMEOUT,
+    )
+    data = response.json()
+    if not data.get("ok"):
+        logger.warning("telegram.callback_ack_failed code=%s", data.get("error_code"))
+
+
 def get_updates(offset: int | None) -> list[dict[str, Any]]:
-    """Lee mensajes pendientes (modo polling, sin webhook). Llamada corta."""
+    """Lee mensajes y pulsaciones de botones pendientes (modo polling)."""
     if not is_live():
         return []
-    params: dict[str, Any] = {"timeout": 0, "allowed_updates": '["message"]'}
+    params: dict[str, Any] = {"timeout": 0, "allowed_updates": '["message", "callback_query"]'}
     if offset is not None:
         params["offset"] = offset
     response = httpx.get(_url("getUpdates"), params=params, timeout=TIMEOUT)

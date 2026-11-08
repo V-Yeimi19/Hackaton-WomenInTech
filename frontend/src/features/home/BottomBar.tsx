@@ -51,7 +51,7 @@ export function BottomBar({ onYapear, onAgent, hideAgent }: { onYapear: () => vo
   return (
     <>
       {!hideAgent && (
-        <button type="button" aria-label="Hablar con Mica, tu asesora contable"
+        <button type="button" aria-label="Hablar con Mica, tu asesora personal"
           onPointerDown={startDrag} onPointerMove={moveDrag}
           onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
           onClick={() => {

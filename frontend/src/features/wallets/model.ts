@@ -2,7 +2,7 @@
 import type { Wallet } from "@/lib/api/types";
 
 export const WALLET_COLORS = {
-  purple: { label: "Violeta", dot: "bg-[#8b5ac7]", card: "from-[#8b5ac7] to-[#7041ad]", corner: "bg-[#8b5ac7]/20" },
+  purple: { label: "Violeta", dot: "bg-[#59006a]", card: "from-[#59006a] to-[#742284]", corner: "bg-[#59006a]/20" },
   teal: { label: "Turquesa", dot: "bg-[#168578]", card: "from-[#168578] to-[#09695f]", corner: "bg-[#168578]/20" },
   magenta: { label: "Coral", dot: "bg-[#c75560]", card: "from-[#c75560] to-[#ae3d50]", corner: "bg-[#c75560]/20" },
   night: { label: "Azul cielo", dot: "bg-[#4279c7]", card: "from-[#4279c7] to-[#2e5fa7]", corner: "bg-[#4279c7]/20" },

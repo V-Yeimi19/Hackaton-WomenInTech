@@ -11,12 +11,6 @@ import { useMe, useTelegramLink } from "./api";
 
 const TELEGRAM_BLUE = "bg-[#229ED9]";
 
-const COMMANDS = [
-  { cmd: "/resumen", text: "Cómo te fue en la semana" },
-  { cmd: "/pausar", text: "Pausa los reportes automáticos" },
-  { cmd: "/ayuda", text: "Todo lo que Mica puede hacer" },
-];
-
 /** Hoja de Mica: conecta la cuenta con el bot de Telegram o abre el chat si ya está conectada. */
 export function MicaSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const toast = useToast();
@@ -41,7 +35,7 @@ export function MicaSheet({ open, onClose }: { open: boolean; onClose: () => voi
   }, [open]);
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Habla con Mica" eyebrow="Tu asesora contable" className="pb-8">
+    <BottomSheet open={open} onClose={onClose} title="Habla con Mica" eyebrow="Tu asesora personal" className="pb-8">
       <div className="mb-4 flex items-center gap-3 rounded-2xl bg-primary-fixed/50 p-3">
         <Image src="/mica-avatar.jpg" alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-full object-cover ring-4 ring-surface" />
         <p className="text-sm text-on-surface">
@@ -84,14 +78,6 @@ function Connected({ botUrl }: { botUrl: string | null }) {
         <Icon name="check_circle" filled className="text-[22px] text-secondary" />
         Tu cuenta ya está conectada con Telegram
       </p>
-      <ul className="mb-4 divide-y divide-outline-variant/40 rounded-2xl bg-surface-container-low">
-        {COMMANDS.map((c) => (
-          <li key={c.cmd} className="flex items-center gap-3 px-4 py-3 text-sm">
-            <code className="font-bold text-primary-container">{c.cmd}</code>
-            <span className="text-on-surface-variant">{c.text}</span>
-          </li>
-        ))}
-      </ul>
       {botUrl && (
         <a href={botUrl} target="_blank" rel="noopener noreferrer"
           className={`flex h-12 w-full items-center justify-center gap-2 rounded-xl ${TELEGRAM_BLUE} text-label uppercase tracking-wide text-white shadow-sm active:scale-[0.98]`}>

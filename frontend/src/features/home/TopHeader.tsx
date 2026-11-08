@@ -86,7 +86,7 @@ export function TopHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
 
 const PROMOS = [
   { tag: "Mi Negocio", title: "Separa la plata de tu negocio y de tu casa", text: "Gratis, con una billetera para cada cosa.", bg: "bg-gradient-to-br from-[#3cf3de] to-[#22d7ce]", icon: "account_balance_wallet" },
-  { tag: "Nuevo", title: "Habla con Mica, tu asesora contable", text: "Resuelve tus dudas de tu negocio.", bg: "bg-surface-container-lowest", avatar: true },
+  { tag: "Nuevo", title: "Habla con Mica, tu asesora personal", text: "Resuelve tus dudas de tu negocio.", bg: "bg-surface-container-lowest", avatar: true },
   { tag: "Sin comisiones", title: "Transfiere entre tus billeteras al instante", text: "Usa el botón Transferir de abajo.", bg: "bg-gradient-to-br from-primary-fixed to-primary-fixed-dim", icon: "swap_horiz" },
 ];
 

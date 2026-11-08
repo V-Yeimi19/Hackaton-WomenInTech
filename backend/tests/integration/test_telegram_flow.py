@@ -74,8 +74,27 @@ def test_telegram_link_and_commands(client, pg_engine, monkeypatch):  # noqa: F8
     messages = _send(client, pg_engine, chat_id, "/resumen")
     assert "Tu semana en Mi Negocio" in messages[-1]
 
-    messages = _send(client, pg_engine, chat_id, "/ayuda")
-    assert "/resumen" in messages[-1] and "WhatsApp" not in messages[-1]
+    messages = _send(client, pg_engine, chat_id, "aYuDa.")
+    assert "Resumen" in messages[-1] and "WhatsApp" not in messages[-1]
+    assert "comandos" not in messages[-1].lower()
+    with Session(pg_engine) as db:
+        link = db.scalar(
+            select(ChannelLink).where(
+                ChannelLink.provider == "telegram",
+                ChannelLink.phone_lookup_hash == channel_lookup_hash("telegram", str(chat_id)),
+            )
+        )
+        message = db.scalar(
+            select(OutboundMessage)
+            .where(
+                OutboundMessage.channel_link_id == link.id,
+            )
+            .order_by(OutboundMessage.created_at.desc())
+        )
+        assert message.reply_markup["keyboard"] == [
+            ["Resumen", "Pausar"],
+            ["Reanudar", "Ayuda"],
+        ]
 
 
 def test_unlinked_telegram_chat_gets_no_reply(client, pg_engine):  # noqa: F811
@@ -149,4 +168,35 @@ def test_free_text_falls_back_to_help_when_ai_fails(client, pg_engine, monkeypat
     monkeypatch.setattr(settings, "groq_api_key", "gsk_prueba")
     monkeypatch.setattr(settings, "groq_model", "modelo-prueba")
     monkeypatch.setattr(llm_gateway, "chat", lambda *a, **k: None)
-    assert "/resumen" in _send(client, pg_engine, chat_id, "hola")[-1]
+    assert "Resumen" in _send(client, pg_engine, chat_id, "hola")[-1]
+
+
+def test_misspelled_options_suggest_without_executing(client, pg_engine, monkeypatch):  # noqa: F811
+    from app.modules.agent import service as agent_service
+    from app.modules.consents.models import Preference
+
+    chat_id = _linked_chat(client, pg_engine, monkeypatch)
+    seen = []
+
+    def answer(*args):
+        seen.append(args[-2])
+        return "Cuéntame más sobre tus cuentas."
+
+    monkeypatch.setattr(agent_service, "answer", answer)
+    for typo, option in (("alluda", "Ayuda"), ("REZUMEN.", "Resumen"), ("pausra", "Pausar")):
+        reply = _send(client, pg_engine, chat_id, typo)[-1]
+        assert f"¿Quisiste decir {option}?" in reply
+    assert not seen
+    with Session(pg_engine) as db:
+        link = db.scalar(
+            select(ChannelLink).where(
+                ChannelLink.provider == "telegram",
+                ChannelLink.phone_lookup_hash == channel_lookup_hash("telegram", str(chat_id)),
+            )
+        )
+        prefs = db.get(Preference, link.business_id)
+        assert prefs is None or prefs.reports_enabled
+
+    assert "Cuéntame más" in _send(client, pg_engine, chat_id, "alluda con mis cuentas.")[-1]
+    assert seen == ["alluda con mis cuentas."]
+    assert "Escríbeme una de estas opciones" in _send(client, pg_engine, chat_id, "Ayuda.")[-1]

@@ -73,6 +73,7 @@ class OutboundMessage(Base):
     )
     dedupe_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
+    reply_markup: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING")
     provider_sid: Mapped[str | None] = mapped_column(String(120), nullable=True, unique=True)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

@@ -59,6 +59,31 @@ Carga reproducible: `python -m tests.benchmark_backend`. Crea 10 000 movimientos
 
 También existen escenarios sintéticos `risk` y `stable`. Sus consentimientos y semanas son fixtures de demostración; no prueban decisiones de una persona real. Cada escenario `fake` recibe un teléfono ficticio independiente.
 
+## Chat de Mica: app y Telegram
+
+La app y Telegram mantienen conversaciones independientes. Comparten un perfil del
+negocio por billetera: rubro, productos más vendidos, ventas diarias declaradas,
+gastos fijos y horario preferido. El perfil se guarda en PostgreSQL al responder
+cada pregunta en la app. Telegram lo consulta en su siguiente respuesta con IA;
+no recibe los mensajes privados del chat web. El horario guardado es una
+preferencia; no modifica por sí solo el calendario del scheduler.
+
+Endpoints autenticados con la sesión del negocio:
+
+- `GET /api/v1/agent/profile?wallet_id=<uuid>`: perfil y versión actual (0 si está vacío).
+- `PATCH /api/v1/agent/profile`: `{wallet_id, answers, expected_version}`. Hasta cinco
+  respuestas de 500 caracteres; una versión desactualizada devuelve 409.
+- `POST /api/v1/agent/chat`: `{wallet_id, message, request_id}`. `request_id` es un UUID
+  reutilizable al reintentar el mismo mensaje; devuelve `{id, request_id, message, reply, created_at}`.
+- `GET /api/v1/agent/chat?wallet_id=<uuid>&limit=50&cursor=<uuid>`: intercambios de la app
+  en orden cronológico y `next_cursor` para recuperar los anteriores. No contiene Telegram.
+
+El servidor verifica que la billetera pertenezca al negocio autenticado, sea de
+negocio y esté activa. El contexto de IA usa historial del servidor, no el enviado
+por el navegador. Las opciones Ayuda, Resumen, Pausar y Reanudar funcionan en ambos
+canales; cada respuesta se entrega en el canal donde se consultó. La personalización
+local anterior se recupera al abrir el chat si aún no existe perfil en el servidor.
+
 ## WhatsApp
 
 `MESSAGING_MODE=fake` no contacta personas. Para probar Twilio, configurar SID, Auth Token, sender y URLs públicas exactas del webhook y callback. Crear un código mediante `/channel-link-challenges` y enviar `VINCULAR <código>` desde el teléfono autorizado en el Sandbox. Los escenarios no verifican automáticamente teléfonos en modo Twilio.

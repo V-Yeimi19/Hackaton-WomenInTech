@@ -181,7 +181,9 @@ test("cambiar de número en la misma pestaña muestra sus propias billeteras", a
 test("Mica: conectar con Telegram desde Inicio y desde el menú", async ({ page }) => {
   await login(page, randomPhone());
 
-  await page.getByRole("button", { name: /Hablar con Mica/ }).click();
+  await page.getByRole("button", { name: "Hablar con Mica, tu asesora personal", exact: true }).click();
+  await expect(page).toHaveURL(/\/mica$/);
+  await page.getByRole("button", { name: "Continuar en Telegram" }).click();
   const sheet = page.getByRole("dialog", { name: "Habla con Mica" });
   const connect = sheet.getByRole("link", { name: "Conectar con Telegram" });
   await expect(connect).toBeVisible();
@@ -191,6 +193,7 @@ test("Mica: conectar con Telegram desde Inicio y desde el menú", async ({ page 
   const me = await api<{ telegram: { enabled: boolean; linked: boolean } }>(page, "me");
   expect(me.telegram).toMatchObject({ enabled: true, linked: false });
   await sheet.getByRole("button", { name: "Cerrar" }).click();
+  await page.goto("/");
 
   await page.getByRole("button", { name: "Mi perfil" }).first().click();
   await page.getByRole("button", { name: "Mica en Telegram" }).click();

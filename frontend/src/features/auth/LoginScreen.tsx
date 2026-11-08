@@ -53,15 +53,11 @@ export function LoginScreen() {
           ))}
           <span aria-hidden="true" className="absolute right-[18%] bottom-[12%] h-3 w-3 rounded-full bg-amber-300" />
           <span aria-hidden="true" className="absolute left-[30%] top-[4%] h-2.5 w-2.5 rounded-full bg-secondary-fixed" />
-          <Image src="/mica-avatar.jpg" alt="Mica, tu asesora contable" width={208} height={208} priority
+          <Image src="/mica-avatar.jpg" alt="Mica, tu asesora personal" width={208} height={208} priority
             className="relative h-52 w-52 rounded-full object-cover shadow-2xl ring-8 ring-white/10" />
         </div>
         <div className="text-center">
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-caption font-semibold text-secondary-fixed">
-            <Icon name="science" className="text-[16px]" />
-            Demo · Hackatón Women in Tech 2026
-          </span>
-          <h1 className="mt-4 text-[28px] font-bold leading-9">¡Te damos la bienvenida a Mica!</h1>
+          <h1 className="mt-0.00001 text-[28px] font-bold leading-11">¡Te damos la bienvenida a Mica!</h1>
           <p className="mt-2 text-base text-on-primary-container">
             Inicia sesión con tu número de celular para probar Mi Negocio. No necesitas clave.
           </p>
@@ -84,7 +80,6 @@ export function LoginScreen() {
         <Image src="/mica-avatar.jpg" alt="" width={56} height={56} className="h-14 w-14 rounded-full object-cover ring-4 ring-white/10" />
         <div>
           <h1 className="text-headline">Ingresa tu número</h1>
-          <p className="text-sm text-on-primary-container">Te crearemos una cuenta de prueba.</p>
         </div>
       </div>
       <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-4 rounded-3xl bg-surface-container-lowest p-6 text-on-surface shadow-xl">
@@ -106,8 +101,7 @@ export function LoginScreen() {
       <div className="mt-4 flex items-start gap-2 rounded-2xl bg-white/10 p-3">
         <Icon name="lock" className="text-[20px] text-secondary-fixed" />
         <p className="text-sm text-on-primary-container">
-          <b className="text-on-primary">No ingreses tu clave de Yape.</b> Es una demo: los saldos y movimientos son
-          ficticios y se guardan en nuestro servidor de pruebas.
+          <b className="text-on-primary">No ingreses tu clave de Yape.</b>
         </p>
       </div>
     </main>

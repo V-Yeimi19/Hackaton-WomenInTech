@@ -63,7 +63,7 @@ npm run dev                     # http://localhost:3000
 | `npm run dev` / `build` / `start` | Desarrollo, build de producción y servidor |
 | `npm run lint` · `npm run typecheck` | ESLint y TypeScript |
 | `npm test` | Pruebas unitarias (Vitest) |
-| `npm run test:e2e` | E2E con Playwright contra el backend real (usa Edge instalado; `PW_CHANNEL=chrome` para Chrome) |
+| `npm run test:e2e` | Compila en `.next-e2e` y ejecuta Playwright contra el backend real (usa Edge instalado; `PW_CHANNEL=chrome` para Chrome) |
 | `npm run api:types` | Regenera los tipos desde `docs/contracts/openapi.json` |
 
 ## Despliegue

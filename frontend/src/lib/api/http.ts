@@ -25,7 +25,7 @@ export async function toApiError(response: Response): Promise<ApiError> {
 }
 
 type RequestOptions = {
-  method?: "GET" | "POST" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   /** Operaciones con dinero: envía Idempotency-Key para que un reintento no cobre dos veces. */
   idempotent?: boolean;

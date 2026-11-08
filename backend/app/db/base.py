@@ -22,6 +22,7 @@ def load_models() -> None:
     para evitar ciclos.
     """
     from app.jobs import models as _jobs  # noqa: F401
+    from app.modules.agent import models as _agent  # noqa: F401
     from app.modules.alerts import models as _alerts  # noqa: F401
     from app.modules.audit import models as _audit  # noqa: F401
     from app.modules.business import models as _business  # noqa: F401
@@ -34,3 +35,4 @@ def load_models() -> None:
     from app.modules.ledger import models as _ledger  # noqa: F401
     from app.modules.messaging import models as _messaging  # noqa: F401
     from app.modules.opportunities import models as _opportunities  # noqa: F401
+    from app.modules.wallets import models as _wallets  # noqa: F401

@@ -58,7 +58,6 @@ export function CreateWalletScreen() {
               <p className="truncate text-title font-bold">{name.trim() || "Mi nueva billetera"}</p>
               <span className="mt-0.5 inline-block rounded-full bg-white/15 px-2 py-0.5 text-caption">{purpose === "BUSINESS" ? "Negocio" : "Ahorro"}</span>
             </div>
-            <Icon name="qr_code_2" className="text-[28px] opacity-90" />
           </div>
           <p className="mt-4 text-caption opacity-80">Saldo inicial · <b>S/ 0.00</b></p>
         </section>
@@ -114,7 +113,7 @@ export function CreateWalletScreen() {
 
       <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-[430px] -translate-x-1/2 bg-surface/95 px-4 py-3 shadow-[0_-4px_24px_rgba(116,34,132,0.08)] backdrop-blur-xl">
         <button type="submit" form="wallet-form" disabled={create.isPending}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-secondary text-label text-on-secondary disabled:opacity-60">
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-label text-on-primary disabled:opacity-60">
           <Icon name="add_circle" className="text-[20px]" />{create.isPending ? "Creando…" : "Crear billetera"}
         </button>
       </div>

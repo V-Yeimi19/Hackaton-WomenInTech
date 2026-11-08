@@ -17,7 +17,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npx next start -p 3100",
+    command: "npx next build && npx next start -p 3100",
+    env: { MICA_NEXT_DIST_DIR: ".next-e2e" },
     url: "http://localhost:3100/login",
     reuseExistingServer: true,
     timeout: 120_000,

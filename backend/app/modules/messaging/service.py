@@ -12,6 +12,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timedelta
+from difflib import get_close_matches
 from typing import cast
 
 from sqlalchemy import or_, select
@@ -22,7 +23,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
-from app.integrations import llm_gateway, telegram_gateway, twilio_gateway
+from app.integrations import telegram_gateway, twilio_gateway
 from app.modules.agent import service as agent_service
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
@@ -85,19 +86,15 @@ def enabled_providers() -> list[str]:
 
 
 def help_text(provider: str) -> str:
-    if provider == "telegram":
+    if provider in ("telegram", "app"):
         return (
-            "Comandos de Mi Negocio:\n"
-            "/resumen — ver tu semana\n"
-            "/pausar · /reanudar — activar o pausar reportes\n"
-            "1 o 2 — aclarar un movimiento pendiente\n"
-            "/ayuda — mostrar este mensaje\n"
-            "Para vincular, toca «Conectar con Telegram» en la app."
-            + (
-                "\nTambién puedes escribirme lo que quieras saber de tus cuentas."
-                if llm_gateway.is_enabled()
-                else ""
-            )
+            "¡Hola! Soy Mica, tu asesora personal.\n\n"
+            "Escríbeme una de estas opciones:\n"
+            "• Resumen — cómo te fue esta semana\n"
+            "• Pausar — dejar de recibir reportes\n"
+            "• Reanudar — volver a recibir reportes\n"
+            "• Ayuda — ver estas opciones otra vez\n\n"
+            "También puedes escribirme tus dudas sobre tus cuentas."
         )
     return HELP_TEXT
 
@@ -398,6 +395,7 @@ def enqueue_outbound(
     dedupe_key: str,
     report_id: uuid.UUID | None = None,
     commit: bool = False,
+    reply_markup: dict | None = None,
 ) -> OutboundMessage:
     existing = db.scalar(select(OutboundMessage).where(OutboundMessage.dedupe_key == dedupe_key))
     if existing is not None:
@@ -409,6 +407,7 @@ def enqueue_outbound(
         channel_link_id=channel_link_id,
         dedupe_key=dedupe_key,
         body=body,
+        reply_markup=reply_markup,
         status="PENDING",
     )
     db.add(message)
@@ -435,6 +434,16 @@ def _reply(
         body=body,
         dedupe_key=f"reply:{event.event_id}",
         report_id=report_id,
+        reply_markup=(
+            {
+                "keyboard": [["Resumen", "Pausar"], ["Reanudar", "Ayuda"]],
+                "resize_keyboard": True,
+                "is_persistent": True,
+                "input_field_placeholder": "Elige una opción o escribe tu duda",
+            }
+            if link.provider == "telegram"
+            else None
+        ),
     )
     audit_record(
         db,
@@ -465,13 +474,38 @@ def _handle_twilio(db: Session, event: InboundEvent) -> None:
 
 
 def parse_telegram_text(text: str) -> tuple[str, str]:
-    """Convierte '/start CODIGO', '/resumen@MicaBot' o 'resumen' en (COMANDO, argumento)."""
-    command, _, argument = text.strip().partition(" ")
-    command = command.removeprefix("/").split("@", 1)[0].upper().strip()
-    argument = argument.strip()
-    if command == "START":
-        command = "VINCULAR" if argument else "AYUDA"
-    return command, argument
+    """Reconoce opciones completas; conserva las frases libres para la IA."""
+    raw = text.strip()
+    token, _, argument = raw.partition(" ")
+    # Los enlaces de vinculación de Telegram siguen usando /start <código>.
+    legacy = token.removeprefix("/").removeprefix("\\").split("@", 1)[0].upper()
+    if legacy == "START":
+        return ("VINCULAR", argument.strip()) if argument.strip() else ("AYUDA", "")
+    if legacy == "VINCULAR" and argument.strip():
+        return "VINCULAR", argument.strip()
+    option = raw.removeprefix("/").removeprefix("\\").split("@", 1)
+    # Solo permitir menciones de bot en la sintaxis anterior /opción@Bot.
+    candidate = (
+        option[0]
+        if raw.startswith("/") and len(option) == 2 and not argument
+        else raw.removeprefix("/").removeprefix("\\")
+    )
+    candidate = candidate.removesuffix(".").strip().upper()
+    if candidate in {"RESUMEN", "PAUSAR", "REANUDAR", "AYUDA", "1", "2"}:
+        return candidate, ""
+    return "", ""
+
+
+def suggest_telegram_option(text: str) -> str | None:
+    """Sugiere opciones para palabras mal escritas sin capturar frases libres."""
+    word = text.strip().removesuffix(".").casefold()
+    if not word.isalpha() or len(word) < 4:
+        return None
+    options = ("resumen", "pausar", "reanudar", "ayuda")
+    if word in options:
+        return None
+    matches = get_close_matches(word, options, n=2, cutoff=0.7)
+    return matches[0].capitalize() if len(matches) == 1 else None
 
 
 def _handle_telegram(db: Session, event: InboundEvent) -> None:
@@ -532,7 +566,11 @@ def _handle_command(
             business,
             link,
             event,
-            f"Tu {name} quedó vinculado a Mi Negocio. Envía AYUDA para ver los comandos.",
+            (
+                f"Tu {name} quedó vinculado a Mi Negocio.\n\n" + help_text(provider)
+                if provider == "telegram"
+                else f"Tu {name} quedó vinculado a Mi Negocio. Envía AYUDA para ver los comandos."
+            ),
         )
         return
 
@@ -562,67 +600,10 @@ def _handle_command(
     event.business_id = business.id
     link.last_inbound_at = utcnow()
 
-    if command == "AYUDA":
-        _reply(db, business, link, event, help_text(provider))
-        return
-
-    if command == "PAUSAR":
-        prefs = _preferences(db, business.id)
-        prefs.reports_enabled = False
-        cancel_pending_for_business(db, business.id, "REPORTS_PAUSED")
-        _reply(
-            db,
-            business,
-            link,
-            event,
-            f"Reportes por {name} pausados. Tus movimientos y saldos siguen disponibles en la app.",
-        )
-        return
-
-    if command == "REANUDAR":
-        if not consent_service.has_active(db, business.id, "WHATSAPP_REPORTS"):
-            _reply(
-                db,
-                business,
-                link,
-                event,
-                f"No tienes consentimiento activo para reportes por {name}. Actívalo en la app.",
-            )
-            return
-        prefs = _preferences(db, business.id)
-        prefs.reports_enabled = True
-        _reply(
-            db,
-            business,
-            link,
-            event,
-            f"Reportes por {name} activados. Envía RESUMEN cuando quieras ver tu semana.",
-        )
-        return
-
-    if command == "RESUMEN":
-        if not consent_service.has_active(db, business.id, "WHATSAPP_REPORTS"):
-            _reply(
-                db,
-                business,
-                link,
-                event,
-                f"El envío de reportes por {name} no está autorizado. Puedes activarlo en la app.",
-            )
-            return
-        if not _preferences(db, business.id).reports_enabled:
-            _reply(
-                db,
-                business,
-                link,
-                event,
-                "Tus reportes están pausados. Envía REANUDAR para activarlos.",
-            )
-            return
-        report = insights_service.generate_report(
-            db, business, cutoff_at=event.received_at, commit=False
-        )
-        _reply(db, business, link, event, report.text, report_id=report.id)
+    option_result = option_reply(db, business, command, provider, event.received_at)
+    if option_result is not None:
+        body, report_id = option_result
+        _reply(db, business, link, event, body, report_id=report_id)
         return
 
     if command in ("1", "2"):
@@ -633,7 +614,11 @@ def _handle_command(
                 business,
                 link,
                 event,
-                "No tienes movimientos pendientes de clasificar. Envía AYUDA para ver los comandos.",
+                (
+                    "No tienes movimientos pendientes de clasificar. Escribe Ayuda para ver las opciones."
+                    if provider == "telegram"
+                    else "No tienes movimientos pendientes de clasificar. Envía AYUDA para ver los comandos."
+                ),
             )
             return
         option = "BUSINESS_PAYMENT" if command == "1" else "HOUSEHOLD_WITHDRAWAL"
@@ -662,8 +647,58 @@ def _handle_command(
         )
         return
 
+    suggestion = suggest_telegram_option(text) if provider == "telegram" else None
+    if suggestion:
+        _reply(
+            db,
+            business,
+            link,
+            event,
+            f"¿Quisiste decir {suggestion}? Escríbelo o toca el botón {suggestion}. "
+            "También puedes escribirme tu duda completa sobre tus cuentas.",
+        )
+        return
+
     answer = agent_service.answer(db, business, event, link.id, text, name)
     _reply(db, business, link, event, answer or help_text(provider))
+
+
+def option_reply(
+    db: Session,
+    business: Business,
+    command: str,
+    provider: str,
+    received_at: datetime,
+) -> tuple[str, uuid.UUID | None] | None:
+    """Opciones fijas compartidas por Telegram y la app, sin enviar a otros canales."""
+    name = channel_name(provider) if provider != "app" else "tus canales"
+    if command == "AYUDA":
+        return help_text(provider), None
+    if command == "PAUSAR":
+        _preferences(db, business.id).reports_enabled = False
+        cancel_pending_for_business(db, business.id, "REPORTS_PAUSED")
+        return (
+            f"Reportes por {name} pausados. Tus movimientos y saldos siguen disponibles en la app.",
+            None,
+        )
+    if command in ("REANUDAR", "RESUMEN"):
+        if not consent_service.has_active(db, business.id, "WHATSAPP_REPORTS"):
+            return (
+                f"El envío de reportes por {name} no está autorizado. Puedes activarlo en la app.",
+                None,
+            )
+        prefs = _preferences(db, business.id)
+        if command == "REANUDAR":
+            prefs.reports_enabled = True
+            return (
+                f"Reportes por {name} activados. Escribe Resumen cuando quieras ver tu semana.",
+                None,
+            )
+        if not prefs.reports_enabled:
+            return "Tus reportes están pausados. Escribe Reanudar para activarlos.", None
+        report = insights_service.generate_report(db, business, cutoff_at=received_at, commit=False)
+        return report.text, report.id
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -745,7 +780,12 @@ def deliver_message(db: Session, message: OutboundMessage) -> OutboundMessage:
     db.commit()
 
     try:
-        result = gateway.send_text(address, message.body)
+        if link.provider == "telegram":
+            result = telegram_gateway.send_text(
+                address, message.body, reply_markup=message.reply_markup
+            )
+        else:
+            result = gateway.send_text(address, message.body)
         message = cast(OutboundMessage, db.get(OutboundMessage, message.id))
         message.provider_sid = result.provider_sid
         message.status = result.status if result.status in STATUS_RANK else "ACCEPTED"

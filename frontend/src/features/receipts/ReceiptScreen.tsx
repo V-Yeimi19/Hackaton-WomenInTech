@@ -9,7 +9,7 @@ import { useMovement } from "@/features/movements/api";
 import { formatShort, receiptDate } from "@/lib/format";
 
 const MICA_ADS = [
-  { key: "agent", title: "Habla con Mica", text: "Tu asesora contable para tu negocio", bg: "bg-white", avatar: true, toast: "Pronto podrás hablar con Mica, tu asesora contable" },
+  { key: "agent", title: "Habla con Mica", text: "Tu asesora personal para tu negocio", bg: "bg-white", avatar: true, toast: "Pronto podrás hablar con Mica, tu asesora personal" },
   { key: "summary", title: "Tu resumen de la semana", text: "Mica te dice cuánto ganó tu negocio", bg: "bg-gradient-to-r from-secondary-fixed to-secondary-fixed-dim", icon: "insights", toast: "Tu resumen semanal con Mica: próximamente" },
   { key: "goals", title: "Separa para tus metas", text: "Mica te sugiere cuánto apartar", bg: "bg-gradient-to-r from-primary-fixed to-primary-fixed-dim", icon: "savings", toast: "Metas de ahorro con Mica: próximamente" },
 ];
