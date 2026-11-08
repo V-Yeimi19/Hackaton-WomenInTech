@@ -8,15 +8,10 @@ import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
 
 import { useCreateWallet, useWallets } from "./api";
-import { NAME_MAX, nameError } from "./model";
+import { NAME_MAX, nameError, normalizeWalletName, walletNameInput, WALLET_COLORS } from "./model";
 
 const ICONS = ["🛍️", "☕", "💇", "🚗", "💼", "🎯"];
-const COLORS = {
-  purple: { label: "Morado", dot: "bg-primary-container", card: "from-primary-container to-primary" },
-  teal: { label: "Turquesa", dot: "bg-secondary", card: "from-secondary to-on-secondary-fixed-variant" },
-  magenta: { label: "Magenta", dot: "bg-tertiary-container", card: "from-tertiary-container to-tertiary" },
-  night: { label: "Noche", dot: "bg-inverse-surface", card: "from-inverse-surface to-on-surface" },
-} as const;
+const COLORS = WALLET_COLORS;
 type Color = keyof typeof COLORS;
 type Purpose = "BUSINESS" | "SAVINGS";
 
@@ -37,8 +32,9 @@ export function CreateWalletScreen() {
     const problem = nameError(name, data?.items ?? []);
     if (problem) return setError(problem);
     try {
-      await create.mutateAsync({ name: name.trim(), purpose, icon, color });
-      toast(`Billetera "${name.trim()}" creada`);
+      const normalizedName = normalizeWalletName(name);
+      await create.mutateAsync({ name: normalizedName, purpose, icon, color });
+      toast(`Billetera "${normalizedName}" creada`);
       router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No pudimos crear la billetera.");
@@ -72,8 +68,8 @@ export function CreateWalletScreen() {
             <label htmlFor="name" className="text-caption font-bold uppercase tracking-wider text-on-surface-variant">Nombre</label>
             <span className="text-caption text-on-surface-variant">{name.trim().length}/{NAME_MAX}</span>
           </div>
-          <input id="name" maxLength={NAME_MAX} placeholder="Ej.: Delivery de postres" value={name} autoFocus
-            onChange={(e) => { setName(e.target.value); setError(null); }}
+          <input id="name" maxLength={NAME_MAX} placeholder="Ej.: Delivery de postres" value={name} autoFocus autoCapitalize="sentences"
+            onChange={(e) => { setName(walletNameInput(e.target.value)); setError(null); }}
             className="h-12 w-full rounded-xl border-2 border-outline-variant bg-surface-container-lowest px-3 text-base outline-none focus:border-primary-container" />
           {error ? <p role="alert" className="mt-1.5 text-sm text-error">{error}</p> : <p className="mt-1.5 text-caption text-on-surface-variant">Se verá en tu QR y en tus constancias.</p>}
         </div>

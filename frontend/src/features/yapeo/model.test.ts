@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { allowsCategories, amountError, pressKey, type Key } from "./model";
+import { allowsCategories, amountError, DEMO_RECIPIENTS, nextDemoRecipient, pressKey, type Key } from "./model";
+
+describe("destinatarios de demo", () => {
+  it("alterna empresas y personas sin repetir hasta completar la lista", () => {
+    window.sessionStorage.removeItem("mica-recipient-index");
+    const recipients = Array.from({ length: 10 }, () => nextDemoRecipient());
+    expect(recipients).toEqual([...DEMO_RECIPIENTS, ...DEMO_RECIPIENTS]);
+    for (const recipient of DEMO_RECIPIENTS) {
+      if (recipient.type === "CONTACT") {
+        expect(recipient.name).toMatch(/^\p{L}+ \p{L}{3}\*$/u);
+      }
+    }
+  });
+});
 
 const type = (keys: Key[], start = "0") => keys.reduce(pressKey, start);
 

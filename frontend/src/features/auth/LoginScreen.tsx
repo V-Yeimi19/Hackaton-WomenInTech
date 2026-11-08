@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Icon } from "@/components/ui/Icon";
 import { ApiError, request } from "@/lib/api/http";
 import { formatPhoneInput, isPeruMobile } from "@/lib/format";
+import { resetBalanceVisibility } from "@/features/wallets/visibility";
 
 const CONFETTI = [
   "left-[12%] top-[12%] text-secondary-fixed rotate-12",
@@ -17,6 +19,7 @@ const CONFETTI = [
 /** Bienvenida y entrada solo con número: el BFF guarda la sesión en una cookie httpOnly. */
 export function LoginScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<"welcome" | "phone">("welcome");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +31,9 @@ export function LoginScreen() {
     setLoading(true);
     try {
       await request("/api/auth/login", { method: "POST", body: { phone: phone.replace(/\D/g, "") } });
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      resetBalanceVisibility();
       router.replace("/");
       router.refresh();
     } catch (err) {

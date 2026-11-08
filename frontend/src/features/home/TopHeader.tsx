@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 
@@ -36,7 +37,6 @@ export function TopHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
             <Icon name="person" className="text-[26px]" />
           </button>
           <span className="text-title font-bold">Hola, Yaper@</span>
-          <span className="rounded-md bg-amber-300 px-2 py-0.5 text-[11px] font-bold text-amber-950">Gratis</span>
         </div>
         <div className="flex items-center gap-1">
           <button type="button" aria-label="Ayuda" onClick={() => toast("Ayuda: próximamente")} className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10">
@@ -84,7 +84,7 @@ export function TopHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
 }
 
 const PROMOS = [
-  { tag: "Mi Negocio", title: "Separa la plata de tu negocio y de tu casa", text: "Gratis, con una billetera para cada cosa.", bg: "bg-gradient-to-br from-secondary-fixed to-secondary-fixed-dim", icon: "account_balance_wallet" },
+  { tag: "Mi Negocio", title: "Separa la plata de tu negocio y de tu casa", text: "Gratis, con una billetera para cada cosa.", bg: "bg-gradient-to-br from-[#3cf3de] to-[#22d7ce]", icon: "account_balance_wallet" },
   { tag: "Nuevo", title: "Habla con Mica, tu asesora contable", text: "Resuelve tus dudas de tu negocio.", bg: "bg-surface-container-lowest", avatar: true },
   { tag: "Sin comisiones", title: "Transfiere entre tus billeteras al instante", text: "Usa el botón Transferir de abajo.", bg: "bg-gradient-to-br from-primary-fixed to-primary-fixed-dim", icon: "swap_horiz" },
 ];
@@ -112,14 +112,14 @@ function PromoCarousel() {
         {PROMOS.map((p) => (
           <div key={p.title} className={`flex h-36 w-[88%] shrink-0 snap-center items-center gap-2 overflow-hidden rounded-[20px] p-4 ${p.bg}`}>
             <div className="min-w-0 flex-1">
-              <span className="inline-block rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-bold text-on-primary">{p.tag}</span>
-              <p className="mt-2 text-title font-bold leading-tight text-primary">{p.title}</p>
-              <p className="mt-1 text-caption text-on-surface-variant">{p.text}</p>
+              <span className={clsx("inline-block rounded-full px-2 py-0.5 text-[11px] font-bold leading-4", p.avatar ? "bg-secondary-container text-on-secondary-container" : "bg-primary-container text-on-primary")}>{p.tag}</span>
+              <p className={clsx("mt-2 text-[18px] font-bold leading-[22px]", p.tag === "Mi Negocio" ? "text-[#002c2b]" : "text-primary-container")}>{p.title}</p>
+              <p className={clsx("mt-1 text-[12px] leading-4", p.tag === "Mi Negocio" ? "text-[#004441]" : "text-on-surface-variant")}>{p.text}</p>
             </div>
             {p.avatar ? (
               <Image src="/mica-avatar.jpg" alt="" width={80} height={80} className="h-20 w-20 shrink-0 rounded-full object-cover" />
             ) : (
-              <Icon name={p.icon!} filled className="shrink-0 text-[64px] text-primary-container" />
+              <Icon name={p.icon!} filled size={64} className="shrink-0 text-primary-container" />
             )}
           </div>
         ))}

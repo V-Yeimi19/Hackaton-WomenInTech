@@ -17,6 +17,7 @@ import hashlib
 import random
 import re
 import secrets
+import unicodedata
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
@@ -189,12 +190,15 @@ def get_wallet(db: Session, business_id: uuid.UUID, wallet_id: uuid.UUID | str |
 
 
 def clean_name(raw: str | None) -> str:
-    return re.sub(r"\s+", " ", raw or "").strip()
+    name = re.sub(r"\s+", " ", unicodedata.normalize("NFC", raw or "")).strip()
+    return name[:1].upper() + name[1:]
 
 
 def validate_name(db: Session, business_id: uuid.UUID, name: str) -> None:
     if not name:
         raise AppError("NAME_INVALID", "Escribe un nombre para tu billetera.", 422)
+    if not all(char.isalpha() or char == " " for char in name):
+        raise AppError("NAME_INVALID", "Usa solo letras y espacios.", 422)
     if len(name) < NAME_MIN:
         raise AppError("NAME_INVALID", "El nombre debe tener al menos 3 caracteres.", 422)
     if len(name) > NAME_MAX:

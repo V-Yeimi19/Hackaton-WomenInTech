@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useWallets } from "@/features/wallets/api";
 import { WalletPickerSheet } from "@/features/wallets/components/WalletPickerSheet";
 
-import { DEFAULT_MERCHANT } from "./model";
+import { DEMO_RECIPIENTS, nextDemoRecipient } from "./model";
 
 /** Escáner simulado: se elige la billetera recién después de detectar el QR. */
 export function ScanScreen() {
@@ -16,8 +16,11 @@ export function ScanScreen() {
   const toast = useToast();
   const { data } = useWallets();
   const [detected, setDetected] = useState(false);
+  const [recipient, setRecipient] = useState<(typeof DEMO_RECIPIENTS)[number]>(DEMO_RECIPIENTS[0]);
 
   function detect(message = "QR detectado") {
+    if (detected) return;
+    setRecipient(nextDemoRecipient());
     toast(message);
     setTimeout(() => setDetected(true), 400);
   }
@@ -56,8 +59,8 @@ export function ScanScreen() {
         </div>
       </div>
       <WalletPickerSheet open={detected} onClose={() => setDetected(false)} wallets={data?.items ?? []}
-        eyebrow="QR detectado" title="¿Desde qué billetera pagas?" subtitle={DEFAULT_MERCHANT}
-        onPick={(w) => router.push(`/yapear?wallet=${w.id}&flujo=qr&para=${encodeURIComponent(DEFAULT_MERCHANT)}`)} />
+        eyebrow="QR detectado" title="¿Desde qué billetera pagas?" subtitle={recipient.name}
+        onPick={(w) => router.push(`/yapear?wallet=${w.id}&flujo=qr&para=${encodeURIComponent(recipient.name)}&tipo=${recipient.type}`)} />
     </main>
   );
 }

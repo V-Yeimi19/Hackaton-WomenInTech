@@ -36,9 +36,36 @@ export const allowsCategories = (wallet?: Pick<Wallet, "is_business"> | null) =>
 
 export type Contact = { name: string; phone: string };
 export const CONTACTS: Contact[] = [
-  { name: "Lucía Gómez R.", phone: "987 654 321" },
-  { name: "Carlos Ruiz", phone: "912 345 678" },
-  { name: "Mamá", phone: "987 112 445" },
+  { name: "Lucía Góm*", phone: "987 654 321" },
+  { name: "Carlos Rui*", phone: "912 345 678" },
+  { name: "Susan Mar*", phone: "987 112 445" },
   { name: "Proveedor Café", phone: "998 877 665" },
 ];
-export const DEFAULT_MERCHANT = "La Tiendita de Don Pepe";
+export const DEMO_RECIPIENTS = [
+  { name: "BoticaPeru", type: "MERCHANT" },
+  { name: "Restaurante Mary", type: "MERCHANT" },
+  { name: "Susan Mar*", type: "CONTACT" },
+  { name: "Makro", type: "MERCHANT" },
+  { name: "Stephen Cuo*", type: "CONTACT" },
+] as const;
+
+let recipientIndex = 0;
+
+/** Avanza solo al iniciar un pago o detectar un QR, nunca al cambiar el monto. */
+export function nextDemoRecipient() {
+  let index = recipientIndex;
+  try {
+    const stored = Number(window.sessionStorage.getItem("mica-recipient-index") ?? "0");
+    if (Number.isSafeInteger(stored) && stored >= 0) index = stored;
+  } catch {
+    // La rotación funciona también sin almacenamiento disponible.
+  }
+  const recipient = DEMO_RECIPIENTS[index % DEMO_RECIPIENTS.length];
+  recipientIndex = (index + 1) % DEMO_RECIPIENTS.length;
+  try {
+    window.sessionStorage.setItem("mica-recipient-index", String(recipientIndex));
+  } catch {
+    // Conserva el índice en memoria.
+  }
+  return recipient;
+}

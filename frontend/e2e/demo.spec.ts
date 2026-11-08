@@ -60,7 +60,7 @@ test("recorrido completo de la demo contra el backend", async ({ page, context }
   await page.getByTestId("pay").click();
   await expect(page).toHaveURL(/\/constancia\//);
   const yapeo = await lastMovement(page);
-  expect(yapeo).toMatchObject({ amount: "-12.05", category: "RESTOCK", title: "Yapeo a Lucía Gómez R." });
+  expect(yapeo).toMatchObject({ amount: "-12.05", category: "RESTOCK", title: "Yapeo a BoticaPeru" });
   await expect(page.getByTestId("receipt-amount")).toHaveText("12.05");
   await expect(page.getByText(yapeo.operation_number)).toBeVisible();
   await expect(page.getByTestId("security-code")).toHaveText(yapeo.security_code.split("").join(""));
@@ -96,7 +96,7 @@ test("recorrido completo de la demo contra el backend", async ({ page, context }
   await page.locator('[data-key="7"]').click();
   await page.getByTestId("pay").click();
   await expect(page).toHaveURL(/\/constancia\//);
-  expect(await lastMovement(page)).toMatchObject({ title: "Yapeo a La Tiendita de Don Pepe", amount: "-7.00", category: null });
+  expect(await lastMovement(page)).toMatchObject({ title: "Yapeo a Restaurante Mary", amount: "-7.00", category: null });
   await page.getByRole("button", { name: "Cerrar" }).click();
 
   // Crear y eliminar una billetera.
@@ -113,7 +113,7 @@ test("recorrido completo de la demo contra el backend", async ({ page, context }
 
   // Movimientos: el yapeo abre su constancia con el mismo número de operación.
   await page.getByRole("button", { name: "Mostrar movimientos" }).click();
-  const row = page.getByRole("button", { name: "Ver detalle: Yapeo a Lucía Gómez R." });
+  const row = page.getByRole("button", { name: "Ver detalle: Yapeo a BoticaPeru" });
   await expect(row).toContainText("Para volver a surtir");
   await row.click();
   await expect(page.getByText(yapeo.operation_number)).toBeVisible();
@@ -137,4 +137,38 @@ test("cada número tiene datos distintos", async ({ browser }) => {
     balances.push((await wallets(page)).map((w) => w.balance).join("|"));
   }
   expect(balances[0]).not.toBe(balances[1]);
+});
+
+test("cambiar de número en la misma pestaña muestra sus propias billeteras", async ({ page }) => {
+  const firstPhone = randomPhone();
+  await login(page, firstPhone);
+  const firstWallets = await wallets(page);
+  const firstMovements = await api(page, "movements");
+  for (const wallet of firstWallets) {
+    await expect(page.locator(`[data-wallet="${wallet.id}"]`)).toBeVisible();
+  }
+
+  async function logout() {
+    await page.getByRole("button", { name: "Mi perfil", exact: true }).click();
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  }
+
+  await logout();
+  await login(page, randomPhone());
+  const secondWallets = await wallets(page);
+  for (const wallet of secondWallets) {
+    await expect(page.locator(`[data-wallet="${wallet.id}"]`)).toBeVisible();
+  }
+  for (const wallet of firstWallets) {
+    await expect(page.locator(`[data-wallet="${wallet.id}"]`)).toHaveCount(0);
+  }
+
+  await logout();
+  await login(page, firstPhone);
+  expect(await wallets(page)).toEqual(firstWallets);
+  expect(await api(page, "movements")).toEqual(firstMovements);
+  for (const wallet of firstWallets) {
+    await expect(page.locator(`[data-wallet="${wallet.id}"]`)).toBeVisible();
+  }
 });

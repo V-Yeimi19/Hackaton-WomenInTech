@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/Icon";
 import { useToast } from "@/components/ui/Toast";
@@ -10,12 +10,11 @@ import { useWallets } from "@/features/wallets/api";
 import { WalletPickerSheet } from "@/features/wallets/components/WalletPickerSheet";
 import type { Category } from "@/lib/api/types";
 import { formatMoney } from "@/lib/format";
-import { useStoredState } from "@/lib/use-session-storage";
 
 import { useYapeo } from "./api";
 import { ContactSheet, type Recipient } from "./ContactSheet";
 import { Keypad } from "./Keypad";
-import { allowsCategories, amountError, CATEGORIES, CONTACTS, DEFAULT_MERCHANT, MESSAGE_MAX, pressKey, type Key } from "./model";
+import { allowsCategories, amountError, CATEGORIES, DEMO_RECIPIENTS, MESSAGE_MAX, nextDemoRecipient, pressKey, type Key } from "./model";
 
 /**
  * Pantalla de monto ("Yapear a …"). Flujo contacto (botón YAPEAR) o comercio (QR).
@@ -29,10 +28,20 @@ export function AmountScreen() {
   const { data } = useWallets();
   const isQr = params.get("flujo") === "qr";
 
-  const [lastContact, setLastContact] = useStoredState<Recipient>("mica-last-contact", { name: CONTACTS[0].name, phone: CONTACTS[0].phone.replace(/\D/g, "") }, "local");
+  const [demoRecipient, setDemoRecipient] = useState<Recipient>(DEMO_RECIPIENTS[0]);
+  const initialized = useRef(false);
+  const explicitRecipient = params.get("para");
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    if (!explicitRecipient) setDemoRecipient(nextDemoRecipient());
+  }, [explicitRecipient]);
   const [chosen, setChosen] = useState<Recipient | null>(null);
-  const merchant = params.get("para") || DEFAULT_MERCHANT;
-  const recipient: Recipient = useMemo(() => (isQr ? { name: merchant } : chosen ?? lastContact), [isQr, merchant, chosen, lastContact]);
+  const recipientType = params.get("tipo");
+  const recipient: Recipient = useMemo(() => chosen ?? (explicitRecipient ? {
+    name: explicitRecipient,
+    type: recipientType === "CONTACT" ? "CONTACT" : "MERCHANT",
+  } : demoRecipient), [chosen, explicitRecipient, recipientType, demoRecipient]);
 
   const [walletId, setWalletId] = useState(params.get("wallet"));
   const wallets = data?.items ?? [];
@@ -61,16 +70,15 @@ export function AmountScreen() {
       const operation = await yapeo.mutateAsync({
         from_wallet_id: wallet.id,
         amount: value.toFixed(2),
-        counterparty: { type: recipient.name.startsWith("Celular") ? "PHONE" : isQr ? "MERCHANT" : "CONTACT", name: recipient.name, phone: recipient.phone ?? null },
+        counterparty: { type: recipient.type ?? (recipient.name.startsWith("Celular") ? "PHONE" : "CONTACT"), name: recipient.name, phone: recipient.phone ?? null },
         category: canCategorize ? category : null,
         message: category ? null : message.trim() || null,
       });
-      if (!isQr) setLastContact(recipient);
       router.replace(`/constancia/${operation.movement.id}`);
     } catch (err) {
       toast(err instanceof Error ? err.message : "No pudimos completar el yapeo.");
     }
-  }, [wallet, yapeo, amount, recipient, isQr, canCategorize, category, message, router, toast, setLastContact]);
+  }, [wallet, yapeo, amount, recipient, canCategorize, category, message, router, toast]);
 
   const selectedCategory = CATEGORIES.find((c) => c.code === category);
 

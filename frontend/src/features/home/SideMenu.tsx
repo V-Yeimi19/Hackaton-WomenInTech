@@ -1,6 +1,7 @@
 "use client";
 
 import clsx from "clsx";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -19,6 +20,7 @@ const ITEMS = [
 /** Menú lateral (solo visual) con Cerrar sesión funcional. */
 export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -30,6 +32,8 @@ export function SideMenu({ open, onClose }: { open: boolean; onClose: () => void
   }, [open, onClose]);
 
   async function logout() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await request("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     router.replace("/login");
     router.refresh();

@@ -9,7 +9,7 @@ import { formatPhoneInput, isPeruMobile } from "@/lib/format";
 
 import { CONTACTS } from "./model";
 
-export type Recipient = { name: string; phone?: string };
+export type Recipient = { name: string; phone?: string; type?: "CONTACT" | "MERCHANT" | "PHONE" };
 
 const initials = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
