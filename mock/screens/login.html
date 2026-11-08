@@ -84,8 +84,12 @@
   });
   $('login-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var res = M.login(phone.value);
-    if (res) { setError(res); phone.focus(); }
+    var btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = 'Ingresando…';
+    Promise.resolve(M.login(phone.value)).then(function (res) {
+      btn.disabled = false; btn.textContent = 'Ingresar';
+      if (res) { setError(res); phone.focus(); }
+    });
   });
 })();
 </script>

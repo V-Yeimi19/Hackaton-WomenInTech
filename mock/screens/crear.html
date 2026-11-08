@@ -153,11 +153,15 @@
   $('colors').addEventListener('click', function (e) { var b = e.target.closest('.color-opt'); if (b) { f.color = b.dataset.color; paint(); } });
   $('form').addEventListener('submit', function (e) {
     e.preventDefault();
-    var err = M.createWallet(f);
-    if (err) { setError(err); $('name').focus(); return; }
-    var name = f.name.trim();
-    M.go('home');
-    setTimeout(function () { M.toast('Billetera "' + name + '" creada'); }, 400);
+    var btn = document.querySelector('button[form="form"]');
+    btn.disabled = true;
+    Promise.resolve(M.createWallet(f)).then(function (err) {
+      btn.disabled = false;
+      if (err) { setError(err); $('name').focus(); return; }
+      var name = f.name.trim();
+      M.go('home');
+      setTimeout(function () { M.toast('Billetera "' + name + '" creada'); }, 400);
+    });
   });
 
   paint();

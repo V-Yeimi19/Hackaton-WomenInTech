@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import re
 import secrets
 import uuid
 from datetime import timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.rate_limit import enforce
 from app.core.security import (
+    decrypt_phone,
     encrypt_phone,
     hash_token,
     new_csrf_token,
@@ -23,10 +25,25 @@ from app.core.security import (
 from app.db.base import utcnow
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
-from app.modules.identity.models import ChannelLink, LinkChallenge, User
+from app.modules.identity.models import ChannelLink, LinkChallenge, User, UserPhone
 from app.modules.identity.models import Session as SessionModel
 
 settings = get_settings()
+
+
+def issue_session(db: Session, user: User) -> tuple[SessionModel, str, str]:
+    """Crea una sesión (el token solo se guarda hasheado). No hace commit."""
+    token = new_token()
+    csrf = new_csrf_token()
+    session = SessionModel(
+        user_id=user.id,
+        token_hash=hash_token(token),
+        csrf_token=csrf,
+        expires_at=utcnow() + timedelta(hours=settings.session_ttl_hours),
+    )
+    db.add(session)
+    db.flush()
+    return session, token, csrf
 
 
 def create_demo_session(
@@ -163,3 +180,122 @@ def find_link_by_phone(
     if environment is not None:
         conditions.append(ChannelLink.environment == environment)
     return db.scalar(select(ChannelLink).where(*conditions))
+
+
+PERU_MOBILE = re.compile(r"^\+519\d{8}$")
+
+
+def mask_phone(normalized: str) -> str:
+    return f"*** *** {normalized[-3:]}"
+
+
+def phone_login(
+    db: Session, raw_phone: str
+) -> tuple[User, SessionModel, str, str, uuid.UUID, str, bool]:
+    """Login de demo solo con número: mismo número -> misma cuenta.
+
+    La primera vez crea la usuaria, activa Mi Negocio, crea las billeteras base y
+    siembra saldos y movimientos aleatorios estables por número. Todo en una sola
+    transacción, serializada por número con un advisory lock.
+    """
+    from app.modules.demo.service import _create_business
+    from app.modules.wallets import service as wallets_service
+
+    try:
+        normalized = normalize_phone(raw_phone)
+    except ValueError:
+        normalized = ""
+    if not PERU_MOBILE.match(normalized):
+        raise AppError("INVALID_PHONE", "Ingresa un celular de 9 dígitos que empiece con 9.", 422)
+    lookup = phone_lookup_hash(normalized)
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:scope, 0))"),
+        {"scope": f"phone-login:{lookup}"},
+    )
+
+    is_new = False
+    record = db.scalar(
+        select(UserPhone).where(
+            UserPhone.phone_lookup_hash == lookup, UserPhone.environment == "DEMO"
+        )
+    )
+    if record is not None:
+        user = db.get(User, record.user_id)
+        if user is None or user.status != "ACTIVE":
+            raise AppError("USER_DISABLED", "Esta cuenta no está disponible.", 403)
+    else:
+        is_new = True
+        user = User(display_name="Yaper@", status="ACTIVE", environment="DEMO")
+        db.add(user)
+        db.flush()
+        db.add(
+            UserPhone(
+                user_id=user.id,
+                environment="DEMO",
+                phone_encrypted=encrypt_phone(normalized),
+                phone_lookup_hash=lookup,
+            )
+        )
+        db.flush()
+
+    business = db.scalar(select(Business).where(Business.owner_id == user.id))
+    if business is None:
+        business = _create_business(db, user, name="Mi Negocio", category="bodega")
+        audit_record(db, business.id, "BUSINESS_ACTIVATED", "business", business.id)
+    if not wallets_service.all_wallets(db, business.id):
+        # Datos aleatorios estables: la semilla es el hash HMAC del número.
+        wallets_service.seed_demo_data(db, business.id, business.environment, seed=lookup)
+    _ensure_channel_link(db, business, normalized, lookup)
+
+    session, token, csrf = issue_session(db, user)
+    db.commit()
+    db.refresh(session)
+    return user, session, token, csrf, business.id, mask_phone(normalized), is_new
+
+
+def _ensure_channel_link(db: Session, business: Business, normalized: str, lookup: str) -> None:
+    """Vincula el número al negocio para que el agente lo reconozca por WhatsApp.
+
+    En modo Twilio real no se vincula automáticamente: se exige VINCULAR <código>
+    desde el propio teléfono (mismo criterio que los escenarios de demo).
+    """
+    if settings.messaging_mode == "twilio":
+        return
+    existing = db.scalar(
+        select(ChannelLink).where(
+            ChannelLink.provider == "twilio",
+            ChannelLink.phone_lookup_hash == lookup,
+            ChannelLink.environment == business.environment,
+        )
+    )
+    if existing is not None:
+        return
+    db.add(
+        ChannelLink(
+            business_id=business.id,
+            provider="twilio",
+            environment=business.environment,
+            phone_encrypted=encrypt_phone(normalized),
+            phone_lookup_hash=lookup,
+            verified_at=utcnow(),
+            last_inbound_at=utcnow(),
+            status="ACTIVE",
+        )
+    )
+    db.flush()
+
+
+def logout(db: Session, session: SessionModel) -> None:
+    if session.revoked_at is None:
+        session.revoked_at = utcnow()
+        db.commit()
+
+
+def phone_for_user(db: Session, user_id: uuid.UUID) -> str | None:
+    record = db.scalar(select(UserPhone).where(UserPhone.user_id == user_id))
+    if record is None:
+        return None
+    try:
+        return mask_phone(decrypt_phone(record.phone_encrypted))
+    except ValueError:
+        return None

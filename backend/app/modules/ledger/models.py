@@ -7,6 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -16,6 +17,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,9 +39,17 @@ class Account(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("business_id", "kind", name="uq_accounts_business_kind"),
+        # Las cuentas fijas son únicas por negocio; WALLET admite varias (0005).
+        Index(
+            "uq_accounts_business_kind_fixed",
+            "business_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind <> 'WALLET'"),
+        ),
         CheckConstraint(
-            "kind IN ('BUSINESS_DIGITAL', 'HOUSEHOLD_DIGITAL', 'CASH_DECLARED', 'EXTERNAL_CLEARING')",
+            "kind IN ('BUSINESS_DIGITAL', 'HOUSEHOLD_DIGITAL', 'CASH_DECLARED', "
+            "'EXTERNAL_CLEARING', 'WALLET')",
             name="ck_accounts_kind",
         ),
         CheckConstraint("currency = 'PEN'", name="ck_accounts_currency"),
@@ -79,12 +89,30 @@ class Transaction(Base):
     )
     idempotency_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Datos de constancia (0005): número de operación visible, contraparte y mensaje.
+    operation_number: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    counterparty_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    counterparty_phone_masked: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    note: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    security_code: Mapped[str | None] = mapped_column(String(3), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow
     )
 
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_transactions_amount_positive"),
+        CheckConstraint(
+            "category IS NULL OR category IN ('RESTOCK', 'LOCAL_SERVICES', 'FAMILY')",
+            name="ck_transactions_category",
+        ),
+        Index(
+            "uq_transactions_operation_number",
+            "environment",
+            "operation_number",
+            unique=True,
+            postgresql_where=text("operation_number IS NOT NULL"),
+        ),
         CheckConstraint("currency = 'PEN'", name="ck_transactions_currency"),
         CheckConstraint("medium IN ('DIGITAL', 'CASH')", name="ck_transactions_medium"),
         CheckConstraint("status IN ('POSTED', 'PENDING', 'FAILED')", name="ck_transactions_status"),
@@ -99,7 +127,8 @@ class Transaction(Base):
         ),
         CheckConstraint(
             "kind IN ('SALE', 'BUSINESS_PAYMENT', 'HOUSEHOLD_WITHDRAWAL', 'OWNER_CONTRIBUTION', "
-            "'UNKNOWN_OUTFLOW', 'OPENING_BALANCE', 'CLASSIFICATION_ADJUSTMENT', 'REVERSAL')",
+            "'UNKNOWN_OUTFLOW', 'OPENING_BALANCE', 'CLASSIFICATION_ADJUSTMENT', 'REVERSAL', "
+            "'PERSONAL_PAYMENT', 'PERSONAL_INCOME', 'WALLET_TRANSFER')",
             name="ck_transactions_kind",
         ),
         UniqueConstraint(
