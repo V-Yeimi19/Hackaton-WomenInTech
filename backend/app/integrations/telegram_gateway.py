@@ -7,6 +7,7 @@ la entrega en la misma respuesta, por eso el estado queda en ``DELIVERED``.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any
 
@@ -16,6 +17,10 @@ from app.core.config import get_settings
 from app.integrations.twilio_gateway import SendResult
 
 settings = get_settings()
+
+# La URL de la Bot API lleva el token: httpx la registra completa en nivel INFO.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 API_BASE = "https://api.telegram.org"
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
