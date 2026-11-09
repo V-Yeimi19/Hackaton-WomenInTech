@@ -12,6 +12,8 @@ type Batch = { payments: ReturnType<typeof demoPayments>; keys: string[]; done: 
 
 /** Índice de "En un día normal, ¿más o menos cuánto vendes?" en el perfil de Mica. */
 const DAILY_SALES_ANSWER = 2;
+/** Venta diaria de referencia (S/ 300) mientras Mica aún no conoce la de la billetera. */
+export const DEFAULT_DAILY_SALES_CENTS = 30_000;
 
 /**
  * Ventas diarias declaradas a Mica. El perfil vive en el servidor (agent/profile);
@@ -30,7 +32,7 @@ async function declaredDailySales(walletId: string): Promise<string> {
 
 /**
  * Cada toque del ícono pide 10 yapeos recibidos que suman las ventas diarias que
- * Mica conoce. Los toques se encolan: tres toques seguidos generan 30 yapeos, uno
+ * Mica conoce (o S/ 300 de referencia si aún no las conoce). Los toques se encolan: tres toques seguidos generan 30 yapeos, uno
  * tras otro. Si la red falla a mitad de una tanda, el siguiente toque la completa
  * con las mismas claves de idempotencia (sin duplicar cobros).
  */
@@ -42,21 +44,13 @@ export function useDemoYapeos() {
   const [generating, setGenerating] = useState(false);
   const batches = useRef(new Map<string, Batch>());
 
-  async function prepare(wallet: Wallet): Promise<Batch | null> {
+  async function prepare(wallet: Wallet): Promise<Batch> {
     const pending = batches.current.get(wallet.id);
     if (pending) return pending;
-    let average: string;
-    try {
-      average = await declaredDailySales(wallet.id);
-    } catch {
-      toast("No pudimos leer tu perfil con Mica. Intenta de nuevo.");
-      return null;
-    }
-    const total = dailySalesCents(average);
-    if (total === null) {
-      toast("Primero registra tus ventas diarias con Mica para esta billetera.");
-      return null;
-    }
+    // Siempre genera: si Mica aún no sabe cuánto vende (o no se pudo leer el
+    // perfil), usa la venta diaria de referencia.
+    const average = await declaredDailySales(wallet.id).catch(() => "");
+    const total = dailySalesCents(average) ?? DEFAULT_DAILY_SALES_CENTS;
     const payments = demoPayments(total);
     const batch = { payments, keys: payments.map(() => crypto.randomUUID()), done: 0 };
     batches.current.set(wallet.id, batch);
@@ -78,11 +72,6 @@ export function useDemoYapeos() {
       while (queue.current.length > 0) {
         const wallet = queue.current[0];
         const batch = await prepare(wallet);
-        if (!batch) {
-          // Sin promedio no tiene sentido procesar los demás toques de esa billetera.
-          queue.current = queue.current.filter((w) => w.id !== wallet.id);
-          continue;
-        }
         try {
           while (batch.done < batch.payments.length) {
             const index = batch.done;
