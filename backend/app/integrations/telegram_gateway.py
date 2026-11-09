@@ -75,6 +75,29 @@ def answer_callback_query(callback_query_id: str) -> None:
         logger.warning("telegram.callback_ack_failed code=%s", data.get("error_code"))
 
 
+def send_document(chat_id: str, content: bytes, filename: str, caption: str) -> SendResult:
+    """Carga privada multipart: sin URLs públicas ni archivos persistidos."""
+    if not is_live():
+        return SendResult(
+            provider_sid=f"TGDEMO{uuid.uuid4().hex[:24]}", status="DELIVERED", simulated=True
+        )
+    response = httpx.post(
+        _url("sendDocument"),
+        data={"chat_id": chat_id, "caption": caption[:1024]},
+        files={"document": (filename, content, "application/pdf")},
+        timeout=httpx.Timeout(30.0, connect=5.0),
+    )
+    response.raise_for_status()
+    data = response.json()
+    if not data.get("ok"):
+        raise RuntimeError(f"Telegram rechazó el documento: {data.get('error_code')}")
+    return SendResult(
+        provider_sid=f"TG{chat_id}:{data['result']['message_id']}",
+        status="DELIVERED",
+        simulated=False,
+    )
+
+
 def get_updates(offset: int | None) -> list[dict[str, Any]]:
     """Lee mensajes y pulsaciones de botones pendientes (modo polling)."""
     if not is_live():

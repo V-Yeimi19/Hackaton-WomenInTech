@@ -151,7 +151,7 @@ def test_free_text_is_answered_by_ai_with_account_data(client, pg_engine, monkey
     assert reply == "DELIVERED|Hoy vas bien, sigue así."
     system, data = seen[0][0]["content"], seen[0][1]["content"]
     assert "Nunca pidas claves" in system and "Telegram" in system
-    assert data.startswith("DATOS DE LA CUENTA") and "Saldo total: S/" in data
+    assert data.startswith("DATOS DE LA CUENTA") and "Saldo digital total: S/" in data
     assert seen[0][-1] == {"role": "user", "content": "¿cómo voy hoy?"}
 
     # Los comandos no pasan por la IA.

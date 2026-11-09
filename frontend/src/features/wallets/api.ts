@@ -7,7 +7,7 @@ import { queryKeys } from "@/lib/api/query-keys";
 import type { Operation, TransferRequest, Wallet, WalletArchive, WalletCreate, WalletList } from "@/lib/api/types";
 
 export function useWallets() {
-  return useQuery({ queryKey: queryKeys.wallets, queryFn: () => backend<WalletList>("wallets") });
+  return useQuery({ queryKey: queryKeys.wallets, queryFn: () => backend<WalletList>("wallets"), refetchInterval: 5000, refetchOnWindowFocus: "always" });
 }
 
 /** Tras mover dinero, saldos y movimientos dejan de estar vigentes. */

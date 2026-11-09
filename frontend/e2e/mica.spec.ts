@@ -28,6 +28,11 @@ test("Mica guarda el perfil compartido y conserva solo el historial de la app", 
   await page.reload();
   await expect(page.getByText("Escríbeme una de estas opciones:", { exact: false })).toBeVisible();
   await expect(page.getByText("Mica las recordará en la app y en Telegram.", { exact: false })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const back = page.getByRole("link", { name: "Volver al inicio", exact: true });
+  const backPosition = await back.boundingBox();
+  expect(backPosition?.y).toBeGreaterThanOrEqual(0);
+  expect(backPosition?.y).toBeLessThan(120);
   await page.getByRole("button", { name: "Continuar en Telegram" }).click();
   await expect(page.getByRole("dialog", { name: "Habla con Mica" }).getByRole("link", { name: "Conectar con Telegram" })).toHaveAttribute("href", /^https:\/\/t\.me\/\w+\?start=[\w-]+$/);
 });

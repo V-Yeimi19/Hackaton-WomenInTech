@@ -84,7 +84,9 @@ def balances(db: Session, business_id: uuid.UUID) -> dict[str, str]:
     return {
         "business_digital": money_str(raw.get(domain.BUSINESS_DIGITAL, ZERO)),
         "household_digital": money_str(raw.get(domain.HOUSEHOLD_DIGITAL, ZERO)),
-        "cash_declared": money_str(raw.get(domain.CASH_DECLARED, ZERO)),
+        "cash_declared": money_str(
+            raw.get(domain.CASH_DECLARED, ZERO) + raw.get(domain.WALLET_CASH, ZERO)
+        ),
     }
 
 

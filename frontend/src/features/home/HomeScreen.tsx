@@ -67,7 +67,7 @@ export function HomeScreen() {
         ) : (
           // La key remonta el carrusel al llegar los datos: así el snap empieza en la Principal.
           <div key={isPending ? "loading" : "ready"} className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 py-2">
-            {isPending && <div className="h-[168px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
+            {isPending && <div className="h-[200px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
             {wallets.map((w) => (
               <WalletCard key={w.id} wallet={w} shown={visibility.isShown(w.id)} onToggleShown={() => visibility.toggle(w.id)}
                 onSimulate={w.role === "BUSINESS" || (w.role === "CUSTOM" && w.purpose === "BUSINESS") ? () => demo.generate(w) : undefined}
@@ -75,7 +75,7 @@ export function HomeScreen() {
                 onOptions={() => setOverlay({ kind: "options", wallet: w })} onQr={() => setOverlay({ kind: "qr", wallet: w })} />
             ))}
             <Link href="/billeteras/nueva"
-              className="flex h-[168px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
+              className="flex h-[200px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
               <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-md"><Icon name="add" className="text-[24px]" /></span>
               <span className="text-caption font-bold text-primary-container">+ Nueva Billetera</span>
               <span className="mt-1 text-caption text-on-surface-variant">Separa gastos o negocios</span>
@@ -88,10 +88,15 @@ export function HomeScreen() {
         <button type="button" onClick={visibility.toggleTotal} aria-pressed={visibility.totalShown}
           className="flex w-full items-center gap-2 rounded-[2rem] bg-surface-container-lowest px-4 py-4 text-left shadow-sm">
           <Icon name="account_balance" filled className="text-[24px] text-primary-container" />
-          <span className="flex-1 text-[15px] font-bold text-primary-container">Saldo total</span>
+          <span className="flex-1 text-[15px] font-bold text-primary-container">Saldo digital total</span>
           <span data-testid="total" className="text-[15px] font-bold">S/ {visibility.totalShown && data ? formatMoney(data.total) : MASK}</span>
           <Icon name={visibility.totalShown ? "visibility" : "visibility_off"} className="text-[22px] text-outline" />
         </button>
+        {data && <div className="mt-2 rounded-2xl bg-surface-container-lowest px-4 py-3 text-sm">
+          <p className="flex justify-between"><span>Efectivo en billeteras</span><strong data-testid="cash-total">{visibility.totalShown ? `S/ ${formatMoney(data.cash_total ?? "0.00")}` : MASK}</strong></p>
+          <p className="mt-1 flex justify-between"><span>Digital + efectivo</span><strong>{visibility.totalShown ? `S/ ${formatMoney(data.combined_total ?? data.total)}` : MASK}</strong></p>
+          {Number(data.unallocated_cash ?? "0") > 0 && <p className="mt-2 text-xs text-on-surface-variant">Efectivo anterior sin asignar a una billetera: {visibility.totalShown ? `S/ ${formatMoney(data.unallocated_cash!)}` : MASK}. Mica te preguntará el efectivo inicial antes de registrar movimientos nuevos.</p>}
+        </div>}
       </section>
 
       <MovementsPanel wallets={wallets} />

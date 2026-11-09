@@ -36,6 +36,8 @@ python-dotenv==1.2.4
 python-multipart==0.0.33
 PyYAML==6.0.3
 requests==2.34.2
+reportlab==5.1.0
+pillow==13.0.0
 SQLAlchemy==2.0.57
 starlette==0.46.2
 twilio==9.13.0

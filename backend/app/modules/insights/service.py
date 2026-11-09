@@ -36,6 +36,7 @@ from app.modules.ledger.service import _lock_display_accounts
 from app.modules.messaging.models import InboundEvent
 from app.modules.opportunities import service as opportunities_service
 from app.modules.opportunities.domain import OpportunityInput, evaluate
+from app.modules.wallets.models import Wallet
 from app.shared.clock import week_start
 from app.shared.money import money_str
 
@@ -142,6 +143,18 @@ def compute_metrics(
     raw_balances = {
         kind: Decimal(str(total or 0)).quantize(Decimal("0.01")) for kind, total in balance_rows
     }
+    business_cash = db.scalar(
+        select(func.coalesce(func.sum(LedgerEntry.delta), 0))
+        .join(Account, Account.id == LedgerEntry.account_id)
+        .join(Wallet, Wallet.cash_account_id == Account.id)
+        .join(Transaction, Transaction.id == LedgerEntry.transaction_id)
+        .where(
+            Account.business_id == business_id,
+            Wallet.purpose == "BUSINESS",
+            Transaction.status == "POSTED",
+            Transaction.occurred_at < effective_end,
+        )
+    )
 
     capture_errors = db.scalar(
         select(func.count())
@@ -172,7 +185,8 @@ def compute_metrics(
         contributions=contributions.quantize(Decimal("0.01")),
         business_digital_balance=raw_balances.get(ledger_domain.BUSINESS_DIGITAL, ZERO),
         household_digital_balance=raw_balances.get(ledger_domain.HOUSEHOLD_DIGITAL, ZERO),
-        declared_cash_balance=raw_balances.get(ledger_domain.CASH_DECLARED, ZERO),
+        declared_cash_balance=raw_balances.get(ledger_domain.CASH_DECLARED, ZERO)
+        + Decimal(str(business_cash or 0)),
         pending_classifications=int(pending or 0),
         coverage_status=coverage,
     )

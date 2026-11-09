@@ -40,6 +40,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent/declarations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Declaration Memory */
+        get: operations["declaration_memory_api_v1_agent_declarations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health/live": {
         parameters: {
             query?: never;
@@ -970,6 +987,7 @@ export interface components {
              * Format: uuid
              */
             request_id?: string;
+            declaration_action?: components["schemas"]["DeclarationAction"] | null;
         };
         /** ChatResponse */
         ChatResponse: {
@@ -992,6 +1010,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            declaration?: components["schemas"]["DeclarationState"] | null;
         };
         /** CommitmentCreate */
         CommitmentCreate: {
@@ -1056,6 +1075,21 @@ export interface components {
             /** Paid Transaction Id */
             paid_transaction_id?: string | null;
         };
+        /** ConfirmedDeclaration */
+        ConfirmedDeclaration: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Confirmed At
+             * Format: date-time
+             */
+            confirmed_at: string;
+            /** Entries */
+            entries: components["schemas"]["MoneyFact"][];
+        };
         /** ConsentGrantRequest */
         ConsentGrantRequest: {
             /**
@@ -1119,6 +1153,46 @@ export interface components {
             name: string;
             /** Phone */
             phone?: string | null;
+        };
+        /** DeclarationAction */
+        DeclarationAction: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "confirm" | "edit" | "cancel";
+        };
+        /** DeclarationMemory */
+        DeclarationMemory: {
+            pending: components["schemas"]["DeclarationPreview"] | null;
+            latest_confirmed: components["schemas"]["ConfirmedDeclaration"] | null;
+        };
+        /** DeclarationPreview */
+        DeclarationPreview: {
+            /** Reply */
+            reply: string;
+            declaration: components["schemas"]["DeclarationState"];
+        };
+        /** DeclarationState */
+        DeclarationState: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Version */
+            version: number;
+            /** Status */
+            status: string;
+            /** Actions */
+            actions: ("confirm" | "edit" | "cancel")[];
         };
         /** DemoSessionCreate */
         DemoSessionCreate: {
@@ -1207,6 +1281,37 @@ export interface components {
             session_expires_at: string;
             telegram: components["schemas"]["TelegramStatus"];
         };
+        /** MoneyFact */
+        MoneyFact: {
+            /**
+             * Wallet Id
+             * Format: uuid
+             */
+            wallet_id: string;
+            /** Wallet Name */
+            wallet_name: string;
+            /**
+             * Medium
+             * @enum {string}
+             */
+            medium: "CASH" | "DIGITAL";
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "IN" | "OUT";
+            /** Amount */
+            amount: string;
+            /** Description */
+            description: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Registered Digital Total */
+            registered_digital_total?: string | null;
+        };
         /** MovementListResponse */
         MovementListResponse: {
             /** Items */
@@ -1230,6 +1335,12 @@ export interface components {
             security_code: string;
             /** Kind */
             kind: string;
+            /**
+             * Medium
+             * @default DIGITAL
+             * @enum {string}
+             */
+            medium: "DIGITAL" | "CASH";
             /**
              * Direction
              * @enum {string}
@@ -1701,6 +1812,18 @@ export interface components {
             /** Total */
             total: string;
             /**
+             * Cash Total
+             * @default 0.00
+             */
+            cash_total: string;
+            /** Combined Total */
+            combined_total?: string | null;
+            /**
+             * Unallocated Cash
+             * @default 0.00
+             */
+            unallocated_cash: string;
+            /**
              * Updated At
              * Format: date-time
              */
@@ -1735,6 +1858,10 @@ export interface components {
             is_business: boolean;
             /** Balance */
             balance: string;
+            /** Cash Balance */
+            cash_balance?: string | null;
+            /** Combined Balance */
+            combined_balance?: string | null;
         };
         /** WalletRef */
         WalletRef: {
@@ -1904,6 +2031,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    declaration_memory_api_v1_agent_declarations_get: {
+        parameters: {
+            query: {
+                wallet_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeclarationMemory"];
                 };
             };
             /** @description Validation Error */

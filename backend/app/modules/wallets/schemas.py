@@ -18,11 +18,16 @@ class WalletOut(BaseModel):
     is_primary: bool
     is_business: bool
     balance: str
+    cash_balance: str | None = None
+    combined_balance: str | None = None
 
 
 class WalletListResponse(BaseModel):
     items: list[WalletOut]
     total: str
+    cash_total: str = "0.00"
+    combined_total: str | None = None
+    unallocated_cash: str = "0.00"
     updated_at: AwareDatetime
 
 
@@ -87,6 +92,7 @@ class MovementOut(BaseModel):
     operation_number: str
     security_code: str
     kind: str
+    medium: Literal["DIGITAL", "CASH"] = "DIGITAL"
     direction: Literal["IN", "OUT", "TRANSFER"]
     title: str
     amount: str

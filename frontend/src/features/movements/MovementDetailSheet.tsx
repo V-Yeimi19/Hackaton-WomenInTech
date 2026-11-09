@@ -22,7 +22,7 @@ export function MovementDetailSheet({ movement, onClose }: { movement: Movement 
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-container/60 text-on-secondary-container">
         <Icon name="swap_horiz" className="text-[24px]" />
       </span>
-      <p className="mt-2 text-caption font-bold uppercase tracking-wider text-on-surface-variant">Transferencia entre billeteras</p>
+      <p className="mt-2 text-caption font-bold uppercase tracking-wider text-on-surface-variant">{movement.medium === "CASH" ? "Movimiento en efectivo confirmado" : "Transferencia entre billeteras"}</p>
       <p className="text-title">{movement.title}</p>
       <p className="mt-1 text-display">{formatSigned(movement.amount)}</p>
       <dl className="mt-4">

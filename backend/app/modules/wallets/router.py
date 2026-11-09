@@ -40,12 +40,7 @@ def _operation_body(db: Session, business_id: uuid.UUID, transaction) -> dict:
 
 def _wallets_snapshot(db: Session, business_id: uuid.UUID) -> dict:
     wallets = service.active_wallets(db, business_id)
-    balances = service.balances_by_account(db, [w.account_id for w in wallets])
-    return {
-        "items": [service.wallet_to_dict(w, balances[w.account_id]) for w in wallets],
-        "total": f"{sum(balances.values()):.2f}" if balances else "0.00",
-        "updated_at": service.utcnow().isoformat(),
-    }
+    return service.wallets_snapshot(db, wallets, business_id)
 
 
 @router.get("/wallets", response_model=WalletListResponse)

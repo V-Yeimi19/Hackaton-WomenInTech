@@ -24,7 +24,7 @@ export function MovementsPanel({ wallets }: { wallets: Wallet[] }) {
 
   function openMovement(movement: Movement) {
     // Los yapeos se ven como constancia; las transferencias, en una hoja de detalle.
-    if (movement.direction === "TRANSFER") setDetail(movement);
+    if (movement.direction === "TRANSFER" || movement.medium === "CASH") setDetail(movement);
     else router.push(`/constancia/${movement.id}`);
   }
 
@@ -57,7 +57,7 @@ export function MovementsPanel({ wallets }: { wallets: Wallet[] }) {
                       className="flex w-full items-center justify-between gap-2 border-t border-surface-container-high px-4 py-3.5 text-left hover:bg-surface-container-low">
                       <div className="min-w-0">
                         <p className="truncate text-[15px] font-bold">{m.title}</p>
-                        <p className="mt-0.5 truncate text-caption text-on-surface-variant">{whenLabel(m.occurred_at)} - {subtitle(m)}</p>
+                        <p className="mt-0.5 truncate text-caption text-on-surface-variant">{whenLabel(m.occurred_at)} - {m.medium === "CASH" ? "Efectivo · " : ""}{subtitle(m)}</p>
                         {(m.category_label || m.note) && (
                           <p className="mt-0.5 truncate text-caption text-on-surface-variant">
                             <span className="font-semibold text-on-surface">Descripción: </span>{m.category_label || m.note}

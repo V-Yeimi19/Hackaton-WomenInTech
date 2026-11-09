@@ -31,6 +31,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.db.base import utcnow
 from app.modules.audit.service import record as audit_record
+from app.modules.business.models import Business
 from app.modules.ledger import domain
 from app.modules.ledger import service as ledger_service
 from app.modules.ledger.models import Account, LedgerEntry, Transaction
@@ -155,7 +156,9 @@ def is_business_wallet(wallet: Wallet) -> bool:
     )
 
 
-def wallet_to_dict(wallet: Wallet, balance: Decimal) -> dict[str, Any]:
+def wallet_to_dict(
+    wallet: Wallet, balance: Decimal, cash_balance: Decimal | None = None
+) -> dict[str, Any]:
     return {
         "id": str(wallet.id),
         "name": wallet.name,
@@ -166,16 +169,139 @@ def wallet_to_dict(wallet: Wallet, balance: Decimal) -> dict[str, Any]:
         "is_primary": wallet.role == ROLE_PRINCIPAL,
         "is_business": is_business_wallet(wallet),
         "balance": money_str(balance),
+        "cash_balance": money_str(cash_balance) if cash_balance is not None else None,
+        "combined_balance": money_str(balance + (cash_balance or ZERO)),
     }
 
 
 def list_wallets(db: Session, business_id: uuid.UUID) -> dict[str, Any]:
     wallets = ensure_default_wallets(db, business_id)
     db.commit()
-    balances = balances_by_account(db, [wallet.account_id for wallet in wallets])
-    items = [wallet_to_dict(wallet, balances[wallet.account_id]) for wallet in wallets]
-    total = sum((balances[wallet.account_id] for wallet in wallets), ZERO)
-    return {"items": items, "total": money_str(total), "updated_at": utcnow().isoformat()}
+    return wallets_snapshot(db, wallets, business_id)
+
+
+def wallets_snapshot(db: Session, wallets: list[Wallet], business_id: uuid.UUID) -> dict[str, Any]:
+    amounts = balances_by_account(
+        db,
+        [
+            account
+            for wallet in wallets
+            for account in (wallet.account_id, wallet.cash_account_id)
+            if account
+        ],
+    )
+    items = [
+        wallet_to_dict(
+            wallet,
+            amounts[wallet.account_id],
+            amounts[wallet.cash_account_id] if wallet.cash_account_id else None,
+        )
+        for wallet in wallets
+    ]
+    total = sum((amounts[wallet.account_id] for wallet in wallets), ZERO)
+    cash = sum(
+        (amounts[wallet.cash_account_id] for wallet in wallets if wallet.cash_account_id), ZERO
+    )
+    legacy = ledger_service.get_account(db, business_id, domain.CASH_DECLARED)
+    unallocated = ledger_service.account_balance(db, legacy.id)
+    return {
+        "items": items,
+        "total": money_str(total),
+        "cash_total": money_str(cash),
+        "combined_total": money_str(total + cash + unallocated),
+        "unallocated_cash": money_str(unallocated),
+        "updated_at": utcnow().isoformat(),
+    }
+
+
+def cash_balance(db: Session, wallet: Wallet) -> Decimal | None:
+    return (
+        ledger_service.account_balance(db, wallet.cash_account_id)
+        if wallet.cash_account_id
+        else None
+    )
+
+
+def initialize_cash(
+    db: Session, wallet: Wallet, environment: str, amount: Decimal, occurred_at: datetime
+) -> None:
+    """Apertura confirmada; reutiliza efectivo legado sin contarlo dos veces."""
+    if wallet.cash_account_id:
+        raise AppError(
+            "CASH_ALREADY_INITIALIZED",
+            "El efectivo inicial ya está registrado. Revisa la confirmación.",
+            409,
+        )
+    ledger_service._lock_display_accounts(db, wallet.business_id)
+    account = Account(business_id=wallet.business_id, kind=domain.WALLET_CASH, currency="PEN")
+    db.add(account)
+    db.flush()
+    wallet.cash_account_id = account.id
+    db.flush()
+    legacy = ledger_service.get_account(db, wallet.business_id, domain.CASH_DECLARED)
+    # CASH_DECLARED era efectivo del negocio, no efectivo personal del hogar.
+    allocated = (
+        min(amount, max(ZERO, ledger_service.account_balance(db, legacy.id)))
+        if is_business_wallet(wallet)
+        else ZERO
+    )
+    if amount > ZERO:
+        legs = [Leg(account, amount)]
+        if allocated > ZERO:
+            legs.append(Leg(legacy, -allocated))
+        if amount > allocated:
+            legs.append(Leg(_external(db, wallet.business_id), -(amount - allocated)))
+        post_legs(
+            db,
+            business_id=wallet.business_id,
+            environment=environment,
+            kind=domain.OPENING_BALANCE,
+            amount=amount,
+            legs=legs,
+            source=domain.USER_DECLARED,
+            occurred_at=occurred_at,
+            description=f"Efectivo inicial de {wallet.name}",
+            medium=domain.CASH,
+            classification_source=domain.USER_CONFIRMED,
+        )
+
+
+def record_cash(
+    db: Session,
+    wallet: Wallet,
+    environment: str,
+    *,
+    amount: Decimal,
+    direction: str,
+    occurred_at: datetime,
+    description: str,
+) -> Transaction:
+    if wallet.cash_account_id is None:
+        raise AppError(
+            "CASH_OPENING_REQUIRED", "Primero confirma el efectivo inicial de esta billetera.", 409
+        )
+    account = db.get(Account, wallet.cash_account_id)
+    if account is None or account.business_id != wallet.business_id:
+        raise AppError("ACCOUNT_NOT_FOUND", "Cuenta de efectivo no encontrada.", 500)
+    incoming = direction == "IN"
+    if is_business_wallet(wallet):
+        kind = domain.SALE if incoming else domain.BUSINESS_PAYMENT
+    else:
+        kind = domain.PERSONAL_INCOME if incoming else domain.PERSONAL_PAYMENT
+    delta = amount if incoming else -amount
+    return post_legs(
+        db,
+        business_id=wallet.business_id,
+        environment=environment,
+        kind=kind,
+        amount=amount,
+        legs=[Leg(account, delta), Leg(_external(db, wallet.business_id), -delta)],
+        source=domain.USER_DECLARED,
+        occurred_at=occurred_at,
+        description=description,
+        medium=domain.CASH,
+        classification_source=domain.USER_CONFIRMED,
+    )
 
 
 def get_wallet(db: Session, business_id: uuid.UUID, wallet_id: uuid.UUID | str | None) -> Wallet:
@@ -276,7 +402,7 @@ def _lock_accounts(db: Session, business_id: uuid.UUID, accounts: list[Account])
     # Mismo orden que ledger_service.post (cuentas fijas por tipo) y luego WALLET por id,
     # para no generar interbloqueos entre operaciones concurrentes.
     ledger_service._lock_display_accounts(db, business_id)
-    wallet_ids = sorted({a.id for a in accounts if a.kind == domain.WALLET})
+    wallet_ids = sorted({a.id for a in accounts if a.kind in (domain.WALLET, domain.WALLET_CASH)})
     if wallet_ids:
         list(
             db.scalars(
@@ -320,6 +446,7 @@ def post_legs(
     category: str | None = None,
     classification_source: str = domain.EXPLICIT_ACTION,
     actor_id: uuid.UUID | None = None,
+    medium: str = domain.DIGITAL,
 ) -> Transaction:
     """Publica una operación con asientos explícitos (sin commit)."""
     if sum((leg.delta for leg in legs), ZERO) != ZERO:
@@ -340,7 +467,7 @@ def post_legs(
         business_id=business_id,
         kind=kind,
         amount=amount,
-        medium=domain.DIGITAL,
+        medium=medium,
         currency="PEN",
         status="POSTED",
         source=source,
@@ -376,7 +503,7 @@ def post_legs(
         "transaction",
         transaction.id,
         actor_id=actor_id,
-        metadata={"kind": kind, "amount": money_str(amount), "medium": domain.DIGITAL},
+        metadata={"kind": kind, "amount": money_str(amount), "medium": medium},
     )
     ledger_service.schedule_report_revisions(db, business_id, occurred_at)
     return transaction
@@ -586,9 +713,16 @@ def archive_wallet(
     move_to_wallet_id: Any = None,
     actor_id: uuid.UUID | None = None,
 ) -> dict[str, Any]:
+    db.scalar(select(Business).where(Business.id == business_id).with_for_update())
     wallet = get_wallet(db, business_id, wallet_id)
     if wallet.role == ROLE_PRINCIPAL:
         raise AppError("PRIMARY_LOCKED", "La billetera Principal no se puede eliminar.", 409)
+    if (cash_balance(db, wallet) or ZERO) > ZERO:
+        raise AppError(
+            "CASH_BALANCE_REMAINS",
+            "Esta billetera todavía tiene efectivo. Concilia su efectivo antes de eliminarla.",
+            409,
+        )
     balance = wallet_balance(db, wallet)
     moved = ZERO
     if balance > 0:
@@ -701,6 +835,7 @@ def movement_to_dict(
         "operation_number": str(operation),
         "security_code": transaction.security_code or "000",
         "kind": transaction.kind,
+        "medium": transaction.medium,
         "direction": direction,
         "title": title,
         "amount": money_str(amount),
@@ -734,14 +869,32 @@ def list_movements(
     wallet_id: Any = None,
     cursor: str | None = None,
     limit: int = 50,
+    search_terms: tuple[str, ...] = (),
+    search_groups: tuple[tuple[str, ...], ...] = (),
+    categories: tuple[str, ...] = (),
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> tuple[list[dict[str, Any]], str | None]:
     limit = max(1, min(limit, 100))
     wallets = all_wallets(db, business_id)
-    by_account = {w.account_id: w for w in wallets}
+    by_account = {
+        account: w for w in wallets for account in (w.account_id, w.cash_account_id) if account
+    }
     if wallet_id:
-        visible_accounts = [get_wallet(db, business_id, wallet_id).account_id]
+        selected_wallet = get_wallet(db, business_id, wallet_id)
+        visible_accounts = [
+            account
+            for account in (selected_wallet.account_id, selected_wallet.cash_account_id)
+            if account
+        ]
     else:
-        visible_accounts = [w.account_id for w in wallets if w.status == "ACTIVE"]
+        visible_accounts = [
+            account
+            for w in wallets
+            if w.status == "ACTIVE"
+            for account in (w.account_id, w.cash_account_id)
+            if account
+        ]
     if not visible_accounts:
         return [], None
     stmt = select(Transaction).where(
@@ -755,6 +908,43 @@ def list_movements(
             LedgerEntry.account_id.in_(visible_accounts),
         ),
     )
+    if search_terms or search_groups or categories:
+        searchable = func.translate(
+            func.lower(
+                func.concat_ws(
+                    " ", Transaction.description, Transaction.note, Transaction.counterparty_name
+                )
+            ),
+            "áéíóúüñ",
+            "aeiouun",
+        )
+        matches = [searchable.contains(term, autoescape=True) for term in search_terms]
+        if search_groups:
+            matches = [
+                and_(
+                    *[
+                        or_(
+                            *[
+                                searchable.op("~")(rf"\m{re.escape(alias)}\M")
+                                if group[0].isdigit()
+                                else searchable.contains(alias, autoescape=True)
+                                for alias in group
+                            ]
+                        )
+                        for group in search_groups
+                    ]
+                )
+            ]
+        stmt = stmt.where(
+            or_(
+                Transaction.category.in_(categories),
+                *matches,
+            )
+        )
+    if start is not None:
+        stmt = stmt.where(Transaction.occurred_at >= start)
+    if end is not None:
+        stmt = stmt.where(Transaction.occurred_at < end)
     if cursor:
         occurred_at, identifier = ledger_service._decode_cursor(cursor)
         stmt = stmt.where(
@@ -784,7 +974,12 @@ def get_movement(db: Session, business_id: uuid.UUID, transaction_id: Any) -> di
     transaction = db.get(Transaction, identifier)
     if transaction is None or transaction.business_id != business_id:
         raise AppError("NOT_FOUND", "Movimiento no encontrado.", 404)
-    by_account = {w.account_id: w for w in all_wallets(db, business_id)}
+    by_account = {
+        account: w
+        for w in all_wallets(db, business_id)
+        for account in (w.account_id, w.cash_account_id)
+        if account
+    }
     legs = _wallet_legs(db, [transaction.id], by_account)
     return movement_to_dict(transaction, legs[transaction.id])
 

@@ -23,15 +23,19 @@ def is_enabled() -> bool:
     return bool(settings.enable_llm and settings.groq_api_key and settings.groq_model)
 
 
-def chat(messages: list[dict[str, str]], *, max_tokens: int = 900) -> str | None:
+def chat(
+    messages: list[dict[str, str]], *, max_tokens: int = 900, json_mode: bool = False
+) -> str | None:
     if not is_enabled():
         return None
     body: dict[str, object] = {
         "model": settings.groq_model,
         "messages": messages,
-        "temperature": 0.4,
+        "temperature": 0 if json_mode else 0.4,
         "max_completion_tokens": max_tokens,
     }
+    if json_mode:
+        body["response_format"] = {"type": "json_object"}
     # Los modelos gpt-oss razonan antes de responder; "low" basta para un chat breve.
     if settings.groq_model.startswith("openai/gpt-oss"):
         body["reasoning_effort"] = "low"

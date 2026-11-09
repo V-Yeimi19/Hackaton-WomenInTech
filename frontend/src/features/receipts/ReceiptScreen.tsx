@@ -33,11 +33,11 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
   }
 
   const received = movement.direction === "IN";
+  const cash = movement.medium === "CASH";
   const wallet = movement.wallets[0];
   const { date, time } = receiptDate(movement.occurred_at);
   const rows: [string, string][] = [
-    ["Nro. de celular", movement.counterparty_phone_masked ?? "*** *** 321"],
-    ["Destino", "Yape"],
+    ...(cash ? [["Medio", "Efectivo declarado"]] as [string, string][] : [["Nro. de celular", movement.counterparty_phone_masked ?? "*** *** 321"], ["Destino", "Yape"]] as [string, string][]),
     [received ? "Billetera destino" : "Billetera origen", wallet?.name ?? "—"],
     ...(movement.category_label || movement.note ? ([["Descripción", movement.category_label || movement.note || ""]] as [string, string][]) : []),
     ["Nro. de operación", movement.operation_number],
@@ -48,7 +48,7 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
       <header className="flex items-center justify-between">
         <span className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary-container text-[12px] font-bold text-primary-container">S/</span>
-          <span className="text-[24px] font-extrabold italic">yape</span>
+          <span className="text-[24px] font-extrabold italic">{cash ? "Mica" : "yape"}</span>
         </span>
         <button type="button" aria-label="Cerrar" onClick={() => router.replace("/")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
           <Icon name="close" className="text-[22px]" />
@@ -57,7 +57,7 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
 
       <section className="mt-4 rounded-3xl bg-white p-5 text-on-surface shadow-lg">
         <div className="flex items-center justify-between">
-          <h1 className="text-[20px] font-extrabold text-primary-container">{received ? "¡Te yapearon!" : "¡Yapeaste!"}</h1>
+          <h1 className="text-[20px] font-extrabold text-primary-container">{cash ? (received ? "Ingreso en efectivo" : "Gasto en efectivo") : received ? "¡Te yapearon!" : "¡Yapeaste!"}</h1>
           <button type="button" onClick={() => toast("Constancia copiada al portapapeles")} className="flex items-center gap-1 text-sm font-bold text-secondary">
             <Icon name="share" className="text-[18px]" />Compartir
           </button>
@@ -69,14 +69,14 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
           <Icon name="calendar_today" className="text-[16px]" />{date}<span className="text-outline-variant">|</span>
           <Icon name="schedule" className="text-[16px]" />{time}
         </p>
-        <div className="mt-4 flex items-center justify-between border-y border-surface-container-high py-3">
+        {!cash && <div className="mt-4 flex items-center justify-between border-y border-surface-container-high py-3">
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-outline">Código de seguridad</span>
           <span className="flex gap-1.5" data-testid="security-code">
             {movement.security_code.split("").map((d, i) => (
               <span key={i} className="flex h-7 w-7 items-center justify-center rounded bg-surface-container-high text-sm font-bold">{d}</span>
             ))}
           </span>
-        </div>
+        </div>}
         <p className="mt-3 text-[11px] font-extrabold uppercase tracking-wider text-outline">Datos de la transacción</p>
         <dl className="mt-1">
           {rows.map(([label, value]) => (
@@ -88,9 +88,9 @@ export function ReceiptScreen({ movementId }: { movementId: string }) {
         </dl>
       </section>
 
-      <button type="button" onClick={() => router.replace("/?yapear=1")}
+      <button type="button" onClick={() => router.replace(cash ? "/" : "/?yapear=1")}
         className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-secondary-container text-[15px] font-bold text-on-secondary-container shadow-md">
-        <Icon name="send" className="text-[20px]" />Nuevo yapeo
+        <Icon name="send" className="text-[20px]" />{cash ? "Volver a mis billeteras" : "Nuevo yapeo"}
       </button>
       <button type="button" onClick={() => toast("Ayuda: próximamente")} className="mx-auto mt-3 flex items-center gap-2 text-sm font-semibold text-white/90">
         <Icon name="headphones" className="text-[18px]" />Necesito ayuda

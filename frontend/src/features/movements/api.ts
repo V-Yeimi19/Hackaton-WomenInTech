@@ -11,6 +11,8 @@ export function useMovements(walletId?: string, enabled = true) {
     queryKey: queryKeys.movements(walletId),
     queryFn: () => backend<MovementList>(`movements?limit=50${walletId ? `&wallet_id=${walletId}` : ""}`),
     enabled,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: "always",
   });
 }
 

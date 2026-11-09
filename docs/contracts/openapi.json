@@ -199,6 +199,49 @@
         }
       }
     },
+    "/api/v1/agent/declarations": {
+      "get": {
+        "tags": [
+          "agent"
+        ],
+        "summary": "Declaration Memory",
+        "operationId": "declaration_memory_api_v1_agent_declarations_get",
+        "parameters": [
+          {
+            "name": "wallet_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Wallet Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeclarationMemory"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health/live": {
       "get": {
         "tags": [
@@ -2419,6 +2462,16 @@
             "type": "string",
             "format": "uuid",
             "title": "Request Id"
+          },
+          "declaration_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclarationAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2452,6 +2505,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "declaration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclarationState"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -2594,6 +2657,34 @@
           "payment_account_id"
         ],
         "title": "CommitmentOut"
+      },
+      "ConfirmedDeclaration": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/MoneyFact"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "confirmed_at",
+          "entries"
+        ],
+        "title": "ConfirmedDeclaration"
       },
       "ConsentGrantRequest": {
         "properties": {
@@ -2784,6 +2875,120 @@
         ],
         "title": "Counterparty"
       },
+      "DeclarationAction": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "confirm",
+              "edit",
+              "cancel"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "action"
+        ],
+        "title": "DeclarationAction"
+      },
+      "DeclarationMemory": {
+        "properties": {
+          "pending": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclarationPreview"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_confirmed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfirmedDeclaration"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "latest_confirmed"
+        ],
+        "title": "DeclarationMemory"
+      },
+      "DeclarationPreview": {
+        "properties": {
+          "reply": {
+            "type": "string",
+            "title": "Reply"
+          },
+          "declaration": {
+            "$ref": "#/components/schemas/DeclarationState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reply",
+          "declaration"
+        ],
+        "title": "DeclarationPreview"
+      },
+      "DeclarationState": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "actions": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "confirm",
+                "edit",
+                "cancel"
+              ]
+            },
+            "type": "array",
+            "title": "Actions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "status",
+          "actions"
+        ],
+        "title": "DeclarationState"
+      },
       "DemoSessionCreate": {
         "properties": {
           "display_name": {
@@ -2973,6 +3178,70 @@
         ],
         "title": "MeResponse"
       },
+      "MoneyFact": {
+        "properties": {
+          "wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Wallet Id"
+          },
+          "wallet_name": {
+            "type": "string",
+            "title": "Wallet Name"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "DIGITAL"
+            ],
+            "title": "Medium"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT"
+            ],
+            "title": "Direction"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "registered_digital_total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registered Digital Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wallet_id",
+          "wallet_name",
+          "medium",
+          "direction",
+          "amount",
+          "description",
+          "day"
+        ],
+        "title": "MoneyFact"
+      },
       "MovementListResponse": {
         "properties": {
           "items": {
@@ -3018,6 +3287,15 @@
           "kind": {
             "type": "string",
             "title": "Kind"
+          },
+          "medium": {
+            "type": "string",
+            "enum": [
+              "DIGITAL",
+              "CASH"
+            ],
+            "title": "Medium",
+            "default": "DIGITAL"
           },
           "direction": {
             "type": "string",
@@ -4254,6 +4532,27 @@
             "type": "string",
             "title": "Total"
           },
+          "cash_total": {
+            "type": "string",
+            "title": "Cash Total",
+            "default": "0.00"
+          },
+          "combined_total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined Total"
+          },
+          "unallocated_cash": {
+            "type": "string",
+            "title": "Unallocated Cash",
+            "default": "0.00"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -4331,6 +4630,28 @@
           "balance": {
             "type": "string",
             "title": "Balance"
+          },
+          "cash_balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cash Balance"
+          },
+          "combined_balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined Balance"
           }
         },
         "type": "object",

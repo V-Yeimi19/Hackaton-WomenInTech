@@ -159,6 +159,7 @@ def test_ca10_invalid_twilio_signature_is_forbidden(client, monkeypatch):
     from app.core.config import get_settings
 
     settings = get_settings()
+    monkeypatch.setattr(settings, "whatsapp_enabled", True)
     monkeypatch.setattr(settings, "messaging_mode", "twilio")
     monkeypatch.setattr(settings, "twilio_auth_token", "test-secret")
     response = client.post(

@@ -75,6 +75,7 @@ class OutboundMessage(Base):
     dedupe_key: Mapped[str] = mapped_column(String(160), nullable=False, unique=True)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     reply_markup: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    document: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PENDING")
     provider_sid: Mapped[str | None] = mapped_column(String(120), nullable=True, unique=True)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -94,6 +95,21 @@ class OutboundMessage(Base):
         ),
         Index("ix_outbound_messages_status_next", "status", "next_attempt_at"),
     )
+
+
+class DashboardRequest(Base):
+    """Selección temporal de periodo y negocio, aislada por vínculo de Telegram."""
+
+    __tablename__ = "telegram_dashboard_requests"
+
+    channel_link_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("channel_links.id"), primary_key=True
+    )
+    business_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False, index=True
+    )
+    data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class DeliveryEvent(Base):

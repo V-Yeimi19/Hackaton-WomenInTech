@@ -34,7 +34,7 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSi
     <article
       data-wallet={wallet.id}
       className={clsx(
-        "relative grid h-[168px] w-[290px] shrink-0 snap-start grid-rows-[32px_1fr_26px] overflow-hidden rounded-[2rem] p-4",
+        "relative grid h-[200px] w-[290px] shrink-0 snap-start grid-rows-[32px_1fr_26px] overflow-hidden rounded-[2rem] p-4",
         primary ? "bg-gradient-to-r from-primary-container to-[#8c3298] text-on-primary shadow-md" : "bg-surface-container-lowest text-on-surface shadow-sm",
       )}
     >
@@ -67,7 +67,7 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSi
           </button>
         ) : <span className={iconClass}>{walletIcon}</span>}
         <div className="min-w-0 flex-1">
-          <span className={clsx("block text-[12px] font-bold leading-4", primary ? "text-on-primary-container" : "text-on-surface-variant")}>Saldo disponible</span>
+          <span className={clsx("block text-[12px] font-bold leading-4", primary ? "text-on-primary-container" : "text-on-surface-variant")}>Saldo digital</span>
           <div className="flex items-baseline gap-0.5">
             <span className="text-[20px] font-semibold leading-7">S/</span>
             <span data-testid="wallet-balance" className="text-[30px] font-bold leading-9 tracking-tight whitespace-nowrap">{shown ? formatMoney(wallet.balance) : MASK}</span>
@@ -76,6 +76,7 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSi
               <Icon name={shown ? "visibility" : "visibility_off"} className="text-[18px]" />
             </button>
           </div>
+          <p className="mt-1 text-xs" data-testid="wallet-cash-balance">Efectivo: {wallet.cash_balance == null ? "por definir con Mica" : shown ? `S/ ${formatMoney(wallet.cash_balance)}` : MASK}</p>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import { summarizeToday } from "./summary";
 
 function movement(overrides: Partial<Movement> = {}): Movement {
   return {
-    id: "sale", operation_number: "1", security_code: "000", kind: "SALE", direction: "IN", title: "Venta", amount: "10.10",
+    id: "sale", operation_number: "1", security_code: "000", kind: "SALE", medium: "DIGITAL", direction: "IN", title: "Venta", amount: "10.10",
     occurred_at: "2026-11-08T15:00:00Z",
     wallets: [{ id: "business", name: "Café", role: "BUSINESS", purpose: "BUSINESS", delta: "10.10" }],
     ...overrides,

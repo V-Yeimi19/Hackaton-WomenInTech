@@ -45,11 +45,11 @@ class Account(Base):
             "business_id",
             "kind",
             unique=True,
-            postgresql_where=text("kind <> 'WALLET'"),
+            postgresql_where=text("kind NOT IN ('WALLET', 'WALLET_CASH')"),
         ),
         CheckConstraint(
             "kind IN ('BUSINESS_DIGITAL', 'HOUSEHOLD_DIGITAL', 'CASH_DECLARED', "
-            "'EXTERNAL_CLEARING', 'WALLET')",
+            "'EXTERNAL_CLEARING', 'WALLET', 'WALLET_CASH')",
             name="ck_accounts_kind",
         ),
         CheckConstraint("currency = 'PEN'", name="ck_accounts_currency"),

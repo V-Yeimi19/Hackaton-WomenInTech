@@ -18,6 +18,7 @@ dependencies = [
   "pydantic>=2.10,<3",
   "pydantic-settings>=2.7,<3",
   "python-multipart>=0.0.20,<0.1",
+  "reportlab>=5.1,<5.2",
   "sqlalchemy>=2.0.36,<2.1",
   "twilio>=9.4,<10",
   "tzdata>=2024.2",
@@ -34,6 +35,9 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+"app.integrations" = ["assets/*.png"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

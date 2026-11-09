@@ -11,9 +11,13 @@ import { useWallets } from "@/features/wallets/api";
 import { MovementSummary } from "./MovementSummary";
 import { ApiError } from "@/lib/api/http";
 import { MicaSheet } from "@/features/agent/MicaSheet";
-import { getProfile, saveProfile, getChat, sendChat, chatTurns } from "./api";
+import { getProfile, saveProfile, getChat, sendChat, chatTurns, useDeclarationMemory, type ChatTurn, type DeclarationAction, type DeclarationState } from "./api";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/api/query-keys";
 
 import { topSalesSuggestions } from "./suggestions";
+
+const ACTION_LABELS = { confirm: "Confirmar", edit: "Editar", cancel: "Cancelar" };
 
 const STEPS = ["Rubro", "Top Ventas", "Promedio", "Costos Fijos", "Reporte"];
 const QUESTIONS = [
@@ -51,8 +55,8 @@ export function MicaScreen() {
 
 
   return (
-    <div className="min-h-dvh bg-surface">
-      <header className="sticky top-0 z-30 shadow-sm">
+    <div className="min-h-dvh bg-surface pt-[180px]">
+      <header className="fixed left-1/2 top-0 z-30 w-full max-w-[430px] -translate-x-1/2 bg-white shadow-sm">
         <div className="flex h-12 items-center justify-between bg-primary-container px-3.5 text-white">
           <Link href="/" className="flex items-center gap-2.5 font-bold"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Icon name="person" size={19} /></span>Hola, Yaper@</Link>
           <div className="flex gap-4"><button aria-label="Soporte" onClick={() => toast("Completa tu perfil para conocer mejor tu negocio.")}><Icon name="headphones" size={22} /></button><button aria-label="Notificaciones" onClick={() => toast("No tienes nuevas notificaciones.")}><Icon name="notifications" size={22} /></button></div>
@@ -87,7 +91,9 @@ export function MicaScreen() {
 function Conversation({ walletId, walletName }: { walletId: string; walletName: string }) {
   const [answers, setAnswers] = useState<string[]>([]);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = useState<ChatTurn[]>([]);
+  const memory = useDeclarationMemory(walletId);
+  const queryClient = useQueryClient();
   const [sending, setSending] = useState(false);
   const [chatError, setChatError] = useState("");
   const [selections, setSelections] = useState<string[]>([]);
@@ -97,12 +103,18 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const pendingRequest = useRef<{ message: string; id: string } | null>(null);
+  const pendingRequest = useRef<{ signature: string; id: string } | null>(null);
   const field = useRef<HTMLInputElement>(null);
   const end = useRef<HTMLDivElement>(null);
   const step = answers.length;
   const storageKey = `mica-onboarding:${walletId}`;
   const quickOptions = step === 1 ? topSalesSuggestions(answers[0] ?? "") : OPTIONS[step] ?? [];
+
+  useEffect(() => {
+    if (memory.data?.latest_confirmed?.id) {
+      void queryClient.invalidateQueries({ queryKey: ["mica", "history", walletId] });
+    }
+  }, [memory.data?.latest_confirmed?.id, queryClient, walletId]);
 
   useEffect(() => {
     let active = true;
@@ -155,18 +167,27 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    const answer = input.trim() || selected;
+    await sendMessage(input.trim() || selected);
+  }
+
+  async function sendMessage(answer: string, action?: DeclarationAction) {
     if (!answer || sending || !loaded) return;
     setSending(true);
     setChatError("");
     try {
-      if (step >= STEPS.length) {
-        if (pendingRequest.current?.message !== answer) {
-          pendingRequest.current = { message: answer, id: crypto.randomUUID() };
+      if (action || step >= STEPS.length || memory.data?.pending) {
+        const signature = JSON.stringify({ answer, action });
+        if (pendingRequest.current?.signature !== signature) {
+          pendingRequest.current = { signature, id: crypto.randomUUID() };
         }
-        const response = await sendChat(walletId, answer, pendingRequest.current.id);
+        const response = await sendChat(walletId, answer, pendingRequest.current.id, action);
         setMessages((current) => [...current, ...chatTurns([response])]);
         pendingRequest.current = null;
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKeys.wallets }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.movementsAll }),
+          queryClient.invalidateQueries({ queryKey: ["declarations", walletId] }),
+        ]);
       } else {
         const profile = await saveProfile(walletId, [...answers, answer], profileVersion);
         setAnswers(profile.answers);
@@ -223,10 +244,18 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
                   return expenses.includes(option) ? expenses.filter((value) => value !== option) : [...expenses, option];
                 }); setInput(""); }} className={`rounded-full px-3.5 py-3 text-left text-xs font-bold shadow-sm transition-colors ${selections.includes(option) ? "bg-primary-container text-white ring-2 ring-secondary-fixed" : "bg-white text-on-surface"}`}>{option}{selections.includes(option) && <span className="ml-2 text-secondary-fixed">✓</span>}</button>)}<button onClick={() => { setSelections([]); field.current?.focus(); }} className="flex items-center gap-1.5 rounded-full bg-surface-container px-4 py-2.5 text-xs font-semibold"><Icon name="edit" size={16} className="text-primary" />{step === 2 ? "Escribir monto o rango…" : step === 4 ? "Escribir día y hora…" : "Escribir otro…"}</button></div></section>}
         {nextCursor && <button type="button" disabled={loadingOlder} onClick={loadOlder} className="text-sm font-bold text-primary">{loadingOlder ? "Cargando…" : "Ver mensajes anteriores"}</button>}
+        {memory.data?.latest_confirmed && <section aria-label="Memoria financiera compartida" className="rounded-2xl bg-white p-4 text-sm">
+          <h3 className="font-bold text-primary">Última declaración confirmada</h3>
+          <p className="mt-1 text-xs text-on-surface-variant">Información que Mica recuerda en la app y en Telegram.</p>
+          {memory.data.latest_confirmed.entries.map((entry, index) => <p key={index} className="mt-2">{entry.wallet_name}: {entry.direction === "IN" ? "Ingreso" : "Gasto"} de S/ {entry.amount} · {entry.medium === "CASH" ? "Efectivo registrado" : "Digital informado, sin modificar saldo"} · {entry.day}<br />{entry.description}</p>)}
+        </section>}
         {messages.map((message, index) => <div key={index} className={`flex items-end gap-2 ${message.role === "user" ? "justify-end" : ""}`}>
           {message.role === "assistant" && <Avatar size={30} />}
-          <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "bg-primary-container text-white" : "bg-white"}`}>{message.content}</p>
+          <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "bg-primary-container text-white" : "bg-white"}`}><p>{message.content}</p>
+            {message.declaration && <DeclarationButtons declaration={message.declaration} disabled={sending} onAction={(action) => void sendMessage(ACTION_LABELS[action.action], action)} />}
+          </div>
         </div>)}
+        {memory.data?.pending && !messages.some((m) => m.declaration?.id === memory.data?.pending?.declaration.id && m.declaration?.version === memory.data?.pending?.declaration.version) && <div className="rounded-2xl bg-white p-4 text-sm"><p className="whitespace-pre-wrap">{memory.data.pending.reply}</p><DeclarationButtons declaration={memory.data.pending.declaration} disabled={sending} onAction={(action) => void sendMessage(ACTION_LABELS[action.action], action)} /></div>}
         {sending && <div role="status" className="space-y-2"><p className="ml-auto w-fit max-w-[85%] rounded-2xl bg-primary-container px-4 py-3 text-sm text-white">{input}</p><p className="pl-10 text-sm text-secondary">Mica está respondiendo…</p></div>}
         {chatError && <div role="alert" className="rounded-2xl bg-error-container p-3 text-sm text-error">{chatError}{!loaded && <button type="button" onClick={() => setLoadAttempt((attempt) => attempt + 1)} className="ml-2 font-bold underline">Reintentar</button>}</div>}
         <div ref={end} />
@@ -236,4 +265,9 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
       </footer>
     </>
   );
+}
+
+function DeclarationButtons({ declaration, disabled, onAction }: { declaration: DeclarationState; disabled: boolean; onAction: (action: DeclarationAction) => void }) {
+  if (!declaration.actions.length) return null;
+  return <div className="mt-3 flex flex-wrap gap-2">{declaration.actions.map((action) => <button key={action} type="button" disabled={disabled} onClick={() => onAction({ id: declaration.id, version: declaration.version, action })} className="rounded-full bg-primary-container px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{ACTION_LABELS[action]}</button>)}</div>;
 }

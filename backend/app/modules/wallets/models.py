@@ -29,6 +29,7 @@ class Wallet(Base):
         UUID(as_uuid=True), ForeignKey("businesses.id"), nullable=False
     )
     account_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, unique=True)
+    cash_account_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     name: Mapped[str] = mapped_column(String(40), nullable=False)
     role: Mapped[str] = mapped_column(String(16), nullable=False)
     purpose: Mapped[str] = mapped_column(String(16), nullable=False)
@@ -50,6 +51,7 @@ class Wallet(Base):
         ),
         CheckConstraint("status IN ('ACTIVE', 'ARCHIVED')", name="ck_wallets_status"),
         Index("ix_wallets_business", "business_id"),
+        Index("uq_wallets_cash_account", "cash_account_id", unique=True),
         Index(
             "uq_wallets_business_name_active",
             "business_id",

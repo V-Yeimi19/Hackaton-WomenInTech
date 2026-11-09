@@ -1,5 +1,7 @@
 """Chat de la app e información del negocio compartida con Telegram."""
 
+import hashlib
+import json
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -14,8 +16,14 @@ from app.core.errors import AppError
 from app.core.rate_limit import enforce
 from app.db.base import utcnow
 from app.db.session import get_db
-from app.modules.agent import service
-from app.modules.agent.models import AgentProfile, AppExchange
+from app.modules.agent import dashboards, declarations, service
+from app.modules.agent.declaration_schemas import (
+    DeclarationAction,
+    DeclarationMemory,
+    DeclarationState,
+)
+from app.modules.agent.models import AgentProfile, AppExchange, MoneyDeclaration
+from app.modules.business.models import Business
 from app.modules.messaging import service as messaging
 from app.modules.wallets import service as wallets
 from app.modules.wallets.models import Wallet
@@ -41,6 +49,7 @@ class ChatRequest(BaseModel):
     wallet_id: UUID
     message: Answer
     request_id: UUID = Field(default_factory=uuid4)
+    declaration_action: DeclarationAction | None = None
 
 
 class ChatResponse(BaseModel):
@@ -50,6 +59,7 @@ class ChatResponse(BaseModel):
     message: str
     reply: str
     created_at: datetime
+    declaration: DeclarationState | None = None
 
 
 class ChatHistory(BaseModel):
@@ -171,7 +181,16 @@ def chat(
 ):
     business_wallet(db, ctx, payload.wallet_id)
     enforce(db, str(ctx.business.id), "agent-app-chat", 30)
-    wallet = business_wallet(db, ctx, payload.wallet_id, lock=True)
+    db.scalar(
+        select(Business)
+        .where(Business.id == ctx.business.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    wallet = business_wallet(db, ctx, payload.wallet_id)
+    request_hash = hashlib.sha256(
+        json.dumps(payload.model_dump(mode="json", exclude_none=True), sort_keys=True).encode()
+    ).hexdigest()
     existing = db.scalar(
         select(AppExchange).where(
             AppExchange.wallet_id == wallet.id,
@@ -180,7 +199,9 @@ def chat(
         )
     )
     if existing:
-        if existing.message != payload.message:
+        if existing.message != payload.message or (
+            existing.request_hash and existing.request_hash != request_hash
+        ):
             raise AppError(
                 "CHAT_REQUEST_CONFLICT", "Este identificador ya se utilizó para otro mensaje.", 409
             )
@@ -204,11 +225,30 @@ def chat(
             {"role": "assistant", "content": item.reply},
         )
     ]
+    money_reply = declarations.handle(
+        db,
+        ctx.business,
+        payload.message,
+        "app",
+        str(wallet.id),
+        f"app:{wallet.id}:{payload.request_id}",
+        utcnow(),
+        wallet,
+        payload.declaration_action,
+    )
     command, _ = messaging.parse_telegram_text(payload.message)
-    option = messaging.option_reply(db, ctx.business, command, "app", utcnow())
-    suggestion = messaging.suggest_telegram_option(payload.message)
+    option = (
+        messaging.option_reply(db, ctx.business, command, "app", utcnow())
+        if money_reply is None
+        else None
+    )
+    suggestion = messaging.suggest_telegram_option(payload.message) if money_reply is None else None
     reply: str | None
-    if option:
+    if money_reply is not None:
+        reply = money_reply.text
+    elif dashboards.requested(payload.message):
+        reply = "Puedes pedirme el PDF desde Telegram. Toca Continuar en Telegram y escribe, por ejemplo, PDF de este mes."
+    elif option:
         reply = option[0]
     elif suggestion:
         reply = f"¿Quisiste decir {suggestion}? Escribe {suggestion} para elegir esa opción."
@@ -221,9 +261,55 @@ def chat(
         wallet_id=wallet.id,
         request_id=payload.request_id,
         message=payload.message,
-        reply=service.clean_reply(reply),
+        reply=reply if money_reply is not None else service.clean_reply(reply),
+        declaration=money_reply.declaration if money_reply else None,
+        request_hash=request_hash,
     )
     db.add(exchange)
     db.commit()
     db.refresh(exchange)
     return exchange
+
+
+@router.get("/agent/declarations", response_model=DeclarationMemory)
+def declaration_memory(
+    wallet_id: UUID,
+    ctx: BusinessContext = Depends(require_business),
+    db: Session = Depends(get_db),
+):
+    business_wallet(db, ctx, wallet_id)
+    pending = db.scalar(
+        select(MoneyDeclaration).where(
+            MoneyDeclaration.business_id == ctx.business.id,
+            MoneyDeclaration.channel == "app",
+            MoneyDeclaration.channel_key == str(wallet_id),
+            MoneyDeclaration.status.in_(("PENDING", "EDITING")),
+            MoneyDeclaration.expires_at > utcnow(),
+        )
+    )
+    latest = list(
+        db.scalars(
+            select(MoneyDeclaration)
+            .where(
+                MoneyDeclaration.business_id == ctx.business.id,
+                MoneyDeclaration.status == "CONFIRMED",
+            )
+            .order_by(MoneyDeclaration.confirmed_at.desc())
+            .limit(30)
+        )
+    )
+    confirmed = next(
+        (d for d in latest if any(e["wallet_id"] == str(wallet_id) for e in d.data["entries"])),
+        None,
+    )
+    preview = declarations.render(db, pending) if pending else None
+    return {
+        "pending": {"reply": preview.text, "declaration": preview.declaration} if preview else None,
+        "latest_confirmed": {
+            "id": str(confirmed.id),
+            "confirmed_at": confirmed.confirmed_at,
+            "entries": confirmed.data["entries"],
+        }
+        if confirmed
+        else None,
+    }

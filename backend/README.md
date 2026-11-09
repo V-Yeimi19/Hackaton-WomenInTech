@@ -84,6 +84,44 @@ por el navegador. Las opciones Ayuda, Resumen, Pausar y Reanudar funcionan en am
 canales; cada respuesta se entrega en el canal donde se consultó. La personalización
 local anterior se recupera al abrir el chat si aún no existe perfil en el servidor.
 
+## Confirmación de ingresos y gastos
+
+Un mensaje de la app o una transcripción de Telegram con movimientos realizados
+prepara un borrador, nunca un asiento inmediato. Mica extrae hasta seis movimientos,
+valida montos en PEN, identifica las billeteras y comprueba que los totales coincidan
+con el desglose. Si falta un medio o hay varias billeteras posibles, solicita aclaración.
+
+- **Digital/Yape:** el importe es información de movimientos existentes. No se
+  vuelve a abonar ni descontar. La revisión muestra discrepancias con el total digital
+  registrado para la fecha; confirmar no altera ese saldo.
+- **Efectivo:** se añade como ingreso/gasto de la billetera indicada después de
+  confirmar. Si no hay efectivo inicial, Mica pregunta cuánto había **antes** de esos
+  movimientos. Ese importe no cuenta como venta. El efectivo legado sin billetera
+  se conserva y se reasigna a billeteras de negocio hasta el importe inicial declarado,
+  sin duplicarlo ni mezclarlo con el efectivo personal.
+- **Confirmar / Editar / Cancelar:** botones en ambos chats y opciones escritas.
+  Editar solicita el reporte completo corregido; cancelar no registra movimientos.
+  Los botones llevan identificador y versión. Un botón viejo, otra cuenta o una
+  confirmación repetida no vuelve a registrar el lote. El borrador vence en 30 minutos.
+
+La confirmación bloquea las cuentas y valida todos los saldos antes de publicar un
+lote atómico. El negocio, el hogar y cada billetera conservan efectivo independiente;
+los reportes del negocio excluyen el efectivo personal. Si cambian los saldos desde
+la revisión, se exige una nueva confirmación. Los movimientos confirmados mantienen
+las protecciones de inmutabilidad del libro.
+
+`POST /api/v1/agent/chat` acepta opcionalmente `declaration_action={id, version, action}`
+(`confirm`, `edit`, `cancel`) y devuelve `declaration` con el estado y las acciones
+disponibles. `GET /api/v1/agent/declarations?wallet_id=<uuid>` recupera el borrador
+de la app y los últimos hechos financieros confirmados, compartidos entre canales;
+no expone los textos privados de la conversación de Telegram.
+
+En `GET /wallets`, `balance` sigue siendo digital; `cash_balance=null` indica que
+falta preguntar el efectivo inicial. `combined_balance` suma ambos por billetera.
+`cash_total` suma efectivo asignado; `unallocated_cash` conserva efectivo legado;
+`combined_total` incluye digital, efectivo asignado y legado. `GET /movements`
+incluye `medium=DIGITAL|CASH` y permite filtrar ambos medios por billetera.
+
 ## Audios de Telegram
 
 Mica acepta notas de voz, audios y documentos con MIME `audio/*` de cuentas ya
@@ -120,3 +158,69 @@ Domingo 20:00 Lima: preliminar. Lunes 00:05: cierre disponible en app, sin segun
 Programar diariamente `pg_dump -Fc` con credenciales del entorno; restaurar con `pg_restore --exit-on-error` en una base separada y comparar conteos y versión de Alembic. La programación del respaldo y el hosting son responsabilidad del despliegue. No publicar archivos `.env`, datos de PostgreSQL o respaldos.
 
 Consultar `inbound_events` y `scheduled_jobs` en `DEAD`, mensajes `UNKNOWN` y antigüedad de pendientes desde una conexión de operador; no hay un endpoint público que exponga esos datos. Tras resolver una incidencia, el operador debe conciliar el efecto antes de reintentar. Los logs de aplicación contienen tipo de error, ruta de contrato, latencia y correlación, sin parámetros SQL ni cuerpo financiero. Configurar el servidor/proxy para que tampoco registre URLs con tokens QR o cabeceras de autorización.
+
+
+## Dashboard PDF por Telegram
+
+Desde un chat privado vinculado, pedir `PDF de este mes`, `PDF de hoy`,
+`PDF de la semana pasada` o `PDF del 01/10/2026 al 31/10/2026`.
+Sin periodo, Mica pregunta; con varias billeteras de negocio, pregunta cu?l,
+o acepta `todos mis negocios`. Las fechas son inclusivas y se interpretan en
+America/Lima; no se admiten fechas futuras ni rangos superiores a 366 d?as.
+La selecci?n pendiente vence a los 30 minutos y admite `Cancelar`.
+
+El PDF de una p?gina contiene ingresos, egresos, resultado (no utilidad contable),
+gr?fico por fecha y separaci?n efectivo/digital. Excluye aperturas, movimientos
+entre billeteras y gastos personales. El efectivo ya confirmado se lee del libro,
+sin sumar su declaraci?n otra vez. Para cada billetera, fecha y direcci?n digital,
+el libro tiene prioridad; donde no existen registros, se usa la ?ltima declaraci?n
+confirmada del d?a. Las declaraciones sucesivas del mismo total diario se sustituyen,
+no se acumulan. Este criterio se explica en el pie del PDF; no supone conciliaci?n
+bancaria ni modifica saldos.
+
+El snapshot JSON queda en `outbound_messages.document`; ReportLab lo convierte en
+PDF en memoria y Telegram lo recibe por `sendDocument` multipart, sin enlaces
+p?blicos. Se conserva la deduplicaci?n del inbox/outbox y no se reenv?a ciegamente
+un documento cuya entrega qued? UNKNOWN. La app orienta a continuar en Telegram;
+no hay un endpoint de descarga p?blica. Migraci?n: `0010_telegram_dashboard`.
+
+Los controles de declaraciones incluyen Confirmar, Editar y Cancelar incluso si
+falta el efectivo inicial: Confirmar solicita el dato pendiente y no publica
+movimientos incompletos. La cabecera de la app permanece fija al desplazarse.
+
+
+## Contexto de movimientos para Mica
+
+La app y Telegram consultan las notas, descripciones, destinatarios y categor?as
+RESTOCK / LOCAL_SERVICES / FAMILY guardadas al yapear o transferir. La b?squeda
+por concepto tambi?n recorre el historial anterior a los ?ltimos 15 movimientos,
+con filtros de periodo interpretados en America/Lima y sin mezclar cuentas.
+En la app se limita a la billetera seleccionada; Telegram consulta las billeteras
+activas de la cuenta vinculada. No requiere migraci?n ni nuevos datos del usuario.
+
+Los totales de coincidencias se calculan en el backend sobre todas las p?ginas;
+el detalle enviado al LLM se limita a 20 movimientos. Las transferencias propias
+se presentan por separado, sin sumarlas a ingresos o gastos. Los textos guardados
+son datos: no constituyen instrucciones ni prueban un producto espec?fico cuando
+solo se eligi? una categor?a general. No se env?an c?digos de seguridad ni tel?fonos.
+
+
+Si se solicitan varias billeteras, el PDF abre con un resumen general y agrega
+una p?gina por billetera con los mismos indicadores, gr?fico por fecha y gr?fico
+de efectivo/digital. Los desgloses y el total general se calculan sobre los mismos
+movimientos deduplicados, sin volver a consultar ni sumar transferencias internas.
+Una sola billetera conserva una sola p?gina. Se acepta pedir expl?citamente
+negocio y cuenta personal (Principal), o varios negocios por nombre. El snapshot
+conserva los desgloses en `wallet_reports`; no se requiere otra migraci?n.
+
+
+`PDF de todas mis billeteras de los ?ltimos dos d?as` selecciona todas las
+billeteras activas propias: principal, negocios y ahorro, incluso si alguna no
+registra ingresos o egresos. La selecci?n se conserva si Mica pregunta el periodo.
+`Todos mis negocios` mantiene su alcance limitado a negocios.
+
+Los importes declarados admiten palabras, por ejemplo `gast? veinte soles en
+efectivo por dos sacos de az?car`; Mica conserva el concepto y pide confirmaci?n
+antes de registrar S/ 20. Las cantidades de productos no se usan como importe.
+En consultas de movimientos, `dos sacos de az?car` y `2 sacos de az?car` se buscan
+como conceptos equivalentes y se distinguen de `20 sacos` y de un periodo temporal.

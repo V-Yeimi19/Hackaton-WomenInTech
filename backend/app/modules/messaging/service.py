@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import uuid
 from datetime import datetime, timedelta
 from difflib import get_close_matches
@@ -23,8 +24,10 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
-from app.integrations import audio_gateway, telegram_gateway, twilio_gateway
+from app.integrations import audio_gateway, dashboard_pdf, telegram_gateway, twilio_gateway
+from app.modules.agent import dashboards, declarations
 from app.modules.agent import service as agent_service
+from app.modules.agent.declaration_schemas import DeclarationAction
 from app.modules.audit.service import record as audit_record
 from app.modules.business.models import Business
 from app.modules.classification import service as classification_service
@@ -95,6 +98,11 @@ def help_text(provider: str) -> str:
             "• Reanudar — volver a recibir reportes\n"
             "• Ayuda — ver estas opciones otra vez\n\n"
             "También puedes escribirme tus dudas sobre tus cuentas."
+            + (
+                "\nPídeme un PDF, por ejemplo: «PDF de este mes». "
+                if provider == "telegram"
+                else ""
+            )
         )
     return HELP_TEXT
 
@@ -188,6 +196,28 @@ def _fail_event(db: Session, event: InboundEvent, code: str) -> None:
     if event.attempts >= MAX_ATTEMPTS:
         event.status = "DEAD"
         event.next_attempt_at = None
+        if event.provider == "telegram" and dashboards.requested(
+            agent_service._inbound_text(event)
+        ):
+            chat = str(
+                ((event.payload_json or {}).get("message") or {}).get("chat", {}).get("id", "")
+            )
+            link = (
+                identity_service.find_link_by_phone(
+                    db, chat, "telegram", environment=event.environment
+                )
+                if chat
+                else None
+            )
+            business = db.get(Business, link.business_id) if link else None
+            if link and business:
+                _reply(
+                    db,
+                    business,
+                    link,
+                    event,
+                    "No pude preparar tu PDF por un error interno. No se modificó ningún saldo. Puedes pedírmelo nuevamente indicando el periodo.",
+                )
     else:
         event.status = "RETRY"
         event.next_attempt_at = _backoff(event.attempts)
@@ -236,8 +266,9 @@ def process_inbound(db: Session, event: InboundEvent) -> InboundEvent:
         current = db.get(InboundEvent, event.id)
         if current is not None:
             _fail_event(db, current, exc.code)
-    except Exception:
+    except Exception as exc:
         db.rollback()
+        logger.error("inbound.processing_failed event_id=%s type=%s", event.id, type(exc).__name__)
         current = db.get(InboundEvent, event.id)
         if current is not None:
             _fail_event(db, current, "PROCESSING_ERROR")
@@ -396,6 +427,7 @@ def enqueue_outbound(
     report_id: uuid.UUID | None = None,
     commit: bool = False,
     reply_markup: dict | None = None,
+    document: dict | None = None,
 ) -> OutboundMessage:
     existing = db.scalar(select(OutboundMessage).where(OutboundMessage.dedupe_key == dedupe_key))
     if existing is not None:
@@ -408,6 +440,7 @@ def enqueue_outbound(
         dedupe_key=dedupe_key,
         body=body,
         reply_markup=reply_markup,
+        document=document,
         status="PENDING",
     )
     db.add(message)
@@ -426,6 +459,8 @@ def _reply(
     body: str,
     *,
     report_id: uuid.UUID | None = None,
+    reply_markup: dict | None = None,
+    document: dict | None = None,
 ) -> OutboundMessage:
     message = enqueue_outbound(
         db,
@@ -434,7 +469,9 @@ def _reply(
         body=body,
         dedupe_key=f"reply:{event.event_id}",
         report_id=report_id,
-        reply_markup=(
+        document=document,
+        reply_markup=reply_markup
+        or (
             {
                 "keyboard": [["Resumen", "Pausar"], ["Reanudar", "Ayuda"]],
                 "resize_keyboard": True,
@@ -510,11 +547,31 @@ def suggest_telegram_option(text: str) -> str | None:
 
 def _handle_telegram(db: Session, event: InboundEvent) -> None:
     payload = event.payload_json or {}
-    message = payload.get("message") or {}
+    callback = payload.get("callback_query") or {}
+    message = callback.get("message") or payload.get("message") or {}
     chat = message.get("chat") or {}
     chat_id = str(chat.get("id") or "")
     if not chat_id or chat.get("type", "private") != "private":
         return  # sin mensaje o chat grupal: el agente solo atiende chats privados
+    if callback:
+        if str((callback.get("from") or {}).get("id")) != chat_id:
+            return
+        match = re.fullmatch(
+            r"money:([cex]):([a-f0-9]{32}):(\d{1,9})", str(callback.get("data") or "")
+        )
+        if not match or int(match[3]) < 1:
+            return
+        action = DeclarationAction(
+            id=uuid.UUID(hex=match[2]),
+            version=int(match[3]),
+            action={"c": "confirm", "e": "edit", "x": "cancel"}[match[1]],
+        )
+        try:
+            telegram_gateway.answer_callback_query(str(callback.get("id") or ""))
+        except Exception as exc:
+            logger.warning("telegram.callback_ack_failed type=%s", type(exc).__name__)
+        _handle_command(db, event, "telegram", chat_id, "", "", "", money_action=action)
+        return
     audio = message.get("voice") or message.get("audio")
     document = message.get("document") or {}
     if (
@@ -594,6 +651,8 @@ def _handle_command(
     command: str,
     argument: str,
     text: str = "",
+    *,
+    money_action: DeclarationAction | None = None,
 ) -> None:
     """``phone`` es la dirección del canal: teléfono (WhatsApp) o chat_id (Telegram).
 
@@ -665,6 +724,35 @@ def _handle_command(
 
     event.business_id = business.id
     link.last_inbound_at = utcnow()
+
+    if provider == "telegram":
+        dashboard = (
+            dashboards.handle(db, business, link, text, event.received_at)
+            if money_action is None
+            else None
+        )
+        if dashboard is not None:
+            _reply(db, business, link, event, dashboard.text, document=dashboard.document)
+            return
+        try:
+            money_reply = declarations.handle(
+                db,
+                business,
+                text,
+                "telegram",
+                str(link.id),
+                f"telegram:{event.id}",
+                event.received_at,
+                action=money_action,
+            )
+        except AppError as exc:
+            if money_action is None:
+                raise
+            _reply(db, business, link, event, exc.message)
+            return
+        if money_reply is not None:
+            _reply(db, business, link, event, money_reply.text, reply_markup=money_reply.markup())
+            return
 
     option_result = option_reply(db, business, command, provider, event.received_at)
     if option_result is not None:
@@ -779,6 +867,10 @@ def _can_send(db: Session, message: OutboundMessage) -> bool:
     business = db.get(Business, message.business_id)
     if business is None or link.business_id != message.business_id:
         return False
+    if message.document is not None and (
+        link.provider != "telegram" or business.status != "ACTIVE"
+    ):
+        return False
     if message.report_id is not None:
         if business.status != "ACTIVE":
             return False
@@ -847,9 +939,14 @@ def deliver_message(db: Session, message: OutboundMessage) -> OutboundMessage:
 
     try:
         if link.provider == "telegram":
-            result = telegram_gateway.send_text(
-                address, message.body, reply_markup=message.reply_markup
-            )
+            if message.document is not None:
+                content = dashboard_pdf.render(message.document)
+                filename = f"Mica-{message.document['start']}-{message.document['end']}.pdf"
+                result = telegram_gateway.send_document(address, content, filename, message.body)
+            else:
+                result = telegram_gateway.send_text(
+                    address, message.body, reply_markup=message.reply_markup
+                )
         else:
             result = gateway.send_text(address, message.body)
         message = cast(OutboundMessage, db.get(OutboundMessage, message.id))
