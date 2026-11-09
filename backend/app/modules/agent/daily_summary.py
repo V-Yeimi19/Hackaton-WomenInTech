@@ -24,9 +24,9 @@ from app.shared.money import money_str
 
 INTENT = re.compile(
     r"(resumen|reporte|balance).{0,30}\b(hoy|del dia|diario)\b"
-    r"|\b(ventas|cobros|vendi|cobre)\b.{0,20}\bhoy\b"
-    r"|\bhoy\b.{0,20}\b(vendi|cobre|ventas)\b"
-    r"|como (me fue|voy|me va) hoy"
+    r"|\b(ventas|cobros) de hoy\b"
+    r"|\b(cuanto|como|que tal)\b.{0,25}\b(vendi|cobre|vend[oi]|me fue|voy|me va)\b.{0,20}\bhoy\b"
+    r"|\b(cuanto|como|que tal)\b.{0,10}\bhoy\b.{0,20}\b(vendi|cobre|ventas)\b"
 )
 NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
 
@@ -37,7 +37,10 @@ def _plain(text: str) -> str:
 
 
 def wants_summary(text: str) -> bool:
-    return bool(INTENT.search(_plain(text or "")))
+    """Pregunta por el resumen del día. Un mensaje con montos ("hoy vendí 500…") es una
+    declaración de ventas y la atiende el flujo de confirmación, no el resumen."""
+    plain = _plain(text or "")
+    return not any(ch.isdigit() for ch in plain) and bool(INTENT.search(plain))
 
 
 def declared_daily_sales(answer: str) -> Decimal | None:

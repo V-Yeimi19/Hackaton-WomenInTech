@@ -10,13 +10,27 @@ from app.modules.agent.daily_summary import _busiest_window, declared_daily_sale
 
 @pytest.mark.parametrize(
     "text",
-    ["Dame el resumen de mis ventas de hoy", "¿cuánto vendí hoy?", "cómo me fue hoy", "resumen del día"],
+    [
+        "Dame el resumen de mis ventas de hoy",
+        "¿cuánto vendí hoy?",
+        "cómo me fue hoy",
+        "resumen del día",
+    ],
 )
 def test_detects_daily_summary(text):
     assert wants_summary(text)
 
 
-@pytest.mark.parametrize("text", ["resumen de la semana", "hola mica", "dame tips para vender más"])
+@pytest.mark.parametrize(
+    "text",
+    [
+        "resumen de la semana",
+        "hola mica",
+        "dame tips para vender más",
+        "Hoy vendí 500 soles en mi negocio, 300 fueron en Yape y 200 en efectivo",
+        "hoy vendí bastante",
+    ],
+)
 def test_ignores_other_messages(text):
     assert not wants_summary(text)
 
