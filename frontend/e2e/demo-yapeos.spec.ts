@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("el ícono de negocio genera 10 cobros con las ventas guardadas en el perfil", async ({ page }) => {
+test("cada toque del ícono de negocio genera 10 yapeos con las ventas que Mica conoce", async ({ page }) => {
   const phone = "9" + String(Math.floor(Math.random() * 1e8)).padStart(8, "0");
   await page.goto("/login");
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
@@ -24,11 +24,22 @@ test("el ícono de negocio genera 10 cobros con las ventas guardadas en el perfi
   expect(saved.ok(), await saved.text()).toBeTruthy();
   expect(await page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith("mica-onboarding")))).toEqual([]);
 
-  // Doble toque rápido: solo una tanda.
+  // Cada toque suma 10 yapeos con el promedio de Mica (S/ 300); dos toques seguidos, 20.
+  const before = (await page.request.get("/api/backend/movements?limit=100").then((r) => r.json())).items.length as number;
   await icon.click();
   await icon.click();
-  await expect.poll(async () => Number((await wallets()).find((w) => w.id === business.id)!.balance), { timeout: 20_000 })
-    .toBeCloseTo(Number(business.balance) + 300, 2);
+  const balanceOf = async () => Number((await wallets()).find((w) => w.id === business.id)!.balance);
+  await expect.poll(balanceOf, { timeout: 30_000 }).toBeCloseTo(Number(business.balance) + 600, 2);
   await page.waitForTimeout(1500);
-  expect(Number((await wallets()).find((w) => w.id === business.id)!.balance)).toBeCloseTo(Number(business.balance) + 300, 2);
+  expect(await balanceOf()).toBeCloseTo(Number(business.balance) + 600, 2);
+  const after = (await page.request.get("/api/backend/movements?limit=100").then((r) => r.json())).items.length as number;
+  expect(after - before).toBe(20);
+
+  // Sin efectos visuales al tocarlo ni al pasar el mouse.
+  await icon.hover();
+  const style = await icon.evaluate((el) => {
+    const css = getComputedStyle(el);
+    return { outline: css.outlineStyle, transform: css.transform, cursor: css.cursor };
+  });
+  expect(style).toEqual({ outline: "none", transform: "none", cursor: "default" });
 });

@@ -55,7 +55,10 @@ export function WalletCard({ wallet, shown, onToggleShown, onQr, onSimulate, sim
 
       <div className="z-10 flex min-w-0 items-center gap-2">
         {onSimulate ? (
-          <button type="button" onClick={onSimulate} disabled={simulating} aria-busy={simulating} aria-label={`Simular yapeos para ${wallet.name}`} className={clsx(iconClass, "focus-visible:outline-2 focus-visible:outline-primary active:scale-95")}>
+          // Disparador discreto de la demo: se ve igual que el ícono decorativo (sin
+          // borde, animación ni cambio de cursor) y acepta toques mientras genera.
+          <button type="button" onClick={onSimulate} aria-busy={simulating} aria-label={`Simular yapeos para ${wallet.name}`}
+            className={clsx(iconClass, "cursor-default select-none outline-none [-webkit-tap-highlight-color:transparent]")}>
             {walletIcon}
           </button>
         ) : <span className={iconClass}>{walletIcon}</span>}

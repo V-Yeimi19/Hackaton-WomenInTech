@@ -28,66 +28,92 @@ async function declaredDailySales(walletId: string): Promise<string> {
   return "";
 }
 
-/** El ícono genera los cobros directamente; los reintentos conservan sus claves. */
+/**
+ * Cada toque del ícono pide 10 yapeos recibidos que suman las ventas diarias que
+ * Mica conoce. Los toques se encolan: tres toques seguidos generan 30 yapeos, uno
+ * tras otro. Si la red falla a mitad de una tanda, el siguiente toque la completa
+ * con las mismas claves de idempotencia (sin duplicar cobros).
+ */
 export function useDemoYapeos() {
   const client = useQueryClient();
   const toast = useToast();
-  const busy = useRef(false);
+  const queue = useRef<Wallet[]>([]);
+  const running = useRef(false);
   const [generating, setGenerating] = useState(false);
   const batches = useRef(new Map<string, Batch>());
 
-  async function generate(wallet: Wallet) {
-    if (busy.current) return;
-    // Se marca antes de leer el perfil: un doble toque no debe crear dos tandas.
-    busy.current = true;
-    let batch = batches.current.get(wallet.id);
-    if (!batch) {
-      let average: string;
-      try {
-        average = await declaredDailySales(wallet.id);
-      } catch {
-        busy.current = false;
-        toast("No pudimos leer tu perfil con Mica. Intenta de nuevo.");
-        return;
-      }
-      const total = dailySalesCents(average);
-      if (total === null) {
-        busy.current = false;
-        toast("Primero registra tus ventas diarias con Mica para esta billetera.");
-        return;
-      }
-      const payments = demoPayments(total);
-      batch = { payments, keys: payments.map(() => crypto.randomUUID()), done: 0 };
-      batches.current.set(wallet.id, batch);
+  async function prepare(wallet: Wallet): Promise<Batch | null> {
+    const pending = batches.current.get(wallet.id);
+    if (pending) return pending;
+    let average: string;
+    try {
+      average = await declaredDailySales(wallet.id);
+    } catch {
+      toast("No pudimos leer tu perfil con Mica. Intenta de nuevo.");
+      return null;
     }
+    const total = dailySalesCents(average);
+    if (total === null) {
+      toast("Primero registra tus ventas diarias con Mica para esta billetera.");
+      return null;
+    }
+    const payments = demoPayments(total);
+    const batch = { payments, keys: payments.map(() => crypto.randomUUID()), done: 0 };
+    batches.current.set(wallet.id, batch);
+    return batch;
+  }
+
+  async function refresh() {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.wallets }),
+      client.invalidateQueries({ queryKey: queryKeys.movementsAll }),
+      client.invalidateQueries({ queryKey: ["mica", "history"] }),
+    ]).catch(() => undefined);
+  }
+
+  async function run() {
+    running.current = true;
     setGenerating(true);
     try {
-      while (batch.done < batch.payments.length) {
-        const index = batch.done;
-        const { name, amount } = batch.payments[index];
-        const response = await fetch("/api/backend/demo/incoming-yapes", {
-          method: "POST",
-          headers: { "content-type": "application/json", "Idempotency-Key": batch.keys[index] },
-          body: JSON.stringify({ to_wallet_id: wallet.id, amount, from_name: `${name} (demo)` }),
-        });
-        if (!response.ok) throw new Error("No se pudo recibir el yapeo de prueba.");
-        batch.done += 1;
+      while (queue.current.length > 0) {
+        const wallet = queue.current[0];
+        const batch = await prepare(wallet);
+        if (!batch) {
+          // Sin promedio no tiene sentido procesar los demás toques de esa billetera.
+          queue.current = queue.current.filter((w) => w.id !== wallet.id);
+          continue;
+        }
+        try {
+          while (batch.done < batch.payments.length) {
+            const index = batch.done;
+            const { name, amount } = batch.payments[index];
+            const response = await fetch("/api/backend/demo/incoming-yapes", {
+              method: "POST",
+              headers: { "content-type": "application/json", "Idempotency-Key": batch.keys[index] },
+              body: JSON.stringify({ to_wallet_id: wallet.id, amount, from_name: `${name} (demo)` }),
+            });
+            if (!response.ok) throw new Error("No se pudo recibir el yapeo de prueba.");
+            batch.done += 1;
+          }
+        } catch {
+          queue.current = [];
+          toast("No se completaron los yapeos. Pulsa el ícono para reintentar los pendientes.");
+          break;
+        }
+        batches.current.delete(wallet.id);
+        queue.current.shift();
+        await refresh();
       }
-      batches.current.delete(wallet.id);
-    } catch {
-      toast("No se completaron los yapeos. Pulsa el ícono para reintentar los pendientes.");
     } finally {
-      try {
-        await Promise.all([
-          client.invalidateQueries({ queryKey: queryKeys.wallets }),
-          client.invalidateQueries({ queryKey: queryKeys.movementsAll }),
-          client.invalidateQueries({ queryKey: ["mica", "history"] }),
-        ]);
-      } finally {
-        busy.current = false;
-        setGenerating(false);
-      }
+      await refresh();
+      running.current = false;
+      setGenerating(false);
     }
+  }
+
+  function generate(wallet: Wallet) {
+    queue.current.push(wallet);
+    if (!running.current) void run();
   }
 
   return { generate, generating };
