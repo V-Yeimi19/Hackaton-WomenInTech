@@ -26,6 +26,7 @@ from app.core.security import decrypt_phone, normalize_phone
 from app.db.base import utcnow
 from app.integrations import audio_gateway, dashboard_pdf, telegram_gateway, twilio_gateway
 from app.modules.agent import dashboards, declarations
+from app.modules.agent import schedule as report_schedule
 from app.modules.agent import service as agent_service
 from app.modules.agent.declaration_schemas import DeclarationAction
 from app.modules.audit.service import record as audit_record
@@ -724,6 +725,21 @@ def _handle_command(
 
     event.business_id = business.id
     link.last_inbound_at = utcnow()
+
+    last_reply = db.scalar(
+        select(OutboundMessage.body)
+        .where(OutboundMessage.channel_link_id == link.id)
+        .order_by(OutboundMessage.created_at.desc())
+        .limit(1)
+    )
+    schedule_reply = (
+        report_schedule.request_change(db, business.id, text, last_reply)
+        if money_action is None
+        else None
+    )
+    if schedule_reply:
+        _reply(db, business, link, event, schedule_reply)
+        return
 
     if provider == "telegram":
         dashboard = (
