@@ -5,9 +5,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/Toast";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { Wallet } from "@/lib/api/types";
+import { getProfile } from "@/features/mica/api";
 import { dailySalesCents, demoPayments } from "./demo-payments";
 
 type Batch = { payments: ReturnType<typeof demoPayments>; keys: string[]; done: number };
+
+/** Índice de "En un día normal, ¿más o menos cuánto vendes?" en el perfil de Mica. */
+const DAILY_SALES_ANSWER = 2;
+
+/**
+ * Ventas diarias declaradas a Mica. El perfil vive en el servidor (agent/profile);
+ * sessionStorage solo queda como respaldo de perfiles anteriores aún no migrados.
+ */
+async function declaredDailySales(walletId: string): Promise<string> {
+  const profile = await getProfile(walletId);
+  const saved = profile.answers[DAILY_SALES_ANSWER];
+  if (typeof saved === "string") return saved;
+  try {
+    const legacy: unknown = JSON.parse(sessionStorage.getItem(`mica-onboarding:${walletId}`) ?? "[]");
+    if (Array.isArray(legacy) && typeof legacy[DAILY_SALES_ANSWER] === "string") return legacy[DAILY_SALES_ANSWER];
+  } catch { /* Sin datos locales. */ }
+  return "";
+}
 
 /** El ícono genera los cobros directamente; los reintentos conservan sus claves. */
 export function useDemoYapeos() {
@@ -19,15 +38,21 @@ export function useDemoYapeos() {
 
   async function generate(wallet: Wallet) {
     if (busy.current) return;
+    // Se marca antes de leer el perfil: un doble toque no debe crear dos tandas.
+    busy.current = true;
     let batch = batches.current.get(wallet.id);
     if (!batch) {
-      let average = "";
+      let average: string;
       try {
-        const answers: unknown = JSON.parse(sessionStorage.getItem(`mica-onboarding:${wallet.id}`) ?? "[]");
-        if (Array.isArray(answers) && typeof answers[2] === "string") average = answers[2];
-      } catch { /* Sin perfil válido no se generan cobros. */ }
+        average = await declaredDailySales(wallet.id);
+      } catch {
+        busy.current = false;
+        toast("No pudimos leer tu perfil con Mica. Intenta de nuevo.");
+        return;
+      }
       const total = dailySalesCents(average);
       if (total === null) {
+        busy.current = false;
         toast("Primero registra tus ventas diarias con Mica para esta billetera.");
         return;
       }
@@ -35,7 +60,6 @@ export function useDemoYapeos() {
       batch = { payments, keys: payments.map(() => crypto.randomUUID()), done: 0 };
       batches.current.set(wallet.id, batch);
     }
-    busy.current = true;
     setGenerating(true);
     try {
       while (batch.done < batch.payments.length) {
