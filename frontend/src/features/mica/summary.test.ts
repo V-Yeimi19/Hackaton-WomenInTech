@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Movement } from "@/lib/api/types";
-import { summarizeToday } from "./summary";
+import { averageDailySales, savingsSplit, summarizeToday } from "./summary";
 
 function movement(overrides: Partial<Movement> = {}): Movement {
   return {
@@ -26,5 +26,20 @@ describe("resumen de movimientos de Mica", () => {
     ] });
     expect(summarizeToday([transfer, { ...transfer, from_wallet: { id: "main", name: "Principal" } }], "business", now)).toEqual({ collected: "0.00", transferred: "100.00" });
     expect(summarizeToday([], "business", now)).toEqual({ collected: "0.00", transferred: "0.00" });
+  });
+});
+
+describe("sugerencia de ahorro de Mica", () => {
+  it("promedia las ventas de los últimos 7 días de la billetera", () => {
+    const now = new Date("2026-11-09T02:00:00Z");
+    const rows = [movement({ amount: "70.00", wallets: [{ id: "business", name: "Café", role: "BUSINESS", purpose: "BUSINESS", delta: "70.00" }] }),
+      movement({ occurred_at: "2026-10-30T15:00:00Z" }), movement({ kind: "OWNER_CONTRIBUTION" })];
+    expect(averageDailySales(rows, "business", now)).toBe("10.00");
+    expect(averageDailySales([], "business", now)).toBe("0.00");
+  });
+  it("separa el 30 % del saldo en soles enteros", () => {
+    expect(savingsSplit("1433.00")).toEqual({ save: "429.00", keep: "1004.00" });
+    expect(savingsSplit("2.00")).toBeNull();
+    expect(savingsSplit("0.00")).toBeNull();
   });
 });

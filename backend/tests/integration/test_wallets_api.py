@@ -156,7 +156,7 @@ def test_create_wallet_validations(client):
     dup = client.post(
         "/api/v1/wallets",
         headers=idem(headers),
-        json={"name": "  ahorro   vacaciones ", "purpose": "SAVINGS"},
+        json={"name": "  ahorro   mercadería ", "purpose": "SAVINGS"},
     )
     assert dup.status_code == 409 and dup.json()["code"] == "NAME_TAKEN"
     created = client.post(
@@ -200,8 +200,8 @@ def test_archive_wallet_rules(client):
     ) + Decimal(savings["balance"])
     # Los movimientos que eran solo de la billetera archivada ya no se listan.
     titles = [m["title"] for m in client.get("/api/v1/movements", headers=headers).json()["items"]]
-    assert "Aporte a Vacaciones" in titles  # también es de la Principal: se mantiene
-    assert any(t.startswith("Saldo de Ahorro Vacaciones") for t in titles)
+    assert "Aporte a Mercadería" in titles  # también es de la Principal: se mantiene
+    assert any(t.startswith("Saldo de Ahorro Mercadería") for t in titles)
 
 
 # ----------------------------------------------------------------------------- transferencias

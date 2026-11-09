@@ -5,7 +5,7 @@ import type { Wallet } from "@/lib/api/types";
 import { isEmoji, nameError, normalizeWalletName, walletNameInput, walletTag } from "./model";
 
 const wallet = (over: Partial<Wallet>): Wallet => ({
-  id: "1", name: "Ahorro Vacaciones", role: "SAVINGS", purpose: "SAVINGS", icon: null, color: null,
+  id: "1", name: "Ahorro Mercadería", role: "SAVINGS", purpose: "SAVINGS", icon: null, color: null,
   is_primary: false, is_business: false, balance: "0.00", ...over,
 });
 
@@ -24,7 +24,7 @@ describe("nameError", () => {
     expect(nameError("  ", existing)).toMatch(/Escribe un nombre/);
     expect(nameError("ab", existing)).toMatch(/al menos 3/);
     expect(nameError("x".repeat(25), existing)).toMatch(/Máximo 24/);
-    expect(nameError("  ahorro   vacaciones ", existing)).toMatch(/Ya tienes/);
+    expect(nameError("  ahorro   mercadería ", existing)).toMatch(/Ya tienes/);
     expect(nameError("Mi Bodega", existing)).toBeNull();
   });
 });

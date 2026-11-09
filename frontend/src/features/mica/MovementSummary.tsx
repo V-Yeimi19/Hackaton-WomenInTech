@@ -1,31 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { backend } from "@/lib/api/http";
-import type { Movement, MovementList } from "@/lib/api/types";
 import { formatMoney } from "@/lib/format";
+import { useWalletHistory } from "./api";
 import { summarizeToday } from "./summary";
 
 export function MovementSummary({ walletId, walletName }: { walletId: string; walletName: string }) {
   const message = useRef<HTMLDivElement>(null);
-  const history = useQuery({
-    queryKey: ["mica", "history", walletId],
-    queryFn: async () => {
-      const movements: Movement[] = [];
-      let cursor: string | null | undefined;
-      do {
-        const params = new URLSearchParams({ wallet_id: walletId, limit: "100" });
-        if (cursor) params.set("cursor", cursor);
-        const page = await backend<MovementList>(`movements?${params}`);
-        movements.push(...page.items);
-        cursor = page.next_cursor;
-      } while (cursor);
-      return movements;
-    },
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
+  const history = useWalletHistory(walletId);
 
   useEffect(() => {
     if (!history.isFetching && history.isSuccess) {
