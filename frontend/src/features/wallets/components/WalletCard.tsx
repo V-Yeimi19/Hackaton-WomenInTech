@@ -12,7 +12,6 @@ type WalletCardProps = {
   wallet: Wallet;
   shown: boolean;
   onToggleShown: () => void;
-  onOptions: () => void;
   onQr: () => void;
   onSimulate?: () => void;
   simulating?: boolean;
@@ -26,7 +25,7 @@ const CORNER_COLORS: Record<string, string> = {
 };
 
 /** Tarjeta del carrusel: la Principal en morado, el resto en blanco con su etiqueta. */
-export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSimulate, simulating }: WalletCardProps) {
+export function WalletCard({ wallet, shown, onToggleShown, onQr, onSimulate, simulating }: WalletCardProps) {
   const primary = wallet.is_primary;
   const walletIcon = isEmoji(wallet.icon) ? wallet.icon : <Icon name={primary ? "credit_card" : WALLET_ICON[wallet.role]} className="text-[20px]" />;
   const iconClass = clsx("flex h-7 w-9 shrink-0 items-center justify-center rounded-full text-[18px]", primary ? "bg-white/15 text-secondary-fixed" : "bg-secondary-container/50 text-on-secondary-container");
@@ -44,19 +43,13 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSi
           <div className="flex items-center gap-1">
             <h3 className="truncate text-[14px] font-bold leading-[17px]">{wallet.name}</h3>
             {primary && <Icon name="verified" filled className="text-[15px] text-secondary-fixed" />}
-          </div>
-          {primary && <p className="text-[11px] leading-[15px] font-semibold text-on-primary-container">{walletTag(wallet)}</p>}
-        </div>
+          </div>        </div>
         <div className="flex shrink-0 items-center gap-1">
           {!primary && (
             <span className={clsx("rounded-full px-2 py-0.5 text-[11px] leading-[15px] font-semibold", wallet.purpose === "SAVINGS" ? "bg-tertiary-fixed text-tertiary" : "bg-secondary-container text-on-secondary-container")}>
               {walletTag(wallet)}
             </span>
           )}
-          <button type="button" aria-label="Opciones de billetera" onClick={onOptions}
-            className={clsx("-my-1 -mr-2 flex h-8 w-8 items-center justify-center rounded-full", primary ? "hover:bg-white/10" : "text-on-surface-variant hover:bg-surface-container-high")}>
-            <Icon name="more_vert" className="text-[20px]" />
-          </button>
         </div>
       </div>
 
@@ -76,7 +69,6 @@ export function WalletCard({ wallet, shown, onToggleShown, onOptions, onQr, onSi
               <Icon name={shown ? "visibility" : "visibility_off"} className="text-[18px]" />
             </button>
           </div>
-          <p className="mt-1 text-xs" data-testid="wallet-cash-balance">Efectivo: {wallet.cash_balance == null ? "por definir con Mica" : shown ? `S/ ${formatMoney(wallet.cash_balance)}` : MASK}</p>
         </div>
       </div>
 

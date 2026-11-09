@@ -17,8 +17,8 @@ const ITEMS = [
   { icon: "request_quote", label: "Cobrar" },
 ];
 
-/** Menú lateral (solo visual) con Mica en Telegram y Cerrar sesión funcionales. */
-export function SideMenu({ open, onClose, onMica }: { open: boolean; onClose: () => void; onMica: () => void }) {
+/** Menú lateral (solo visual) con Gestión de billeteras, Mica en Telegram y Cerrar sesión funcionales. */
+export function SideMenu({ open, onClose, onMica, onManageWallets }: { open: boolean; onClose: () => void; onMica: () => void; onManageWallets: () => void }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [visible, setVisible] = useState(false);
@@ -52,6 +52,10 @@ export function SideMenu({ open, onClose, onMica }: { open: boolean; onClose: ()
               <span className="text-base">{item.label}</span>
             </button>
           ))}
+          <button type="button" onClick={onManageWallets} className="flex w-full items-center gap-6 px-6 py-4 text-left hover:bg-surface-container-low">
+            <Icon name="account_balance_wallet" className="text-[26px] text-primary-container" />
+            <span className="text-base">Gestión de billeteras</span>
+          </button>
           <button type="button" onClick={onMica} className="flex w-full items-center gap-6 px-6 py-4 text-left hover:bg-surface-container-low">
             <Icon name="send" className="text-[26px] text-[#229ED9]" />
             <span className="text-base">Mica en Telegram</span>

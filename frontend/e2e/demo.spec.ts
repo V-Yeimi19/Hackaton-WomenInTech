@@ -111,7 +111,9 @@ test("recorrido completo de la demo contra el backend", async ({ page, context }
   await expect(page).toHaveURL("/");
   const created = (await wallets(page)).find((w) => w.name === "Mi Bodega Prueba")!;
   expect(created.balance).toBe("0.00");
-  await page.locator(`[data-wallet="${created.id}"]`).getByRole("button", { name: "Opciones de billetera" }).click();
+  await page.getByRole("button", { name: "Mi perfil" }).click();
+  await page.getByRole("button", { name: "Gestión de billeteras" }).click();
+  await page.getByRole("dialog", { name: "¿Qué billetera quieres gestionar?" }).getByRole("button", { name: /Mi Bodega Prueba/ }).click();
   await page.getByRole("button", { name: /Eliminar billetera/ }).click();
   await page.getByRole("button", { name: "Eliminar", exact: true }).click();
   await expect.poll(async () => (await wallets(page)).some((w) => w.id === created.id)).toBe(false);

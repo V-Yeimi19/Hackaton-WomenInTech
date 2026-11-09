@@ -17,15 +17,17 @@ type WalletPickerSheetProps = {
   eyebrow?: string;
   title?: string;
   subtitle?: string;
+  /** false: también permite elegir billeteras sin saldo (p. ej. gestión). */
+  requireBalance?: boolean;
 };
 
-/** "¿Desde qué billetera?": se usa al yapear, al pagar un QR y al cambiar el origen. */
-export function WalletPickerSheet({ open, onClose, wallets, onPick, eyebrow = "Yapear", title = "¿Desde qué billetera?", subtitle }: WalletPickerSheetProps) {
+/** "¿Desde qué billetera?": se usa al yapear, al pagar un QR, al cambiar el origen y en gestión de billeteras. */
+export function WalletPickerSheet({ open, onClose, wallets, onPick, eyebrow = "Yapear", title = "¿Desde qué billetera?", subtitle, requireBalance = true }: WalletPickerSheetProps) {
   return (
     <BottomSheet open={open} onClose={onClose} eyebrow={eyebrow} title={title} subtitle={subtitle}>
       <ul className="flex flex-col gap-1">
         {wallets.map((w) => {
-          const disabled = Number(w.balance) <= 0;
+          const disabled = requireBalance && Number(w.balance) <= 0;
           return (
             <li key={w.id}>
               <button type="button" disabled={disabled} data-wallet-option={w.role} onClick={() => onPick(w)}
@@ -33,7 +35,7 @@ export function WalletPickerSheet({ open, onClose, wallets, onPick, eyebrow = "Y
                 <WalletAvatar wallet={w} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-bold">{w.name}</span>
-                  <span className="block text-caption text-on-surface-variant">{disabled ? "Sin saldo disponible" : `Disponible: S/ ${formatMoney(w.balance)}`}</span>
+                  <span className="block text-caption text-on-surface-variant">{disabled ? "Sin saldo disponible" : `${requireBalance ? "Disponible" : "Saldo"}: S/ ${formatMoney(w.balance)}`}</span>
                 </span>
                 <Icon name="chevron_right" className="text-[20px] text-outline" />
               </button>
