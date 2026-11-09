@@ -33,7 +33,7 @@ export function WalletCard({ wallet, shown, onToggleShown, onQr, onSimulate, sim
     <article
       data-wallet={wallet.id}
       className={clsx(
-        "relative grid h-[200px] w-[290px] shrink-0 snap-start grid-rows-[32px_1fr_26px] overflow-hidden rounded-[2rem] p-4",
+        "relative grid h-[152px] w-[290px] shrink-0 snap-start grid-rows-[32px_1fr_26px] overflow-hidden rounded-[2rem] p-4",
         primary ? "bg-gradient-to-r from-primary-container to-[#8c3298] text-on-primary shadow-md" : "bg-surface-container-lowest text-on-surface shadow-sm",
       )}
     >

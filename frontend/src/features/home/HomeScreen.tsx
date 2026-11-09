@@ -67,7 +67,7 @@ export function HomeScreen() {
         ) : (
           // La key remonta el carrusel al llegar los datos: así el snap empieza en la Principal.
           <div key={isPending ? "loading" : "ready"} className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 py-2">
-            {isPending && <div className="h-[200px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
+            {isPending && <div className="h-[152px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
             {wallets.map((w) => (
               <WalletCard key={w.id} wallet={w} shown={visibility.isShown(w.id)} onToggleShown={() => visibility.toggle(w.id)}
                 onSimulate={w.role === "BUSINESS" || (w.role === "CUSTOM" && w.purpose === "BUSINESS") ? () => demo.generate(w) : undefined}
@@ -75,7 +75,7 @@ export function HomeScreen() {
                 onQr={() => setOverlay({ kind: "qr", wallet: w })} />
             ))}
             <Link href="/billeteras/nueva"
-              className="flex h-[200px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
+              className="flex h-[152px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
               <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-md"><Icon name="add" className="text-[24px]" /></span>
               <span className="text-caption font-bold text-primary-container">+ Nueva Billetera</span>
               <span className="mt-1 text-caption text-on-surface-variant">Separa gastos o negocios</span>
