@@ -80,7 +80,7 @@ DEFAULT_WALLETS = (
         "account_balance_wallet",
     ),
     (ROLE_BUSINESS, "Emprendimiento Café", PURPOSE_BUSINESS, domain.BUSINESS_DIGITAL, "storefront"),
-    (ROLE_SAVINGS, "Ahorro Vacaciones", PURPOSE_SAVINGS, domain.WALLET, "savings"),
+    (ROLE_SAVINGS, "Ahorro Mercadería", PURPOSE_SAVINGS, domain.WALLET, "savings"),
 )
 
 
@@ -1068,7 +1068,7 @@ def seed_demo_data(db: Session, business_id: uuid.UUID, environment: str, seed: 
             "from": principal,
             "to": savings,
             "amount": _money(rng, 50, 200, "10"),
-            "description": "Aporte a Vacaciones",
+            "description": "Aporte a Mercadería",
         },
         {
             "type": "transfer",

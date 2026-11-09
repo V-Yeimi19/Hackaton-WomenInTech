@@ -16,14 +16,17 @@ from app.core.errors import AppError
 from app.core.rate_limit import enforce
 from app.db.base import utcnow
 from app.db.session import get_db
-from app.modules.agent import dashboards, declarations, service
+from app.modules.agent import daily_summary, dashboards, declarations, service
+from app.modules.agent import schedule as report_schedule
 from app.modules.agent.declaration_schemas import (
     DeclarationAction,
     DeclarationMemory,
     DeclarationState,
 )
 from app.modules.agent.models import AgentProfile, AppExchange, MoneyDeclaration
+from app.modules.agent.schedule import parse_schedule
 from app.modules.business.models import Business
+from app.modules.consents.models import Preference
 from app.modules.messaging import service as messaging
 from app.modules.wallets import service as wallets
 from app.modules.wallets.models import Wallet
@@ -102,6 +105,25 @@ def profile(
     )
 
 
+SCHEDULE_ANSWER = 4  # "¿qué día y a qué hora prefieres recibir tu reporte semanal?"
+
+
+def apply_report_schedule(db: Session, business_id: UUID, answers: list[str]) -> None:
+    """Programa el reporte semanal con el día y la hora que la usuaria le dio a Mica."""
+    if len(answers) <= SCHEDULE_ANSWER:
+        return
+    parsed = parse_schedule(answers[SCHEDULE_ANSWER])
+    if parsed is None:
+        return
+    weekday, hhmm = parsed
+    prefs = db.get(Preference, business_id)
+    if prefs is None:
+        prefs = Preference(business_id=business_id)
+        db.add(prefs)
+    prefs.schedule_weekday = weekday
+    prefs.schedule_local = hhmm
+
+
 @router.patch("/agent/profile", response_model=ProfileResponse)
 def update_profile(
     payload: ProfileUpdate,
@@ -132,6 +154,7 @@ def update_profile(
         record.answers = payload.answers
         record.version += 1
         record.updated_at = utcnow()
+    apply_report_schedule(db, ctx.business.id, payload.answers)
     db.commit()
     db.refresh(record)
     return ProfileResponse(
@@ -225,16 +248,34 @@ def chat(
             {"role": "assistant", "content": item.reply},
         )
     ]
-    money_reply = declarations.handle(
-        db,
-        ctx.business,
-        payload.message,
-        "app",
-        str(wallet.id),
-        f"app:{wallet.id}:{payload.request_id}",
-        utcnow(),
-        wallet,
-        payload.declaration_action,
+    schedule_reply = (
+        report_schedule.request_change(
+            db, ctx.business.id, payload.message, previous[0].reply if previous else None
+        )
+        if payload.declaration_action is None
+        else None
+    )
+    summary_reply = (
+        daily_summary.build(db, ctx.business, wallet)
+        if not schedule_reply
+        and payload.declaration_action is None
+        and daily_summary.wants_summary(payload.message)
+        else None
+    )
+    money_reply = (
+        None
+        if schedule_reply or summary_reply
+        else declarations.handle(
+            db,
+            ctx.business,
+            payload.message,
+            "app",
+            str(wallet.id),
+            f"app:{wallet.id}:{payload.request_id}",
+            utcnow(),
+            wallet,
+            payload.declaration_action,
+        )
     )
     command, _ = messaging.parse_telegram_text(payload.message)
     option = (
@@ -244,7 +285,11 @@ def chat(
     )
     suggestion = messaging.suggest_telegram_option(payload.message) if money_reply is None else None
     reply: str | None
-    if money_reply is not None:
+    if schedule_reply:
+        reply = schedule_reply
+    elif summary_reply:
+        reply = summary_reply
+    elif money_reply is not None:
         reply = money_reply.text
     elif dashboards.requested(payload.message):
         reply = "Puedes pedirme el PDF desde Telegram. Toca Continuar en Telegram y escribe, por ejemplo, PDF de este mes."
@@ -261,7 +306,7 @@ def chat(
         wallet_id=wallet.id,
         request_id=payload.request_id,
         message=payload.message,
-        reply=reply if money_reply is not None else service.clean_reply(reply),
+        reply=reply,
         declaration=money_reply.declaration if money_reply else None,
         request_hash=request_hash,
     )

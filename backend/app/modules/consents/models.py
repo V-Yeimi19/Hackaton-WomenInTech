@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, String
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, SmallInteger, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -48,9 +48,14 @@ class Preference(Base):
     reports_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     format: Mapped[str] = mapped_column(String(10), nullable=False, default="TEXT")
     schedule_local: Mapped[str] = mapped_column(String(5), nullable=False, default="20:00")
+    # Día del reporte semanal: lunes = 0 … domingo = 6 (por defecto, domingo).
+    schedule_weekday: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=6)
     invitations_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
     )
 
-    __table_args__ = (CheckConstraint("format IN ('TEXT', 'AUDIO')", name="ck_preferences_format"),)
+    __table_args__ = (
+        CheckConstraint("format IN ('TEXT', 'AUDIO')", name="ck_preferences_format"),
+        CheckConstraint("schedule_weekday BETWEEN 0 AND 6", name="ck_preferences_schedule_weekday"),
+    )

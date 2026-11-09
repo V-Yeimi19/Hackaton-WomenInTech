@@ -15,9 +15,19 @@ import { getProfile, saveProfile, getChat, sendChat, chatTurns, useDeclarationMe
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/api/query-keys";
 
+import { SavingsSuggestion } from "./SavingsSuggestion";
+import { MicaReply } from "./MicaReply";
 import { topSalesSuggestions } from "./suggestions";
 
 const ACTION_LABELS = { confirm: "Confirmar", edit: "Editar", cancel: "Cancelar" };
+const SAVINGS_QUESTION = "¿Cuánto dinero puedo apartar a mi Ahorro sin descuidar la mercadería?";
+const QUICK_REPLIES: { icon: string; label: string; message: string; savings?: boolean }[] = [
+  { icon: "bar_chart", label: "Resumen de ventas de hoy", message: "Dame el resumen de mis ventas de hoy" },
+  { icon: "lightbulb", label: "Tips para vender más", message: "Dame tips para vender más en mi negocio" },
+  { icon: "savings", label: "Separar a mi Ahorro", message: SAVINGS_QUESTION, savings: true },
+];
+const SAVINGS_INTENT =/apart|separ|ahorr|transfer/;
+const wantsSavings = (text: string) => SAVINGS_INTENT.test(text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase());
 
 const STEPS = ["Rubro", "Top Ventas", "Promedio", "Costos Fijos", "Reporte"];
 const QUESTIONS = [
@@ -95,6 +105,7 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
   const memory = useDeclarationMemory(walletId);
   const queryClient = useQueryClient();
   const [sending, setSending] = useState(false);
+  const toast = useToast();
   const [chatError, setChatError] = useState("");
   const [selections, setSelections] = useState<string[]>([]);
   const selected = selections.join(", ");
@@ -165,6 +176,11 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
     finally { setLoadingOlder(false); }
   }
 
+  function askSavings() {
+    if (sending || !loaded) return;
+    setMessages((current) => [...current, { role: "user", content: SAVINGS_QUESTION }, { role: "assistant", content: "", savings: true }]);
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     await sendMessage(input.trim() || selected);
@@ -181,7 +197,7 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
           pendingRequest.current = { signature, id: crypto.randomUUID() };
         }
         const response = await sendChat(walletId, answer, pendingRequest.current.id, action);
-        setMessages((current) => [...current, ...chatTurns([response])]);
+        setMessages((current) => [...current, ...chatTurns([response]), ...(!action && wantsSavings(answer) ? [{ role: "assistant" as const, content: "", savings: true }] : [])]);
         pendingRequest.current = null;
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: queryKeys.wallets }),
@@ -211,7 +227,7 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
 
   return (
     <>
-      <main className="space-y-3 px-4 pb-40 pt-2">
+      <main className="space-y-3 px-4 pb-52 pt-2">
         <section className="relative overflow-hidden rounded-[32px] bg-white p-4 shadow-[0_4px_20px_rgba(116,34,132,0.06)]">
           <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-secondary-fixed/30 blur-2xl" />
           <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-primary-fixed/30 blur-2xl" />
@@ -249,9 +265,10 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
           <p className="mt-1 text-xs text-on-surface-variant">Información que Mica recuerda en la app y en Telegram.</p>
           {memory.data.latest_confirmed.entries.map((entry, index) => <p key={index} className="mt-2">{entry.wallet_name}: {entry.direction === "IN" ? "Ingreso" : "Gasto"} de S/ {entry.amount} · {entry.medium === "CASH" ? "Efectivo registrado" : "Digital informado, sin modificar saldo"} · {entry.day}<br />{entry.description}</p>)}
         </section>}
-        {messages.map((message, index) => <div key={index} className={`flex items-end gap-2 ${message.role === "user" ? "justify-end" : ""}`}>
+        {messages.map((message, index) => message.savings ? <SavingsSuggestion key={index} walletId={walletId} /> : <div key={index} className={`flex items-end gap-2 ${message.role === "user" ? "justify-end" : ""}`}>
           {message.role === "assistant" && <Avatar size={30} />}
-          <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "bg-primary-container text-white" : "bg-white"}`}><p>{message.content}</p>
+          <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "whitespace-pre-wrap bg-primary-container text-white" : "bg-white"}`}>
+            {message.role === "assistant" ? <MicaReply content={message.content} disabled={sending || !loaded} onOption={index === messages.length - 1 && !message.declaration ? (option) => void sendMessage(option) : undefined} /> : <p>{message.content}</p>}
             {message.declaration && <DeclarationButtons declaration={message.declaration} disabled={sending} onAction={(action) => void sendMessage(ACTION_LABELS[action.action], action)} />}
           </div>
         </div>)}
@@ -261,7 +278,18 @@ function Conversation({ walletId, walletName }: { walletId: string; walletName: 
         <div ref={end} />
       </main>
       <footer className="fixed bottom-0 left-1/2 z-20 w-full max-w-[430px] -translate-x-1/2 bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md">
-        <form onSubmit={submit} className="flex items-center gap-2"><input ref={field} aria-label="Respuesta a Mica" value={input} disabled={sending || !loaded} maxLength={500} onChange={(e) => { setInput(e.target.value); setSelections([]); }} placeholder={step >= STEPS.length ? "Escribe tu mensaje a Mica…" : selected || (step === 2 ? "Ej.: S/ 150 o de S/ 100 a S/ 200" : step === 4 ? "Ej.: Viernes a las 6 p. m." : "Responde a Mica o elige una opción…")} className="h-14 min-w-0 flex-1 rounded-full bg-white px-4 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary-container disabled:opacity-60" /><button type="submit" aria-label="Enviar respuesta" disabled={(!input.trim() && !selected) || sending || !loaded} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary-fixed-dim text-on-secondary-fixed-variant shadow-md disabled:opacity-40"><Icon name="arrow_upward" /></button></form>
+        {loaded && step >= STEPS.length && <nav aria-label="Respuestas rápidas" className="no-scrollbar -mx-4 mb-2 flex gap-2 overflow-x-auto px-4 py-1">
+          {QUICK_REPLIES.map((reply) => <button key={reply.label} type="button" disabled={sending}
+            onClick={() => { if (reply.savings) return askSavings(); setInput(reply.message); void sendMessage(reply.message); }}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 text-xs font-bold text-primary-container shadow-sm disabled:opacity-50">
+            <Icon name={reply.icon} size={18} />{reply.label}</button>)}
+        </nav>}
+        <form onSubmit={submit} className="flex items-center gap-1 rounded-full bg-white py-1.5 pl-2 pr-1.5 shadow-md focus-within:ring-2 focus-within:ring-primary-container">
+          <button type="button" aria-label="Adjuntar" onClick={() => toast("Adjuntar archivos: próximamente")} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container"><Icon name="add_circle" size={24} /></button>
+          <input ref={field} aria-label="Respuesta a Mica" value={input} disabled={sending || !loaded} maxLength={500} onChange={(e) => { setInput(e.target.value); setSelections([]); }} placeholder={step >= STEPS.length ? "Escribe un mensaje a Mica…" : selected || (step === 2 ? "Ej.: S/ 150 o de S/ 100 a S/ 200" : step === 4 ? "Ej.: Viernes a las 6 p. m." : "Responde a Mica o elige una opción…")} className="h-11 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none disabled:opacity-60" />
+          <button type="button" aria-label="Enviar audio" onClick={() => toast("Audios: por ahora envíalos a Mica desde Telegram")} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container"><Icon name="mic" size={22} /></button>
+          <button type="submit" aria-label="Enviar respuesta" disabled={(!input.trim() && !selected) || sending || !loaded} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-on-secondary shadow-md disabled:opacity-40"><Icon name="send" size={20} /></button>
+        </form>
       </footer>
     </>
   );

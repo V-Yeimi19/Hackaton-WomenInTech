@@ -1,9 +1,32 @@
 import { backend } from "@/lib/api/http";
+import type { Movement, MovementList } from "@/lib/api/types";
 import { useQuery } from "@tanstack/react-query";
 
 export type DeclarationState = { id: string; version: number; status: string; actions: ("confirm" | "edit" | "cancel")[] };
 export type DeclarationAction = { id: string; version: number; action: "confirm" | "edit" | "cancel" };
-export type ChatTurn = { role: "user" | "assistant"; content: string; declaration?: DeclarationState | null };
+/** `savings`: turno local de Mica con la tarjeta de sugerencia de ahorro (no viene del servidor). */
+export type ChatTurn = { role: "user" | "assistant"; content: string; declaration?: DeclarationState | null; savings?: boolean };
+
+/** Todos los movimientos de una billetera (pagina hasta el final). */
+export function useWalletHistory(walletId: string) {
+  return useQuery({
+    queryKey: ["mica", "history", walletId],
+    queryFn: async () => {
+      const movements: Movement[] = [];
+      let cursor: string | null | undefined;
+      do {
+        const params = new URLSearchParams({ wallet_id: walletId, limit: "100" });
+        if (cursor) params.set("cursor", cursor);
+        const page = await backend<MovementList>(`movements?${params}`);
+        movements.push(...page.items);
+        cursor = page.next_cursor;
+      } while (cursor);
+      return movements;
+    },
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
 
 export type BusinessProfile = { wallet_id: string; answers: string[]; version: number };
 export type Exchange = { id: string; request_id: string; message: string; reply: string; created_at: string; declaration?: DeclarationState | null };

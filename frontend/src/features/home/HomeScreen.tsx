@@ -22,7 +22,7 @@ import { BottomBar } from "./BottomBar";
 import { SideMenu } from "./SideMenu";
 import { TopHeader } from "./TopHeader";
 
-type Overlay = { kind: "menu" } | { kind: "mica" } | { kind: "picker" } | { kind: "transfer" } | { kind: "qr"; wallet: Wallet } | { kind: "options"; wallet: Wallet } | null;
+type Overlay = { kind: "menu" } | { kind: "mica" } | { kind: "picker" } | { kind: "manage" } | { kind: "transfer" } | { kind: "qr"; wallet: Wallet } | { kind: "options"; wallet: Wallet } | null;
 
 /** Inicio: compone las secciones; cada una es dueña de su lógica. */
 export function HomeScreen() {
@@ -67,15 +67,15 @@ export function HomeScreen() {
         ) : (
           // La key remonta el carrusel al llegar los datos: así el snap empieza en la Principal.
           <div key={isPending ? "loading" : "ready"} className="no-scrollbar flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 py-2">
-            {isPending && <div className="h-[200px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
+            {isPending && <div className="h-[164px] w-[290px] shrink-0 animate-pulse rounded-[2rem] bg-surface-container-high" />}
             {wallets.map((w) => (
               <WalletCard key={w.id} wallet={w} shown={visibility.isShown(w.id)} onToggleShown={() => visibility.toggle(w.id)}
                 onSimulate={w.role === "BUSINESS" || (w.role === "CUSTOM" && w.purpose === "BUSINESS") ? () => demo.generate(w) : undefined}
                 simulating={demo.generating}
-                onOptions={() => setOverlay({ kind: "options", wallet: w })} onQr={() => setOverlay({ kind: "qr", wallet: w })} />
+                onQr={() => setOverlay({ kind: "qr", wallet: w })} />
             ))}
             <Link href="/billeteras/nueva"
-              className="flex h-[200px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
+              className="flex h-[164px] w-[150px] shrink-0 snap-start flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-outline-variant bg-surface-container-low text-center">
               <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-md"><Icon name="add" className="text-[24px]" /></span>
               <span className="text-caption font-bold text-primary-container">+ Nueva Billetera</span>
               <span className="mt-1 text-caption text-on-surface-variant">Separa gastos o negocios</span>
@@ -92,19 +92,17 @@ export function HomeScreen() {
           <span data-testid="total" className="text-[15px] font-bold">S/ {visibility.totalShown && data ? formatMoney(data.total) : MASK}</span>
           <Icon name={visibility.totalShown ? "visibility" : "visibility_off"} className="text-[22px] text-outline" />
         </button>
-        {data && <div className="mt-2 rounded-2xl bg-surface-container-lowest px-4 py-3 text-sm">
-          <p className="flex justify-between"><span>Efectivo en billeteras</span><strong data-testid="cash-total">{visibility.totalShown ? `S/ ${formatMoney(data.cash_total ?? "0.00")}` : MASK}</strong></p>
-          <p className="mt-1 flex justify-between"><span>Digital + efectivo</span><strong>{visibility.totalShown ? `S/ ${formatMoney(data.combined_total ?? data.total)}` : MASK}</strong></p>
-          {Number(data.unallocated_cash ?? "0") > 0 && <p className="mt-2 text-xs text-on-surface-variant">Efectivo anterior sin asignar a una billetera: {visibility.totalShown ? `S/ ${formatMoney(data.unallocated_cash!)}` : MASK}. Mica te preguntará el efectivo inicial antes de registrar movimientos nuevos.</p>}
-        </div>}
       </section>
 
       <MovementsPanel wallets={wallets} />
 
       <BottomBar onYapear={() => setOverlay({ kind: "picker" })} onAgent={() => router.push("/mica")} hideAgent={overlay !== null} />
 
-      <SideMenu open={overlay?.kind === "menu"} onClose={close} onMica={() => setOverlay({ kind: "mica" })} />
+      <SideMenu open={overlay?.kind === "menu"} onClose={close} onMica={() => setOverlay({ kind: "mica" })} onManageWallets={() => setOverlay({ kind: "manage" })} />
       <MicaSheet open={overlay?.kind === "mica"} onClose={close} />
+      <WalletPickerSheet open={overlay?.kind === "manage"} onClose={close} wallets={wallets} requireBalance={false}
+        eyebrow="Gestión de billeteras" title="¿Qué billetera quieres gestionar?"
+        onPick={(w) => setOverlay({ kind: "options", wallet: w })} />
       <WalletPickerSheet open={overlay?.kind === "picker"} onClose={close} wallets={wallets}
         onPick={(w) => router.push(`/yapear?wallet=${w.id}&flujo=contacto`)} />
       <TransferSheet open={overlay?.kind === "transfer"} onClose={close} wallets={wallets} />
