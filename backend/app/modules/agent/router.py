@@ -16,7 +16,7 @@ from app.core.errors import AppError
 from app.core.rate_limit import enforce
 from app.db.base import utcnow
 from app.db.session import get_db
-from app.modules.agent import dashboards, declarations, service
+from app.modules.agent import daily_summary, dashboards, declarations, service
 from app.modules.agent import schedule as report_schedule
 from app.modules.agent.declaration_schemas import (
     DeclarationAction,
@@ -255,9 +255,16 @@ def chat(
         if payload.declaration_action is None
         else None
     )
+    summary_reply = (
+        daily_summary.build(db, ctx.business, wallet)
+        if not schedule_reply
+        and payload.declaration_action is None
+        and daily_summary.wants_summary(payload.message)
+        else None
+    )
     money_reply = (
         None
-        if schedule_reply
+        if schedule_reply or summary_reply
         else declarations.handle(
             db,
             ctx.business,
@@ -280,6 +287,8 @@ def chat(
     reply: str | None
     if schedule_reply:
         reply = schedule_reply
+    elif summary_reply:
+        reply = summary_reply
     elif money_reply is not None:
         reply = money_reply.text
     elif dashboards.requested(payload.message):
@@ -297,7 +306,7 @@ def chat(
         wallet_id=wallet.id,
         request_id=payload.request_id,
         message=payload.message,
-        reply=reply if money_reply is not None else service.clean_reply(reply),
+        reply=reply,
         declaration=money_reply.declaration if money_reply else None,
         request_hash=request_hash,
     )

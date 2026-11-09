@@ -34,6 +34,13 @@ from app.shared.money import money_str
 settings = get_settings()
 
 MAX_REPLY = 1500
+APP_CHANNEL = "la app"
+APP_FORMAT = (
+    "Usa Markdown simple: **negritas** para los montos y datos clave, y una lista con "
+    '"- " cuando des dos o más datos (una idea por viñeta). Sin tablas, títulos ni enlaces. '
+    'Si sugieres opciones, escríbelas solo en la última línea como "Opciones: Resumen, Ayuda".'
+)
+PLAIN_FORMAT = "Texto plano, sin markdown, sin tablas ni asteriscos."
 HISTORY_TURNS = 4
 RECENT_MOVEMENTS = 15
 
@@ -49,7 +56,7 @@ emprendedoras peruanas. Conversas por {channel}.
 
 Cómo respondes:
 - En español peruano, cálido y sencillo, sin tecnicismos. Trata de "tú".
-- Breve: máximo 6 líneas. Texto plano, sin markdown, sin tablas ni asteriscos.
+- Breve: máximo 6 líneas. {format_rules}
 - Montos como "S/ 120.50".
 
 Reglas que nunca rompes:
@@ -165,6 +172,11 @@ def _account_snapshot(db: Session, business: Business) -> str:
 
 # *texto* o **texto** de markdown; no toca nombres enmascarados como "Susan Mar*".
 EMPHASIS = re.compile(r"\*{1,2}(\S[^*\n]*?\S|\S)\*{1,2}")
+
+
+def system_prompt(channel: str) -> str:
+    rules = APP_FORMAT if channel == APP_CHANNEL else PLAIN_FORMAT
+    return SYSTEM_PROMPT.format(channel=channel, format_rules=rules)
 
 
 def clean_reply(text: str) -> str:
@@ -339,7 +351,7 @@ def generate_answer(
     snapshot = wallet_snapshot(db, business, wallet) if wallet else _account_snapshot(db, business)
     search = movement_context.search_context(db, business.id, text, wallet.id if wallet else None)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT.format(channel=channel)},
+        {"role": "system", "content": system_prompt(channel)},
         {"role": "system", "content": "DATOS DE LA CUENTA\n" + snapshot},
         {
             "role": "system",
@@ -350,7 +362,10 @@ def generate_answer(
         {"role": "user", "content": text.strip()[:4000]},
     ]
     reply = llm_gateway.chat(messages)
-    return clean_reply(reply) if reply else None
+    if not reply:
+        return None
+    # La app muestra Markdown con formato; Telegram y WhatsApp reciben texto plano.
+    return reply.strip()[:MAX_REPLY] if channel == APP_CHANNEL else clean_reply(reply)
 
 
 def wallet_snapshot(db: Session, business: Business, wallet: Wallet) -> str:
